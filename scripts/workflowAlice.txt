@@ -1,0 +1,57 @@
+## Alice BALARD
+## 2024
+## For project of Erika Martinez
+
+## Dowload trimmed reads
+sbatch mvRawFasta.sh
+
+## Check quality of the trimmed reads
+# FastQC v0.12.1
+sbatch fastqc.sh
+# multiQC v1.9
+sbatch multiqc.sh
+
+## Send report to my email (useful command!)
+echo "sent from Curta" > tmp
+mailx -s "MultiQC report chytrid trimmed reads" -a outData/multiqc_report.html alice.cam.balard@gmail.com < tmp
+
+## Create de novo transcriptome assembly for Rhizophydium megarrhizum using the best sample from
+## Z1 to Z6 (chytrid alone, not MET treated)
+## Based on the	number of sequences and	GC content closer to the mode, we chose	Z2 for transcriptome assembly
+
+sbatch transcriptomeAssemblyRmega.sh
+
+###################################################################
+Trinity assemblies are written to /scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta
+###################################################################
+
+## quality check
+sbatch checkAssemblyQuality.sh
+
+## Decontaminate assembly with MCSC method
+## phylum: Chytridiomycota
+
+## NB: needs diamond to run
+module load DIAMOND/2.0.13-GCC-11.2.0
+
+
+## https://academic.oup.com/bib/article/23/2/bbab563/6514404
+
+## Post assembly quality control
+
+## Tool: TransRate
+
+##Tools such as SeqKit [74] can be used to calculate sequence length statistics (such as the N50 value) 
+##The ExN50 is a modified N50 metric for transcriptome assemblies that calculates the N50 value using only the top X% of highly expressed transcripts, avoiding issues from lowly expressed isoforms, and is currently implemented in the Trinity assembler.
+
+## read support—the fraction of all reads that map back to the assembly
+## Tool = Salmon
+
+## Decontaminate assembly with MCSC method
+## phylum: Chytridiomycota
+
+## Assess completeness with BUSCO (goal: >80% orthologs found)
+
+
+## Annotation
+## TRINOTATE

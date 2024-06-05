@@ -1,0 +1,33 @@
+Step 1/2: Performing rsync file transfer of requested files
+Rsync file transfer complete.
+Step 2/2: Assigning taxonomic IDs to sequences
+All files processed, cleaning up extra sequence files... done, library complete.
+Masking low-complexity regions of downloaded library... done.
+Step 1/2: Performing rsync file transfer of requested files
+Rsync file transfer complete.
+Step 2/2: Assigning taxonomic IDs to sequences
+All files processed, cleaning up extra sequence files... done, library complete.
+Masking low-complexity regions of downloaded library... done.
+Step 1/2: Performing rsync file transfer of requested files
+Rsync file transfer complete.
+Step 2/2: Assigning taxonomic IDs to sequences
+All files processed, cleaning up extra sequence files... done, library complete.
+Masking low-complexity regions of downloaded library... done.
+Downloading plasmid files from FTP... done.
+Masking low-complexity regions of downloaded library... done.
+Step 1/2: Performing rsync file transfer of requested files
+Rsync file transfer complete.
+Step 2/2: Assigning taxonomic IDs to sequences
+All files processed, cleaning up extra sequence files... done, library complete.
+Downloading UniVec_Core data from server... done.
+Adding taxonomy ID of 28384 to all sequences... done.
+Masking low-complexity regions of downloaded library... done.
+Found 89246/89400 targets, searched through 1030185525 accession IDs, search complete.
+lookup_accession_numbers: 154/89400 accession numbers remain unmapped, see unmapped.txt in DB directory
+Taxonomy parsed and converted.
+xargs: cat: terminated by signal 13
+/home/alicebalard/.conda/envs/kraken/share/kraken2-2.1.3-0/libexec/build_kraken2_db.sh: line 143: 104954 Done                    list_sequence_files
+     104955 Exit 125                | xargs -0 cat
+     104956 Killed                  | build_db -k $KRAKEN2_KMER_LEN -l $KRAKEN2_MINIMIZER_LEN -S $KRAKEN2_SEED_TEMPLATE $KRAKEN2XFLAG -H hash.k2d.tmp -t taxo.k2d.tmp -o opts.k2d.tmp -n taxonomy/ -m $seqid2taxid_map_file -c $required_capacity -p $KRAKEN2_THREAD_CT $max_db_flag -B $KRAKEN2_BLOCK_SIZE -b $KRAKEN2_SUBBLOCK_SIZE -r $KRAKEN2_MIN_TAXID_BITS $fast_build_flag
+kraken2: database ("./krakenDB") does not contain necessary file taxo.k2d
+slurmstepd: error: Detected 1 oom_kill event in StepId=17933357.batch. Some of the step tasks have been OOM Killed.
