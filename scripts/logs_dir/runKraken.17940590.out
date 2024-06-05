@@ -1,0 +1,23 @@
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/condabin/conda
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/bin/conda
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/bin/conda-env
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/bin/activate
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/bin/deactivate
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/etc/profile.d/conda.sh
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/etc/fish/conf.d/conda.fish
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/shell/condabin/Conda.psm1
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/shell/condabin/conda-hook.ps1
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/lib/python3.9/site-packages/xontrib/conda.xsh
+no change     /trinity/shared/easybuild/software/Anaconda3/2022.05/etc/profile.d/conda.csh
+no change     /home/alicebalard/.bashrc
+no change     /home/alicebalard/.zshrc
+no change     /home/alicebalard/.config/fish/config.fish
+no change     /home/alicebalard/.xonshrc
+no change     /home/alicebalard/.tcshrc
+No action taken.
+Creating sequence ID to taxonomy ID map (step 1)...
+Sequence ID to taxonomy ID map already present, skipping map creation.
+Estimating required capacity (step 2)...
+Estimated hash table requirement: 83459300204 bytes
+Capacity estimation complete. [38m59.445s]
+Building database files (step 3)...
