@@ -15,9 +15,24 @@ sbatch multiqc.sh
 echo "sent from Curta" > tmp
 mailx -s "MultiQC report chytrid trimmed reads" -a outData/multiqc_report.html alice.cam.balard@gmail.com < tmp
 
-## Create de novo transcriptome assembly for Rhizophydium megarrhizum using the best sample from
-## Z1 to Z6 (chytrid alone, not MET treated)
-## Based on the	number of sequences and	GC content closer to the mode, we chose	Z2 for transcriptome assembly
+########################################################################################################
+## Create de novo transcriptome assembly for Rhizophydium megarrhizum using Z1 to Z12 (chytrid alone) ##
+########################################################################################################
+
+## 1. Decontaminate raw reads with Kraken2 v2.1.3
+sbatch runKraken2decontaminationZ2.sh 
+
+Files without contaminants are found in "unclassified" e.g.
+/scratch/alicebalard/outData/kraken2decontamination/out/Z1_unclassified_raw_reads_1.fq
+
+## 2. Decontaminate from rRNA with SortmeRNA
+
+TBC
+
+
+
+
+## 3. Assemble transcriptome de novo
 
 sbatch transcriptomeAssemblyRmega.sh
 
@@ -27,13 +42,6 @@ Trinity assemblies are written to /scratch/alicebalard/outData/assembly/trinity_
 
 ## quality check
 sbatch checkAssemblyQuality.sh
-
-## Decontaminate assembly with MCSC method
-## phylum: Chytridiomycota
-
-## NB: needs diamond to run
-module load DIAMOND/2.0.13-GCC-11.2.0
-
 
 ## https://academic.oup.com/bib/article/23/2/bbab563/6514404
 
@@ -47,11 +55,7 @@ module load DIAMOND/2.0.13-GCC-11.2.0
 ## read support—the fraction of all reads that map back to the assembly
 ## Tool = Salmon
 
-## Decontaminate assembly with MCSC method
-## phylum: Chytridiomycota
-
 ## Assess completeness with BUSCO (goal: >80% orthologs found)
-
 
 ## Annotation
 ## TRINOTATE
