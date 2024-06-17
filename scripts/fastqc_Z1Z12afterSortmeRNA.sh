@@ -9,7 +9,7 @@
 #SBATCH --qos=standard 
 
 # Get the current file based on the array task ID
-FILE=$(ls /scratch/alicebalard/outData/sortmerna/*non_rRNA*fq | sed -n "${SLURM_ARRAY_TASK_ID}p")
+FILE=$(ls /scratch/alicebalard/outData/sortmerna/*non_rRNA*fwd.fq.gz | sed -n "${SLURM_ARRAY_TASK_ID}p")
 
 /scratch/alicebalard/FastQC/fastqc -o /scratch/alicebalard/outData/fastqc/afterSortmerna $FILE
 

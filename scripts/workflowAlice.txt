@@ -12,33 +12,27 @@ sbatch fastqc.sh
 sbatch multiqc.sh
 
 ## Send report to my email (useful command!)
-echo "sent from Curta" > tmp
-mailx -s "MultiQC report chytrid trimmed reads" -a outData/multiqc_report.html alice.cam.balard@gmail.com < tmp
+sh sendtomygmail.sh "emailtitle" file
 
 ########################################################################################################
 ## Create de novo transcriptome assembly for Rhizophydium megarrhizum using Z1 to Z12 (chytrid alone) ##
 ########################################################################################################
 
-## 1. Decontaminate raw reads with Kraken2 v2.1.3
-sbatch runKraken2decontaminationZ2.sh 
+## 1. Decontaminate from rRNA with SortmeRNA
+sbatch runSortmeRNA.sh
 
-Files without contaminants are found in "unclassified" e.g.
-/scratch/alicebalard/outData/kraken2decontamination/out/Z1_unclassified_raw_reads_1.fq
+Forward and reverse reads found in "non_rRNA" fastq e.g.
+/scratch/alicebalard/outData/sortmerna/Z9_non_rRNA_rev.fq
 
-## 2. Decontaminate from rRNA with SortmeRNA
-
-TBC
-
-
-
-
-## 3. Assemble transcriptome de novo
-
+## 2. Assemble transcriptome de novo
 sbatch transcriptomeAssemblyRmega.sh
 
-###################################################################
-Trinity assemblies are written to /scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta
-###################################################################
+# Trinity assemblies are written to /scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta
+
+## 3. Use blobtools 2 for assessment of contamination
+
+
+
 
 ## quality check
 sbatch checkAssemblyQuality.sh
