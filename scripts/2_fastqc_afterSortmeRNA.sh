@@ -2,10 +2,10 @@
 #SBATCH --job-name=fastqc
 #SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
-#SBATCH --array=1-24
+#SBATCH --array=1-36
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
-#SBATCH --time=3:00:00
+#SBATCH --time=4:00:00
 #SBATCH --qos=standard 
 
 # Get the current file based on the array task ID

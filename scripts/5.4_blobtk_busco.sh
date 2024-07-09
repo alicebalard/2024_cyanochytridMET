@@ -12,32 +12,35 @@
 #SBATCH --mail-user=alicebalard@zedat.fu-berlin.de
 #SBATCH --mail-type=end
 
-cd /scratch/alicebalard/outData/qualityAssembly/BUSCO
+## Enable same name autoswapping
+LMOD_DISABLE_SAME_NAME_AUTOSWAP=no
+
+module purge
+module load Anaconda3
+
+source ~/.bashrc
+conda init --all
+conda activate btk
 
 module add BUSCO/5.1.2-foss-2020b
 
+## First assembly Z1Z12 only chytrids:
+BTKOUT=/scratch/alicebalard/outData/blobtools/Z1Z12assembly
 TRANSC=/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta
 
+cd $BTKOUT
+
 ## With more samples
-busco -i $TRANSC -l fungi_odb10 -o output_directory -m transcriptome -c 10 -o "BUSCO_transcZ1to12_aftersortmern"
+busco -i $TRANSC -l fungi_odb10 -m transcriptome -c 10 -o "BUSCO_Z1Z12"
 
 ## l = current fungi database (will be downloaded automatically)
 ## m = genome or transcriptome (in your case transcriptome)
-
 ## NOTE: BUSCO doesn't like slash signs in the fasta header, you may need to replace them before running BUSCO.
 
+## Add to blob dir
+# These files can be imported to add BUSCO annotations to the assembly contigs:
 
-
-############################################################
-## Previous results (only Z2 sample, before decontamination)
-# ***** Results: *****
-#
-#        C:8.7%[S:3.2%,D:5.5%],F:13.7%,M:77.6%,n:758        
-#        66      Complete BUSCOs (C)                        
-#        24      Complete and single-copy BUSCOs (S)        
-#        42      Complete and duplicated BUSCOs (D)         
-#        104     Fragmented BUSCOs (F)                      
-#        588     Missing BUSCOs (M)                         
-#        758     Total BUSCO groups searched
-
+blobtools add \
+    --busco $BTKOUT/BUSCO_Z1Z12/run_fungi_odb10/full_table.tsv \
+    $BTKOUT
 
