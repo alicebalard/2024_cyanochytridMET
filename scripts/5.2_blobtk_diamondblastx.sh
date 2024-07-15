@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=200GB 
-#SBATCH --time=1-24:00:00
+#SBATCH --time=0-24:00:00
 #SBATCH --qos=standard              
 #SBATCH --partition=main,begendiv
 #SBATCH --constraint=no_gpu
@@ -28,16 +28,16 @@ cd /scratch/alicebalard/outData/blobtools
 ## https://blobtoolkit.genomehubs.org/blobtools2/blobtools2-tutorials/getting-started-with-blobtools2/#open_dataset
 
 ## First assembly: Z1 to Z12, only chytrids
-#ASSEMBLY=/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta 
-#READS1=/scratch/alicebalard/outData/assembly/combined_left.fq
-#READS2=/scratch/alicebalard/outData/assembly/combined_right.fq
-#BTKOUT=/scratch/alicebalard/outData/blobtools/Z1Z12assembly
+ASSEMBLY=/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta 
+READS1=/scratch/alicebalard/outData/assembly/combined_left.fq
+READS2=/scratch/alicebalard/outData/assembly/combined_right.fq
+BTKOUT=/scratch/alicebalard/outData/blobtools/Z1Z12assembly
 
 ## Second assembly: In1 to In12, chytrids infected by bacteria
-ASSEMBLY=/scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
-READS1=/scratch/alicebalard/outData/assembly_In/combined_left.fq
-READS2=/scratch/alicebalard/outData/assembly_In/combined_right.fq
-BTKOUT=/scratch/alicebalard/outData/blobtools/In1In12assembly
+#ASSEMBLY=/scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
+#READS1=/scratch/alicebalard/outData/assembly_In/combined_left.fq
+#READS2=/scratch/alicebalard/outData/assembly_In/combined_right.fq
+#BTKOUT=/scratch/alicebalard/outData/blobtools/In1In12assembly
 
 num_threads=$SLURM_CPUS_PER_TASK
 
@@ -64,11 +64,21 @@ diamond blastx \
         --threads $num_threads \
         > $BTKOUT/diamond.out
 
+diamond blastx \
+        --query $ASSEMBLY \
+        --db /scratch/alicebalard/outData/blobtools/uniprot/reference_proteomes.dmnd \
+        --outfmt 6 qseqid staxids bitscore qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore \
+        --sensitive \
+        --max-target-seqs 1 \
+        --evalue 1e-5 \
+        --threads $num_threads \
+        > $BTKOUT/diamond_1e-5pval.out
+
 # This file can be imported to assign taxonomic labels to the assembly scaffolds using taxrules:
 
 echo "Add Diamond BLASTx hits to blobtools dir..."
 blobtools add \
-    --hits $BTKOUT/diamond.out \
+    --hits $BTKOUT/diamond1e-5pval.out \
     --taxrule bestsumorder \
     --replace \
     --taxdump /scratch/alicebalard/outData/blobtools/taxdump \
