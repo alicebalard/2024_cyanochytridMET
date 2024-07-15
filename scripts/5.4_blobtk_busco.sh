@@ -28,10 +28,19 @@ module add BUSCO/5.1.2-foss-2020b
 BTKOUT=/scratch/alicebalard/outData/blobtools/Z1Z12assembly
 TRANSC=/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta
 
+## First assembly: Z1 to Z12, only chytrids
+#ASSEMBLY=/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta 
+#BTKOUT=/scratch/alicebalard/outData/blobtools/Z1Z12assembly
+
+## Second assembly: In1 to In12, chytrids infected by bacteria
+ASSEMBLY=/scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
+BTKOUT=/scratch/alicebalard/outData/blobtools/In1In12assembly
+
 cd $BTKOUT
 
 ## With more samples
-busco -i $TRANSC -l fungi_odb10 -m transcriptome -c 10 -o "BUSCO_Z1Z12"
+#busco -i $ASSEMBLY -l fungi_odb10 -m transcriptome -c 10 -o "BUSCO_Z1Z12"    
+busco -i $ASSEMBLY -l fungi_odb10 -m transcriptome -c 10 -o "BUSCO_In1In12"
 
 ## l = current fungi database (will be downloaded automatically)
 ## m = genome or transcriptome (in your case transcriptome)
@@ -41,6 +50,7 @@ busco -i $TRANSC -l fungi_odb10 -m transcriptome -c 10 -o "BUSCO_Z1Z12"
 # These files can be imported to add BUSCO annotations to the assembly contigs:
 
 blobtools add \
-    --busco $BTKOUT/BUSCO_Z1Z12/run_fungi_odb10/full_table.tsv \
+#    --busco $BTKOUT/BUSCO_Z1Z12/run_fungi_odb10/full_table.tsv \
+     --busco $BTKOUT/BUSCO_In1In12/run_fungi_odb10/full_table.tsv
     $BTKOUT
 

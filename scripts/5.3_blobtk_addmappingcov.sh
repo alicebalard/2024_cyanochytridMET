@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=21GB 
-#SBATCH --time=3-24:00:00
+#SBATCH --time=1-24:00:00
 #SBATCH --qos=standard              
 #SBATCH --partition=main,begendiv
 #SBATCH --constraint=no_gpu
@@ -28,16 +28,16 @@ cd /scratch/alicebalard/outData/blobtools
 ## https://blobtoolkit.genomehubs.org/blobtools2/blobtools2-tutorials/getting-started-with-blobtools2/#open_dataset
 
 ## First assembly: Z1 to Z12, only chytrids
-ASSEMBLY=/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta 
-READS1=/scratch/alicebalard/outData/assembly/combined_left.fq
-READS2=/scratch/alicebalard/outData/assembly/combined_right.fq
-BTKOUT=/scratch/alicebalard/outData/blobtools/Z1Z12assembly
+#ASSEMBLY=/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta 
+#READS1=/scratch/alicebalard/outData/assembly/combined_left.fq
+#READS2=/scratch/alicebalard/outData/assembly/combined_right.fq
+#BTKOUT=/scratch/alicebalard/outData/blobtools/Z1Z12assembly
 
 ## Second assembly: In1 to In12, chytrids infected by bacteria
-#ASSEMBLY=/scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
-#READS1=/scratch/alicebalard/outData/assembly_In/combined_left.fq
-#READS2=/scratch/alicebalard/outData/assembly_In/combined_right.fq
-#BTKOUT=/scratch/alicebalard/outData/blobtools/In1In12assembly
+ASSEMBLY=/scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
+READS1=/scratch/alicebalard/outData/assembly_In/combined_left.fq
+READS2=/scratch/alicebalard/outData/assembly_In/combined_right.fq
+BTKOUT=/scratch/alicebalard/outData/blobtools/In1In12assembly
 
 num_threads=$SLURM_CPUS_PER_TASK
 

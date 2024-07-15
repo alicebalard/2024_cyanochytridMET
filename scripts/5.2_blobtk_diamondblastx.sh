@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name=blobtk
+#SBATCH --job-name=blobtk_diamondblastx_In
 #SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
 #SBATCH --mail-user=alicebalard@zedat.fu-berlin.de  
 #SBATCH --mail-type=end
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=21GB 
+#SBATCH --mem=200GB 
 #SBATCH --time=1-24:00:00
 #SBATCH --qos=standard              
 #SBATCH --partition=main,begendiv
@@ -50,7 +50,7 @@ echo "Create DIAMOND hits..."
 module load BLAST+/2.13.0-gompi-2022a
 module load DIAMOND/2.0.13-GCC-11.2.0
 
-## Make diamond db
+## Make diamond db NB LOOOONG PROCESS!!
 ## diamond makedb -p $num_threads --in uniprot/reference_proteomes.fasta.gz --taxonmap uniprot/reference_proteomes.taxid_map --taxonnodes taxdump/nodes.dmp -d uniprot/reference_proteomes.dmnd
 
 ## Run diamond
@@ -70,6 +70,7 @@ echo "Add Diamond BLASTx hits to blobtools dir..."
 blobtools add \
     --hits $BTKOUT/diamond.out \
     --taxrule bestsumorder \
+    --replace \
     --taxdump /scratch/alicebalard/outData/blobtools/taxdump \
     $BTKOUT
 
