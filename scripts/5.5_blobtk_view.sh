@@ -1,7 +1,7 @@
 Run on my local machine
 
 conda activate btk
-scp alicebalard@curta.zedat.fu-berlin.de:/scratch/alicebalard/outData/blobtools/Z1Z12assembly/*json /home/alice/Documents/Erika-chytridProject/Z1Z12/.
+scp alicebalard@curta.zedat.fu-berlin.de:/scratch/alicebalard/outData/blobtools/Z1Z12/*json /home/alice/Documents/Erika-chytridProject/Z1Z12/.
 
 To observe:
 
