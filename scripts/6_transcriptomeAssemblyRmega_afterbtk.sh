@@ -7,8 +7,8 @@
 #SBATCH --mail-type=end
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=20
-#SBATCH --mem=450GB 
-#SBATCH --time=7-24:00:00
+#SBATCH --mem=300GB 
+#SBATCH --time=5-24:00:00
 #SBATCH --qos=standard              
 #SBATCH --partition=main,begendiv
 #SBATCH --constraint=no_gpu
@@ -21,20 +21,20 @@ cd /scratch/alicebalard/outData/assemblyFinal/
 
 ## Reads to be assembled:
 ZfungiL=/scratch/alicebalard/outData/blobtools/Z1Z12/filtered/out_1.fq
-ZfungiR=/scratch/alicebalard/outData/blobtools/Z1Z12/filtered/out_1.fq
+ZfungiR=/scratch/alicebalard/outData/blobtools/Z1Z12/filtered/out_2.fq
 InfungiL=/scratch/alicebalard/outData/blobtools/In1In12/filtered/out_1.fq
-InfungiR=/scratch/alicebalard/outData/blobtools/In1In12/filtered/out_1.fq
+InfungiR=/scratch/alicebalard/outData/blobtools/In1In12/filtered/out_2.fq
 
-zcat $ZfungiL $InfungiL > combined_left.fq
-zcat $ZfungiR $InfungiR > combined_right.fq
+cat $ZfungiL $InfungiL > combined_left.fq
+cat $ZfungiR $InfungiR > combined_right.fq
 
 echo "Number of left reads assembled in total:"
-zcat combined_left.fq | echo $((`wc -l`/4))
+cat combined_left.fq | echo $((`wc -l`/4))
 echo "Number of right reads assembled in total:"
-zcat combined_right.fq | echo $((`wc -l`/4))
+cat combined_right.fq | echo $((`wc -l`/4))
 
 num_threads=$SLURM_CPUS_PER_TASK
 echo "Transcriptome assembly running with $num_threads threads"
-MAX_MEM=450G
+MAX_MEM=300G
 
 Trinity --seqType fq --normalize_by_read_set --max_memory $MAX_MEM --left combined_left.fq --right combined_right.fq --CPU $num_threads
