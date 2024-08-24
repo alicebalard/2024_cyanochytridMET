@@ -15,4 +15,3 @@ To output a table:
 
 blobtools filter --table Z1Z12.table.tsv --table-fields gc,length,bestsumorder_kingdom,bestsumorder_family,bestsumorder_genus Z1Z12
 blobtools filter --table In1In12.table.tsv --table-fields gc,length,bestsumorder_kingdom,bestsumorder_family,bestsumorder_genus In1In12
-
