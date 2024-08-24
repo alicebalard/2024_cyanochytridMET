@@ -14,10 +14,8 @@
 module purge
 module add Trinity/2.10.0-foss-2019b-Python-3.7.4
 
-ASSEMBLY="/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta"
+## Assembly Final
 
-cd /scratch/alicebalard/outData/qualityAssembly
-
+ASSEMBLY="/scratch/alicebalard/outData/assemblyFinal/trinity_out_dir/Trinity.fasta"
 echo "basic contig statistics"
-
 $TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY
