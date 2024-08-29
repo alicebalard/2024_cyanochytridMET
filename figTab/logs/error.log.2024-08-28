@@ -1,0 +1,20 @@
+{
+  url: '/api/v1/identifiers/FINALTran',
+  method: 'GET',
+  httpVersion: '1.1',
+  host: 'localhost:8000',
+  userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0',
+  message: 'Forbidden',
+  level: '\x1B[31merror\x1B[39m',
+  timestamp: '2024-08-28T13:28:18.766Z'
+}
+{
+  url: '/api/v1/identifiers/FINALTran',
+  method: 'GET',
+  httpVersion: '1.1',
+  host: 'localhost:8000',
+  userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0',
+  message: 'Forbidden',
+  level: '\x1B[31merror\x1B[39m',
+  timestamp: '2024-08-28T13:28:37.644Z'
+}
