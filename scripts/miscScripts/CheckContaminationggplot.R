@@ -8,15 +8,12 @@ head(phylumBlast)
 head(kingdomBlast)
 head(scoresBlast)
 
-scoresBlast
-
 bitscores = scoresBlast[c(1, 6, 14, 15)]
 names(bitscores) = c("id", "percentSimilarity", "evalue", "bitscore")
 
 fungi <- kingdomBlast[kingdomBlast$bestsumorder_kingdom %in% "Fungi",]
 Fungi <- phylumBlast[phylumBlast$X_id %in% fungi$X_id,]
 rm(fungi)
-
 
 Fungi <- merge(Fungi, bitscores)
 library(scales)
@@ -39,5 +36,22 @@ ggplot(Fungi, aes(x=percentSimilarity, y=evalue))+
   scale_y_continuous(labels = scientific) +
   theme_bw()
 
-  
+ggplot(Fungi, aes(x=percentSimilarity, y=length, fill=assembly.reads_cov))+
+  geom_point(aes(size=length), shape = 21, alpha = .7)+
+  facet_wrap(.~bestsumorder_phylum)+
+  scale_fill_gradient(low = "blue", high = "red")+
+  theme_bw()
 
+ggplot(Fungi, aes(x=gc, y=length, fill=assembly.reads_cov))+
+  geom_point(aes(size=length), shape = 21, alpha = .7)+
+  facet_wrap(.~bestsumorder_phylum)+
+  scale_fill_gradient(low = "blue", high = "red")+
+  geom_hline(yintercept = 5000)+
+  theme_bw()
+  
+ggplot(Fungi, aes(x=length, y=evalue, fill=assembly.reads_cov))+
+  geom_point(aes(size=length), shape = 21, alpha = .7)+
+  facet_wrap(.~bestsumorder_phylum)+
+  scale_fill_gradient(low = "blue", high = "red")+
+  geom_hline(yintercept = 5000)+
+  theme_bw()
