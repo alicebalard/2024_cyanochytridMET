@@ -19,39 +19,42 @@ Fungi <- merge(Fungi, bitscores)
 library(scales)
 library(ggplot2)
 
-ggplot(Fungi, aes(x=percentSimilarity, y=evalue, fill=assembly.reads_cov))+
+P1 <- ggplot(Fungi, aes(x=percentSimilarity, y=evalue, fill=assembly.reads_cov))+
   geom_point(aes(size=length), shape = 21, alpha = .7)+
   facet_wrap(.~bestsumorder_phylum)+
   scale_fill_gradient(low = "blue", high = "red")+
   scale_y_continuous(labels = scientific) +
   theme_bw()
+P1
 
-ggplot(Fungi, aes(x=percentSimilarity, y=evalue))+
+P2<-ggplot(Fungi, aes(x=percentSimilarity, y=evalue))+
   geom_point(aes(size=length), shape = 21, alpha = .7)+
-  facet_wrap(.~bestsumorder_phylum)+
-  scale_y_continuous(labels = scientific) +
-  theme_bw()ggplot(Fungi, aes(x=percentSimilarity, y=evalue))+
-  geom_point(aes(size=assembly.reads_cov), shape = 21, alpha = .7)+
   facet_wrap(.~bestsumorder_phylum)+
   scale_y_continuous(labels = scientific) +
   theme_bw()
 
-ggplot(Fungi, aes(x=percentSimilarity, y=length, fill=assembly.reads_cov))+
+P2
+
+P3 <- ggplot(Fungi, aes(x=percentSimilarity, y=length, 
+                        fill=assembly.reads_cov))+
   geom_point(aes(size=length), shape = 21, alpha = .7)+
   facet_wrap(.~bestsumorder_phylum)+
   scale_fill_gradient(low = "blue", high = "red")+
   theme_bw()
+P3
 
-ggplot(Fungi, aes(x=gc, y=length, fill=assembly.reads_cov))+
+p4 <- ggplot(Fungi, aes(x=gc, y=length, fill=assembly.reads_cov))+
   geom_point(aes(size=length), shape = 21, alpha = .7)+
   facet_wrap(.~bestsumorder_phylum)+
   scale_fill_gradient(low = "blue", high = "red")+
   geom_hline(yintercept = 5000)+
   theme_bw()
-  
-ggplot(Fungi, aes(x=length, y=evalue, fill=assembly.reads_cov))+
-  geom_point(aes(size=length), shape = 21, alpha = .7)+
+p4
+
+Fungi$gc30to60 = (Fungi$gc <0.6 & Fungi$gc >0.3)
+
+P5 <- ggplot(Fungi, aes(x=gc, y=evalue, fill=gc30to60))+
+  geom_point(aes(size=length), shape = 21, alpha = .9)+
   facet_wrap(.~bestsumorder_phylum)+
-  scale_fill_gradient(low = "blue", high = "red")+
-  geom_hline(yintercept = 5000)+
   theme_bw()
+P5
