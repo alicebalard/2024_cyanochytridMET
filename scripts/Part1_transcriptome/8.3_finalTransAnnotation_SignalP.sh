@@ -26,3 +26,8 @@ coding_seqs=/scratch/alicebalard/outData/annotation/Trinotate/TransDecoder-Trans
 conda activate myannot
 signalp6 --fastafile $coding_seqs --output_dir sigP6outdir --format none --organism euk --mode fast --torch_num_threads 20
 conda deactivate
+
+## Add to SQLite
+TRINOTATE_HOME=/scratch/alicebalard/outData/annotation/Trinotate
+
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db chytridTrinotate.sqlite --LOAD_signalp sigP6outdir/output.gff3

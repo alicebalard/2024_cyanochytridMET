@@ -46,14 +46,25 @@ $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db chytridTrinotate.sqlit
            --run "swissprot_blastp swissprot_blastx pfam infernal" \
            --use_diamond
 
-## Run signalp6 and tmhmm outside because of python versions issues:
+## Run signalp6 (in previous script) and tmhmm outside because of python versions issues:
 conda activate myannot
 tmhmm-2.0c/bin/tmhmm --short $coding_seqs  > tmhmm.v2.out
 conda deactivate
 
 ## Add to SQLite
-$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db chytridTrinotate.sqlite --LOAD_signalp sigP6outdir/output.gff3
 $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db chytridTrinotate.sqlite --LOAD_tmhmmv2 tmhmm.v2.out
 
 ## Generate Trinotate report:
-Trinotate --db chytridTrinotate.sqlite --report --incl_pep --incl_trans > $TRINOTATE_HOME/allFungiTrinotate.tsv
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db chytridTrinotate.sqlite --report --incl_pep --incl_trans > $TRINOTATE_HOME/allFungiTrinotate.tsv
+
+## Simplify output for later use with DESeq2:
+cat $TRINOTATE_HOME/allFungiTrinotate.tsv | cut -f 1,2,3,13 > $TRINOTATE_HOME/allFungiTrinot_simplified.tsv
+
+awk 'BEGIN {OFS="\t"} 
+     NR==1 {print $0, "gene_name"} 
+     NR > 1 {split($3, a, "^"); print $0, a[1]}' $TRINOTATE_HOME/allFungiTrinot_simplified.tsv > $TRINOTATE_HOME/temp
+
+mv $TRINOTATE_HOME/temp $TRINOTATE_HOME/allFungiTrinot_simplified.tsv
+
+cp TRINOTATE_HOME/allFungiTrinot_simplified.tsv /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/figTab/.
+
