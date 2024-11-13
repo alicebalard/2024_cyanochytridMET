@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH --job-name=checkQualityAssembly
+#SBATCH --job-name=6.2_checkQualityAssembly
 #SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
 #SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --mail-user=alicebalard@zedat.fu-berlin.de
@@ -16,6 +16,6 @@ module add Trinity/2.10.0-foss-2019b-Python-3.7.4
 
 ## Assembly Final
 
-ASSEMBLY="/scratch/alicebalard/outData/assemblyFinal/trinity_out_dir/Trinity.fasta"
+ASSEMBLY="/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta"
 echo "basic contig statistics"
 $TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY
