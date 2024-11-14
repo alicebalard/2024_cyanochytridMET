@@ -37,9 +37,4 @@ PATH=$PATH:$TRINOTATE_HOME/infernal/bin
 ## Install signalP v6.0 fast in a conda environment (myannot)
 ## Install tmhmm v2.0 DONE in same environment. NB some edits done following trinotate tuto page
 
-###############
-## Dl databases:
-## $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --create --db chytridTrinotate.sqlite --trinotate_data_dir $TRINOTATE_HOME/DATADIR --use_diamond
-
-###################################################
 export TRINOTATE_DATA_DIR=/scratch/alicebalard/outData/annotation/Trinotate/DATADIR

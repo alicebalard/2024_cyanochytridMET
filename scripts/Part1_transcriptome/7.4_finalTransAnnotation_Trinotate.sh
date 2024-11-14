@@ -19,19 +19,26 @@ module load Anaconda3
 source ~/.bashrc
 conda init --all
 
-source /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/7.1_finalTransAnnotation_prepareTrinotate.sh
+## Install Trinotate and all dependencies in TRINOTATE_DATA_DIR
+source /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/Part1_transcriptome/7.1_finalTransAnnotation_prepareTrinotate.sh
 
 ## transcripts.fasta : your target transcriptome in fasta format
 transcripts=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta
 
 ## coding_seqs.pep : coding regions translated in fasta format (specific header formatting required - see below. Most use TransDecoder to generate this)
-coding_seqs=/scratch/alicebalard/outData/assemblyMergedFungi/transdecoder/Trinity.fasta.transdecoder.pep
+coding_seqs=/scratch/alicebalard/outData/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep
 
 ## gene_to_trans_map.tsv : pairwise mappings between gene and transcript isoform identifiers
 gene_to_trans_map=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map
 
-## database initialised before
-DB=/scratch/alicebalard/outData/assemblyMergedFungi/assemblyMergedFungi.sqlite
+OUTDIR=/scratch/alicebalard/outData/assemblyMergedFungi/annotation
+
+cd $OUTDIR
+
+## Initiate database in OUTDIR by dl important databases
+DB=/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi.sqlite
+
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --create --db $DB --trinotate_data_dir $TRINOTATE_HOME/DATADIR --use_diamond
 
 ## Initialize Trinotate sqlite database:
 $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --init \
@@ -49,26 +56,28 @@ $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --CPU 20 \
            --run "swissprot_blastp swissprot_blastx pfam infernal" \
            --use_diamond
 
-## Run signalp6 (in previous script 7.3) and tmhmm outside because of python versions issues:
+## Run signalp6 (in previous script 7.3)
+## Add to SQLite
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_signalp sigP6outdir/output.gff3
+
+## Run tmhmm outside because of python versions issues:
 conda activate myannot
 tmhmm-2.0c/bin/tmhmm --short $coding_seqs  > tmhmm.v2.out
 conda deactivate
 
 ## Add to SQLite
-$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_signalp sigP6outdir/output.gff3
-
 $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_tmhmmv2 tmhmm.v2.out
 
 ## Generate Trinotate report:
-$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --report --incl_pep --incl_trans > $TRINOTATE_HOME/assemblyMergedFungi.tsv
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --report --incl_pep --incl_trans > assemblyMergedFungi.tsv
 
 ## Simplify output for later use with DESeq2:
-cat $TRINOTATE_HOME/allFungiTrinotate.tsv | cut -f 1,2,3,13 > $TRINOTATE_HOME/assemblyMergedFungi_simplified.tsv
+cat assemblyMergedFungi.tsv | cut -f 1,2,3,13 > assemblyMergedFungi_simplified.tsv
 
 awk 'BEGIN {OFS="\t"} 
      NR==1 {print $0, "gene_name"} 
-     NR > 1 {split($3, a, "^"); print $0, a[1]}' $TRINOTATE_HOME/assemblyMergedFungi_simplified.tsv > $TRINOTATE_HOME/temp
+     NR > 1 {split($3, a, "^"); print $0, a[1]}' assemblyMergedFungi_simplified.tsv > temp
 
-mv $TRINOTATE_HOME/temp $TRINOTATE_HOME/assemblyMergedFungi_simplified.tsv
+mv temp assemblyMergedFungi_simplified.tsv
 
-cp TRINOTATE_HOME/assemblyMergedFungi_simplified.tsv /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/figTab/.
+mv assemblyMergedFungi_simplified.tsv /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/.

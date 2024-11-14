@@ -19,9 +19,9 @@ module load Anaconda3
 source ~/.bashrc
 conda init --all
 
-cd /scratch/alicebalard/outData/assemblyMergedFungi
+cd /scratch/alicebalard/outData/assemblyMergedFungi/annotation
 
-coding_seqs=/scratch/alicebalard/outData/assemblyMergedFungi/transdecoder/Trinity.fasta.transdecoder.pep
+coding_seqs=transdecoder/Trinity.fasta.transdecoder.pep
 
 conda activate myannot
 signalp6 --fastafile $coding_seqs --output_dir sigP6outdir --format none --organism euk --mode fast --torch_num_threads 20

@@ -18,7 +18,7 @@ cd /scratch/alicebalard/outData/annotation/Trinotate/TransDecoder-TransDecoder-v
 ## Final filtered transcriptome:
 TRAN=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta
 GTM=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map
-OUT=/scratch/alicebalard/outData/assemblyMergedFungi/transdecoder
+OUT=/scratch/alicebalard/outData/assemblyMergedFungi/annotation/transdecoder
 
 ## Step 1: extract the long open reading frames
 perl TransDecoder.LongOrfs -t $TRAN --gene_trans_map $GTM --output_dir $OUT
