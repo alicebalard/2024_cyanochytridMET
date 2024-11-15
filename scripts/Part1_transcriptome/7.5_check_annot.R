@@ -53,12 +53,15 @@ transc <- read.fasta("/scratch/alicebalard/outData/assemblyMergedFungi/trinity_o
 transc1 <- transc[names(transc) %in% eukTransc]
 
 write.fasta(transc1,
-            names(trans1),
-            file.out= "/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta")
+            names(transc1),
+            file.out= "/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta", nbchar=50000)
+## NB to upper case in bash:
+## awk '/^>/ {print; next} {print toupper($0)}' Trinity_eukaryoteHits.fasta > temp
+## mv temp Trinity_eukaryoteHits.fasta
 
 write.fasta(transc[names(transc) %in% fungTransc],
             names(transc[names(transc) %in% fungTransc]),
-            file.out= "/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_fungiHits.fasta")
+            file.out= "/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_fungiHits.fasta", nbchar=50000)
 
 ###############################################
 ## Subset gene-trans-map for the Eukaryotic one
