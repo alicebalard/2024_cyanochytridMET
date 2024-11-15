@@ -79,5 +79,3 @@ awk 'BEGIN {OFS="\t"}
      NR > 1 {split($3, a, "^"); print $0, a[1]}' assemblyMergedFungi_simplified.tsv > temp
 
 mv temp assemblyMergedFungi_simplified.tsv
-
-mv assemblyMergedFungi_simplified.tsv /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/.

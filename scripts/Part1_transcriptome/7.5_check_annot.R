@@ -1,7 +1,6 @@
-## Compare old and new annotations
-oldAnnot <- read.csv("data/allFungiTrinot_simplified.tsv", sep = "\t")
 
-newAnnot <- read.csv("data/assemblyMergedFungi_simplified.tsv", sep = "\t")
+## Load annotation
+newAnnot <- read.csv("/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_simplified.tsv", sep = "\t")
 
 ## Remove everything before "Full"; Extract the first word after the first "^"; rm ;
 extractBlastxTaxa <- function(x){
@@ -18,20 +17,13 @@ extractBlastxTaxa <- function(x){
     return(x)
 }
 
-oldAnnot <- extractBlastxTaxa(oldAnnot)
 newAnnot <- extractBlastxTaxa(newAnnot)
-
-table(oldAnnot$blastxKingdom)
-##     .   Archaea  Bacteria Eukaryota   Viruses 
-##   20863       142      3359     57740       119 
 
 table(newAnnot$blastxKingdom)
 ##      .   Archaea  Bacteria Eukaryota   Viruses 
 ##  48688       192      5801     61449       165 
 
 ## NB duplicated isoforms
-
-table(oldAnnot$blastxKingdom, oldAnnot$blastxPhylum)
 table(newAnnot$blastxKingdom, newAnnot$blastxPhylum)
 
 nrow(newAnnot[newAnnot$blastxKingdom %in% "Eukaryota",])/
@@ -70,8 +62,10 @@ write.fasta(transc[names(transc) %in% fungTransc],
 
 ###############################################
 ## Subset gene-trans-map for the Eukaryotic one
-
 gtm <- read.table("/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map") 
 
 write.table(gtm[gtm$V2 %in% eukTransc,], "/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map", row.names=F, quote=F, col.names = F)
 
+#################################################
+## Subset annotation file for the Eukaryotic hits
+write.table(newAnnot[newAnnot$blastxKingdom %in% "Eukaryota",], "/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified.tsv", sep = "\t", quote = F, row.names=F, col.names=T)
