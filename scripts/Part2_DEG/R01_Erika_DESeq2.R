@@ -5,36 +5,72 @@ library("pheatmap")
 library("RColorBrewer")
 library(ggplot2)
 
-# Set path
-setwd("/Users/akire/Documents/IGB-tasks/Transcriptome_assay/diff_exp/data")
-
 ##############
 # Data loading
-## case 1- one alignment 
-### Load the count matrix
-count_matrixr <- read.table("RSEM.gene.counts.matrix", header=T)
+
+## Chytrid annotation
+annotChyt <- read.csv("../../data/allFungiTrinot_simplified.tsv", sep ="\t")
+## rm multiple lines due to multiple sources of annotations
+annotChyt <- unique(annotChyt)
+
+## extract GO terms in their own column for GO analysis downstream
+annotChyt$GO <- 
+  sapply(annotChyt$gene_ontology_BLASTX, function(x) {
+    go_terms <- str_extract_all(x, "GO:\\d+")
+    paste(unlist(go_terms), collapse = ",")
+  })
+
+annotChytFungi <- annotChyt[grep("Fungi", annotChyt$sprot_Top_BLASTX_hit),]
 
 ### Load all the samples
-samples_data <- read.table("/Users/akire/Documents/IGB-tasks/Transcriptome_assay/diff_exp/required_tables/sample_data_r.txt", header = TRUE, sep = "\t")
+samples_data <- read.table(
+  "../../data/sample_data_remove_r.txt", header = TRUE, sep = "\t")
 
+### Load the count matrix
+count_matrixr <- read.csv(
+  "../../data/RSEM_remove.gene.counts.matrix", sep = "\t")
+
+#############
 ## Split by: everything with chytrid + everything with cyano
 samples_chytrid_genome <- samples_data[grep("chy|both", samples_data$condition),]
-count_matrixr_chytridgenome <- count_matrixr[grep("cyano", row.names(count_matrixr),invert = TRUE ),]
+
+### Select chytrid genes
+count_matrixr_chytridgenome <- count_matrixr[grep("cyano", count_matrixr$X, invert = T),]
+
+## rename chytrid genes
+### gene number and name without any additional information (e.g. gene 1 TRINITY_DN43456_c0_g1_i1).
+new_gene_trans_map_fungi <- read.table(
+  "../../data/new_gene_trans_map_fungi.txt")
+new_gene_trans_map_fungi$V3 <- annotChyt$gene_name[
+  match(new_gene_trans_map_fungi$V2, annotChyt$transcript_id)]
+
+count_matrixr_chytridgenome$isoform <- new_gene_trans_map_fungi$V2[
+  match(count_matrixr_chytridgenome$X, new_gene_trans_map_fungi$V1)]
+
+count_matrixr_chytridgenome$geneName <- new_gene_trans_map_fungi$V3[
+  match(count_matrixr_chytridgenome$X, new_gene_trans_map_fungi$V1)]
+
+head(count_matrixr_chytridgenome)
+
+### SUBSELECT ONLY FUNGI (to be corrected earlier)
+count_matrixr_chytridgenome <- count_matrixr_chytridgenome[
+  count_matrixr_chytridgenome$X %in% annotChytFungi$gene_name,]
+
+
+table(count_matrixr_chytridgenome$X %in% ".")
+
+count_matrixr_chytridgenome[
+  count_matrixr_chytridgenome$X %in% ".",]
+
+
+## Select samples chytrid and both
 count_matrixr_chytridgenome <- count_matrixr_chytridgenome[grep("chy|both", names(count_matrixr_chytridgenome))]
 
+###################
+## 2. cyanobacteria (tbc)
 samples_cyano_genome <- samples_data[grep("cyano|both", samples_data$condition),]
 count_matrixr_cyanogenome <- count_matrixr[grep("cyano", row.names(count_matrixr)),]
 count_matrixr_cyanogenome <- count_matrixr_cyanogenome[grep("cyano|both", names(count_matrixr_cyanogenome))]
-
-## case 2- four alignments
-# RSEM_cyano _chytri _both_cyano _both_chytrid
-datar_chytrid <- read.table("RSEM_chytrid.gene.counts.matrix", header=T)
-datar_both_chytrid <- read.table("RSEM_both_chytrid.gene.counts.matrix", header=T)
-count_matrixr_chytridgenome_CASE2 <-cbind(datar_chytrid, datar_both_chytrid)
-
-datar_cyano <- read.table("RSEM_cyano.gene.counts.matrix", header=T)
-datar_both_cyano <- read.table("RSEM_both_cyano.gene.counts.matrix", header=T)
-count_matrixr_cyanogenome_CASE2 <- cbind(datar_cyano, datar_both_cyano)
 
 #################
 # DESeq2 analysis- for this analysis I need un-normalized counts. 
@@ -88,24 +124,14 @@ calculateContrasts <- function(my_samples, my_countsmatrix, my_org){
               vstr=vstr))
 }
 
-contrast_cyanogenome_Case1 <- calculateContrasts(
+contrast_cyanogenome <- calculateContrasts(
   my_samples=samples_cyano_genome,
   my_countsmatrix=count_matrixr_cyanogenome,
   my_org="cyano")
 
-contrast_chytridgenome_Case1 <- calculateContrasts(
+contrast_chytridgenome <- calculateContrasts(
   my_samples=samples_chytrid_genome,
   my_countsmatrix=count_matrixr_chytridgenome,
-  my_org="chy")
-
-contrast_cyanogenome_Case2 <- calculateContrasts(
-  my_samples=samples_cyano_genome,
-  my_countsmatrix=count_matrixr_cyanogenome_CASE2,
-  my_org="cyano")
-
-contrast_chytridgenome_Case2 <- calculateContrasts(
-  my_samples=samples_chytrid_genome,
-  my_countsmatrix=count_matrixr_chytridgenome_CASE2,
   my_org="chy")
 
 plotHeatmap <- function(vstr){
@@ -123,9 +149,8 @@ plotHeatmap <- function(vstr){
 }
 
 plotHeatmap(contrast_cyanogenome_Case1$vstr)
-plotHeatmap(contrast_cyanogenome_Case2$vstr)
 plotHeatmap(contrast_chytridgenome_Case1$vstr)
-plotHeatmap(contrast_chytridgenome_Case2$vstr)
+
 
 # heatmap of the sample-to-sample distances
 
