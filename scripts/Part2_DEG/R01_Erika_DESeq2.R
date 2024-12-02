@@ -8,6 +8,8 @@ library(ggplot2)
 ##############
 # Data loading
 
+## to be updated with latest Erika script
+
 ## Chytrid annotation
 annotChyt <- read.csv("../../data/allFungiTrinot_simplified.tsv", sep ="\t")
 ## rm multiple lines due to multiple sources of annotations
