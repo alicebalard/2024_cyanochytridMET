@@ -1,4 +1,4 @@
-baseMean	log2FoldChange	lfcSE	stat	pvalue	padj	group
+geneName	baseMean	log2FoldChange	lfcSE	stat	pvalue	padj	group
 RASB_ASPFU	86.4865104821593	8.00714593099447	1.62244522832287	4.93523343112884	8.00549531025518e-07	0.000856587998197304	infection effect on chytrid gene expression in absence of MET
 ERAP1_RAT	51.8614221813697	7.99360871691009	1.75991716106205	4.54203691728661	5.57132814546334e-06	0.00201053787300269	infection effect on chytrid gene expression in absence of MET
 KKCC2_RAT	40.5565574982483	-4.36288376964762	0.961079557145655	-4.53956567612894	5.63702207383933e-06	0.00201053787300269	infection effect on chytrid gene expression in absence of MET
