@@ -120,4 +120,7 @@ fullDEGTable = rbind(
   V_cyano_met_effect_1org$signifGenes %>% mutate(group = "MET effect on cyanobacteria gene expression in absence of chytrid"),
   V_cyano_met_effect_2orgs$signifGenes %>% mutate(group = "MET effect on cyanobacteria gene expression in presence of chytrid"))
 
-write.table(x = fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", quote = F, sep = "\t")
+fullDEGTable$geneName = rownames(fullDEGTable)
+fullDEGTable=fullDEGTable[c("geneName", names(fullDEGTable)[!names(fullDEGTable) %in% "geneName"])]
+
+write.table(x = fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", quote = F, sep = "\t", row.names = F)
