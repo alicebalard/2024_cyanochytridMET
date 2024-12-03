@@ -6,8 +6,9 @@
 #################
 ## Libraries load
 list.of.packages <- c(
-  "ggplot2",
-  "goEnrichment",
+  "ggplot2", "reshape2","viridis", "pheatmap","RColorBrewer", "cowplot", "ggvenn",
+  "WGCNA",
+  # "goEnrichment",
   "stringr", # to modify characters
   "tidyverse")  # tidyverse will pull in ggplot2, readr, other useful libraries
 
@@ -100,7 +101,9 @@ bioc_packages <- c("Category", # for hypergeometric GO test
                    "GOstats", # for GO analysis
                    "GSEABase",  # for GO term GeneSetCollection
                    "GO.db", # for GO slim retrieving
-                   "qvalue" # for FDR after PQLseq
+                   "qvalue", # for FDR after PQLseq
+                   "impute", "preprocessCore",#for WGCNA
+                   "DESeq2"
 ) 
 # devtools::install_version("dbplyr", version = "2.3.4") # if buggy UniProt.ws
 
@@ -143,11 +146,11 @@ install_and_load_bioc_packages(bioc_packages)
 ## Chytrid
 # assembly: /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta
 # gene_trans_map: /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map
-gene_trans_map_chytrid <- read.csv("/home/alice/Documents/GIT/2024_cyanochytridMET/ignoreThinkpad/assembly15nov24/Trinity_eukaryoteHits.fasta.gene_trans_map", 
+gene_trans_map_chytrid <- read.csv("../../gitignore/Trinity_eukaryoteHits.fasta.gene_trans_map", 
                                    header = F, sep=" ")
 
 # annotation: /scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified.tsv
-annotationChytrid <- read.csv("/home/alice/Documents/GIT/2024_cyanochytridMET/ignoreThinkpad/assembly15nov24/assemblyMergedFungi_filterEuk_simplified.tsv", sep = "\t")
+annotationChytrid <- read.csv("../../gitignore/assemblyMergedFungi_filterEuk_simplified.tsv", sep = "\t")
 
 ## Cyanobacteria
 # 1. header_lookup_table.txt This file contains the shorter names I tried for the cyanobacterium genes and the full name separated by a tab. For the short name I add a number that represents the gene (1...4428) and the g1 and i1 even though each gene has only one isoform. For example
@@ -165,3 +168,5 @@ header_lookup_table$V1 = gsub(">", "", header_lookup_table$V1)
 # match with gene trans map
 gene_trans_map_cyano$protein = header_lookup_table$protein[
   match(gene_trans_map_cyano$V2, header_lookup_table$V1)]
+
+source("functions.R")

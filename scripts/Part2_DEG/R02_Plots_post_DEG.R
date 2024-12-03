@@ -1,7 +1,4 @@
-source("dataLoad.R")
-
-## Read in DESeq2 results:
-load("../../data/run_DESEQ2_Erika/DESeq2Results_6comp_final_hope_wo_mintpm_021224.Rdata")
+source("R01_Erika_DESeq2.R")
 
 ##################################################
 ## Rename DESEq2 files with meaningfull gene names
@@ -11,11 +8,10 @@ giveGoodGeneNameChytrid <- function(chytridDESEq2){
     match(row.names(chytridDESEq2), annotationChytrid$X.gene_id)]
   return(chytridDESEq2)
 }
-
-chytrid_inf_effect_control <- giveGoodGeneNameChytrid(chytrid_inf_effect_control)
-chytrid_inf_effect_met <- giveGoodGeneNameChytrid(chytrid_inf_effect_met)
-chytrid_met_effect_1org <- giveGoodGeneNameChytrid(chytrid_met_effect_1org)
-chytrid_met_effect_2orgs <- giveGoodGeneNameChytrid(chytrid_met_effect_2orgs)
+chytrid_inf_effect_control <- giveGoodGeneNameChytrid(contrast_chytridgenome$resr_inf_effect_control)
+chytrid_inf_effect_met <- giveGoodGeneNameChytrid(contrast_chytridgenome$resr_inf_effect_met)
+chytrid_met_effect_1org <- giveGoodGeneNameChytrid(contrast_chytridgenome$resr_met_effect_1org)
+chytrid_met_effect_2orgs <- giveGoodGeneNameChytrid(contrast_chytridgenome$resr_met_effect_2orgs)
 
 giveGoodGeneNameCyano <- function(cyanoDESEq2){
   row.names(cyanoDESEq2) = gene_trans_map_cyano$protein[
@@ -23,10 +19,10 @@ giveGoodGeneNameCyano <- function(cyanoDESEq2){
   return(cyanoDESEq2)
 }
 
-cyano_inf_effect_control <- giveGoodGeneNameCyano(cyano_inf_effect_control)
-cyano_inf_effect_met <- giveGoodGeneNameCyano(cyano_resr_inf_effect_met)
-cyano_met_effect_1org <- giveGoodGeneNameCyano(cyano_met_effect_1org)
-cyano_met_effect_2orgs <- giveGoodGeneNameCyano(cyano_met_effect_2orgs)
+cyano_inf_effect_control <- giveGoodGeneNameCyano(contrast_cyanogenome$resr_inf_effect_control)
+cyano_inf_effect_met <- giveGoodGeneNameCyano(contrast_cyanogenome$resr_inf_effect_met)
+cyano_met_effect_1org <- giveGoodGeneNameCyano(contrast_cyanogenome$resr_met_effect_1org)
+cyano_met_effect_2orgs <- giveGoodGeneNameCyano(contrast_cyanogenome$resr_met_effect_2orgs)
 
 mylistResDESEQ2 <- list(chytrid_inf_effect_control=chytrid_inf_effect_control,
                         chytrid_inf_effect_met=chytrid_inf_effect_met,
@@ -58,57 +54,38 @@ makeVolcano <- function(res, title){
   return(list(signifGenes = ressig, plot = plot))
 }
 
-hist(chytrid_inf_effect_control$log2FoldChange, breaks = 100)
-
-chytrid_inf_effect_control[
-  !is.na(chytrid_inf_effect_control$log2FoldChange) & 
-  chytrid_inf_effect_control$log2FoldChange < -20,]
-
-range(mylistResDESEQ2$cyano_met_effect_1org$log2FoldChange, na.rm = T)
-## TOO BIG
-
 ## open bigger window
-dev.new(width = 15, height = 12)
-
 V_chytrid_inf_effect_control <- makeVolcano(
   res = chytrid_inf_effect_control,
   title = "infecting vs non infecting chytrid gene expression, no MET")
-V_chytrid_inf_effect_control$plot
 
 V_chytrid_inf_effect_met <- makeVolcano(
   res = chytrid_inf_effect_met,
   title = "infecting vs non infecting chytrid gene expression, MET")
-V_chytrid_inf_effect_met$plot
 
 V_chytrid_met_effect_1org <- makeVolcano(
   res = chytrid_met_effect_1org,
   title = "MET effect on chytrid gene expression")
-V_chytrid_met_effect_1org$plot
 
 V_chytrid_met_effect_2orgs <- makeVolcano(
   res = chytrid_met_effect_2orgs,
   title = "MET effect on chytrid infecting bacteria gene expression")
-V_chytrid_met_effect_2orgs$plot
 
 V_cyano_inf_effect_control <- makeVolcano(
   res = cyano_inf_effect_control,
   title = "infected vs non infected cyano gene expression, no MET")
-V_cyano_inf_effect_control$plot
 
 V_cyano_inf_effect_met <- makeVolcano(
   res = cyano_inf_effect_met,
   title = "infected vs non infected cyano gene expression, MET")
-V_cyano_inf_effect_met$plot
 
 V_cyano_met_effect_1org <- makeVolcano(
   res = cyano_met_effect_1org,
   title = "MET effect on cyano gene expression")
-V_cyano_met_effect_1org$plot
 
 V_cyano_met_effect_2orgs <- makeVolcano(
   res = cyano_met_effect_2orgs,
   title = "MET effect on cyano infecting bacteria gene expression")
-V_cyano_met_effect_2orgs$plot
 
 ## Extreme log2 fold changes could also arise from issues related to:
 ### Low counts: If the gene has very low counts in one condition (e.g., zero or near-zero),
@@ -116,10 +93,31 @@ V_cyano_met_effect_2orgs$plot
 ### Normalization methods: Ensure appropriate normalization techniques are applied during 
 # the analysis. Poor normalization can distort fold change calculations.
 
-cyano_met_effect_2orgs[
-  row.names(cyano_met_effect_2orgs) %in% gene_trans_map_cyano[
-    grep("PadR", gene_trans_map_cyano$protein),"protein"],]
+## open bigger window
+dev.new(width = 15, height = 12)
+pdf("../../figures/Fig1_chytrid_volc.pdf", width = 15, height = 15)
+cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
+                   V_chytrid_inf_effect_met$plot,
+                   V_chytrid_met_effect_1org$plot,
+                   V_chytrid_met_effect_2orgs$plot)
+dev.off()
 
-RSME_final_hope.gene_cyano[
-  RSME_final_hope.gene_cyano[,1] %in% gene_trans_map_cyano[
-  grep("PadR", gene_trans_map_cyano$protein),"V1"],]
+dev.new(width = 15, height = 12)
+pdf("../../figures/Fig2_cyano_volc.pdf", width = 15, height = 15)
+cowplot::plot_grid(V_cyano_inf_effect_control$plot,
+                   V_cyano_inf_effect_met$plot,
+                   V_cyano_met_effect_1org$plot,
+                   V_cyano_met_effect_2orgs$plot)
+dev.off()
+
+fullDEGTable = rbind(
+  V_chytrid_inf_effect_control$signifGenes %>% mutate(group = "infection effect on chytrid gene expression in absence of MET"),
+  V_chytrid_inf_effect_met$signifGenes %>% mutate(group = "infection effect on chytrid gene expression in presence of MET"),
+  V_chytrid_met_effect_1org$signifGenes %>% mutate(group = "MET effect on chytrid gene expression in absence of cyanobacteria"),
+  V_chytrid_met_effect_2orgs$signifGenes %>% mutate(group = "MET effect on chytrid gene expression in presence of cyanobacteria"),
+  V_cyano_inf_effect_control$signifGenes %>% mutate(group = "infection effect on cyanobacteria gene expression in absence of MET"),
+  V_cyano_inf_effect_met$signifGenes %>% mutate(group = "infection effect on cyanobacteria gene expression in presence of MET"),
+  V_cyano_met_effect_1org$signifGenes %>% mutate(group = "MET effect on cyanobacteria gene expression in absence of chytrid"),
+  V_cyano_met_effect_2orgs$signifGenes %>% mutate(group = "MET effect on cyanobacteria gene expression in presence of chytrid"))
+
+write.table(x = fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", quote = F, sep = "\t")

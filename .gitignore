@@ -2,3 +2,6 @@ ignoreThinkpad
 
 ## on the server:
 scripts/logs_dir/
+
+## everywhere
+gitignore
