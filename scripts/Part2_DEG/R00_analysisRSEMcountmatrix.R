@@ -8,7 +8,7 @@ RSEM_final_hope.gene <-
 ##########################################################################
 ## Split by type of genes depending on in which samples they are expressed
 # (1) chytrid genes expressed in chytrid alone and infecting --> give to Erika for DESEq2 1623 genes
-# (2) cyanobacteri genes expressed in cyano alone and infected --> give to Erika for DESEq2 3420 genes
+# (2) cyanobacteria genes expressed in cyano alone and infected --> give to Erika for DESEq2 3420 genes
 # (3) a mix that we need to understand --> GO analysis
 a = ifelse(rowSums(RSEM_final_hope.gene[grep("chy", names(RSEM_final_hope.gene))]) !=0,
            "in_chytrid_alone", "")
@@ -22,9 +22,13 @@ RSEM_final_hope.gene$whichOrg <- trimws(paste(a,b,c, sep = " "))
 RSEM_final_hope.gene$whichTranscriptome <- ifelse(
   grepl("TRINITY", RSEM_final_hope.gene$X), "chytrid", "cyano")
 
+RSEM_final_hope.gene$whichOrg %>% head(20)
+
+RSEM_final_hope.gene[8,]
+
 table(RSEM_final_hope.gene$whichTranscriptome,
       RSEM_final_hope.gene$whichOrg)
-#              in_both_organisms in_both_organisms in_cyano_alone in_chytrid_alone
+#            0  in_both_organisms in_both_organisms in_cyano_alone in_chytrid_alone
 # chytrid  679               1764                              751              360
 # cyano    629                  1                             3420                0
 # 
@@ -35,6 +39,60 @@ table(RSEM_final_hope.gene$whichTranscriptome,
 #         in_chytrid_alone in_both_organisms in_cyano_alone in_cyano_alone
 # chytrid                                               140             16
 # cyano                                                 161            215
+
+###################
+## Define groups ##
+###################
+## Figure X ##
+
+##### 1. rm contamination #####
+# chytrid genes also found in when cyanobacteria is alone:
+# chytrid + in_both_organisms in_cyano_alone
+# chytrid + in_chytrid_alone  in_cyano_alone
+# chytrid + in_chytrid_alone in_both_organisms in_cyano_alone
+# chytrid + in_cyano_alone
+
+write.csv(RSEM_final_hope.gene[
+  RSEM_final_hope.gene$whichTranscriptome %in% "chytrid" & RSEM_final_hope.gene$whichOrg %in% 
+    c("in_both_organisms in_cyano_alone",
+      "in_chytrid_alone  in_cyano_alone",
+      "in_chytrid_alone in_both_organisms in_cyano_alone",
+      "in_cyano_alone"),"X"],
+  "../../data/listOfTranscriptContaminant_toRmFromChytridTranscriptome", quote = F, row.names = F)
+
+###########
+
+# 1764 chytrid in_both_organisms --> virulence genes of chytrid!!! 10 filaments with TONS of infection
+## TO DO
+# in how many samples are they found (>half)
+# top expressed
+# --> GO on these to find the big functions
+# DEG MET/not MET --> does met affects the virulence?
+
+# 3420 defense vs infection genes -->DEG
+
+# 751 wrong transcripts, not chytrids! but cyanobacteria
+## TO DO: rm from the chytrid transcriptome
+
+# 360 only zoospore transcripts
+# in how many samples are they found (>half)
+
+# 5 contaminants in_chytrid_alone  in_cyano_alone to rm from 
+## TO DO: rm from the chytrid transcriptome
+
+## 1623 chytrid genes --> DEG
+
+## 140 in_chytrid_alone in_both_organisms in_cyano_alone 
+## TO DO: rm from the chytrid transcriptome
+## RM from cyano 161
+
+# 16 ## TO DO: rm from the chytrid transcriptome
+# 215 --> cyano genes only expressed outside of infection?
+## TO DO
+# in how many samples are they found (>half)
+# top expressed
+# --> GO on these to find the big functions
+# DEG MET/not MET --> does met affects the virulence?
 
 # (1) chytrid genes expressed in chytrid alone and infecting --> give to Erika for DESEq2 1623 genes
 

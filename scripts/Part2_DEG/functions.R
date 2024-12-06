@@ -4,7 +4,7 @@
 
 makeClusterWGCNA <- function(datExpr){
   gsg = WGCNA::goodSamplesGenes(datExpr, verbose = 3)
-  gsg$allOK
+  message(gsg$allOK)
   if (!gsg$allOK){
     # Optionally, print the gene and sample names that were removed:
     if (sum(!gsg$goodGenes)>0) 
