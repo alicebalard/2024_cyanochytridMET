@@ -1,7 +1,6 @@
 ## List of functions used
 # makeClusterWGCNA
 
-
 makeClusterWGCNA <- function(datExpr){
   gsg = WGCNA::goodSamplesGenes(datExpr, verbose = 3)
   message(gsg$allOK)
