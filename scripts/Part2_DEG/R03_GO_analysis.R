@@ -113,6 +113,9 @@ getGOBubbleZ <- function(universe, annotation, GO_df, group, isbubble=T, isDE=T,
   }
 }
 
+
+
+
 ## For the comparison:
 ## Plot GO
 resclassicGO <- list(getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
@@ -137,6 +140,15 @@ names(resBubbleZ) <- names(mylistResDESEQ2)[c(3)]
 
 resclassicGO$chytrid_met_effect_1org$enrichment
 resBubbleZ$chytrid_met_effect_1org$enrichment
+
+################
+## group a: 124 cyano genes only expressed outside of infection,
+## at least in half of each group met/not met
+getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
+             GO_df = GO_chytrid, group = names(mylistResDESEQ2)[1], isbubble = F, 
+             isDE = F, genelist = annotationChytrid$gene_name[match(rownames(RSEM_final_hope.gene_a), 
+                                                                  annotationChytrid$custom_gene_name)])
+
 
 ################
 ## group d: 124 cyano genes only expressed outside of infection,
