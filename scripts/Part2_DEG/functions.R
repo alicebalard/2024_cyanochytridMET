@@ -27,7 +27,7 @@ makeClusterWGCNA <- function(datExpr){
   return(data.frame(t(datExpr)))
 }
 
-makeVolcano <- function(res, title){
+makeVolcano <- function(res, title, subtitle){
   results_df = as.data.frame(res)
   results_df = results_df[order(results_df$padj),]
   
@@ -39,7 +39,8 @@ makeVolcano <- function(res, title){
                          lab = row.names(results_df),
                          x = 'log2FoldChange', title = title,
                          y = 'padj', pCutoff = 0.05,
-                         drawConnectors = TRUE, labSize = 3)
+                         drawConnectors = TRUE, labSize = 3) + 
+    ggtitle(label = title, subtitle = subtitle) 
   
   return(list(signifGenes = ressig, plot = plot))
 }

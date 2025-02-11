@@ -155,7 +155,7 @@ RSEM_final_hope.gene_chytrid = RSEM_final_hope.gene_chytrid[
 
 # if (!requireNamespace("BiocManager", quietly = TRUE))
   # install.packages("BiocManager")
-# BiocManager::install("NOISeq")
+## BiocManager::install("NOISeq")
 
 library(NOISeq)
 
@@ -226,51 +226,61 @@ contrast_cyanogenome <- calculateContrasts(
 ## Volcano plots
 V_chytrid_inf_effect_control <- makeVolcano(
   res = contrast_chytridgenome$resr_inf_effect_control,
-  title = "infecting vs non infecting chytrid gene expression, no MET")
+  title = "Infection effect on chytrid gene expression", 
+  subtitle = "absence of metolachlor")
 
 V_chytrid_inf_effect_met <- makeVolcano(
   res = contrast_chytridgenome$resr_inf_effect_met,
-  title = "infecting vs non infecting chytrid gene expression, MET")
+  title = "Infection effect on chytrid gene expression", 
+  subtitle = "presence of metolachlor")
 
 V_chytrid_met_effect_1org <- makeVolcano(
   res = contrast_chytridgenome$resr_met_effect_1org,
-  title = "MET effect on chytrid gene expression")
+  title = "Metolachlor effect on chytrid gene expression", 
+  subtitle = "free-living zoospores")
 
 V_chytrid_met_effect_2orgs <- makeVolcano(
   res = contrast_chytridgenome$resr_met_effect_2orgs,
-  title = "MET effect on chytrid infecting bacteria gene expression")
+  title = "Metolachlor effect on chytrid gene expression", 
+  subtitle = "during infection")
 
 V_cyano_inf_effect_control <- makeVolcano(
   res = contrast_cyanogenome$resr_inf_effect_control,
-  title = "infected vs non infected cyano gene expression, no MET")
+  title = "Infection effect on cyanobacteria gene expression", 
+  subtitle = "absence of metolachlor")
 
 V_cyano_inf_effect_met <- makeVolcano(
   res = contrast_cyanogenome$resr_inf_effect_met,
-  title = "infected vs non infected cyano gene expression, MET")
+  title = "Infection effect on cyanobacteria gene expression", 
+  subtitle = "presence of metolachlor")
 
 V_cyano_met_effect_1org <- makeVolcano(
   res = contrast_cyanogenome$resr_met_effect_1org,
-  title = "MET effect on cyano gene expression")
+  title = "Metolachlor effect on cyanobacteria gene expression", 
+  subtitle = "uninfected cyanobacteria")
 
 V_cyano_met_effect_2orgs <- makeVolcano(
   res = contrast_cyanogenome$resr_met_effect_2orgs,
-  title = "MET effect on cyano infecting bacteria gene expression")
+  title = "Metolachlor effect on cyanobacteria gene expression", 
+  subtitle = "infected cyanobacteria")
 
 ## open bigger window
 dev.new(width = 15, height = 12)
-pdf("../../figures/Fig1-part1_chytrid_volc.pdf", width = 15, height = 15)
+pdf("../../figures/Fig1_chytrid_volc.pdf", width = 15, height = 15)
 cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
                    V_chytrid_inf_effect_met$plot,
                    V_chytrid_met_effect_1org$plot,
-                   V_chytrid_met_effect_2orgs$plot)
+                   V_chytrid_met_effect_2orgs$plot,
+                   labels = c("a", "b", "c", "d"), label_size = 20)
 dev.off()
 
 dev.new(width = 15, height = 12)
-pdf("../../figures/Fig2-part1_cyano_volc.pdf", width = 15, height = 15)
+pdf("../../figures/Fig2_cyano_volc.pdf", width = 15, height = 15)
 cowplot::plot_grid(V_cyano_inf_effect_control$plot,
                    V_cyano_inf_effect_met$plot,
                    V_cyano_met_effect_1org$plot,
-                   V_cyano_met_effect_2orgs$plot)
+                   V_cyano_met_effect_2orgs$plot, 
+                   labels = c("a", "b", "c", "d"), label_size = 20)
 dev.off()
 
 ## Venn diagrams
@@ -290,9 +300,9 @@ venn_data <- list("infection effect chytrid - control"=
                   "infection effect chytrid - met"= 
                     getGenes(contrast_chytridgenome$resr_inf_effect_met))
   
-pdf("../../figures/Fig1-part2_Venn.pdf", width = 5, height = 5)
+pdf("../../figures/Fig3-part1_Venn.pdf", width = 5, height = 5)
 ggvenn(
-  venn_data, show_stats = "c", fill_color = rep("white", 4),
+  venn_data, show_percentage = F, fill_color = rep("white", 4),
   stroke_size = 0.5, set_name_size = 4
 )
 dev.off()
@@ -307,9 +317,9 @@ venn_data <- list("infection effect cyano - control"=
                   "infection effect cyano - met"= 
                     getGenes(contrast_cyanogenome$resr_inf_effect_met))
 
-pdf("../../figures/Fig2-part2_Venn.pdf", width = 5, height = 5)
+pdf("../../figures/Fig4-part1_Venncyano.pdf", width = 5, height = 5)
 ggvenn(
-  venn_data, show_stats = "c", fill_color = rep("white", 4),
+  venn_data, show_percentage = F, fill_color = rep("white", 4),
   stroke_size = 0.5, set_name_size = 4
 )
 dev.off()
@@ -392,8 +402,11 @@ fullDEGTable$log2FoldChange <- signif(fullDEGTable$log2FoldChange, 2)
 
 write.csv(fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", row.names = F)        
 
-## TBC from here
+##################### 
+## Important genes ##
+##################### 
 
+## TBC from here
 
 #############
 ## Chytrid ##
@@ -411,6 +424,9 @@ intersect(a, b)[!intersect(a, b) %in% union(c, d)]
 ## Infection effect on control AND metolachlor chytrid: 6 genes ##
 intersect(c, d)[!intersect(c, d) %in% union(a, b)]
 # "APC1_DICDI"  "ERT1_USTMA"  "LORF2_MOUSE" "NEP1_YEAST"  "SCP36_ARATH" "XDH_DICDI"  
+
+## TBC from here
+
 
 #################
 ## GO analysis ##
