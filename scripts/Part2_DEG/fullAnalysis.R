@@ -55,7 +55,7 @@ listOfTranscriptContaminant_toRmFromChytridTranscriptome <-
         "in_cyano_alone"),"X"]
 
 write.csv(listOfTranscriptContaminant_toRmFromChytridTranscriptome,
-  "../../data/listOfTranscriptContaminant_toRmFromChytridTranscriptome", quote = F, row.names = F)
+          "../../data/listOfTranscriptContaminant_toRmFromChytridTranscriptome", quote = F, row.names = F)
 
 #### 2. Which genes have been sequenced for chytrid and cyano (and are not contamination)?
 #############
@@ -133,30 +133,14 @@ nrow(RSEM_final_hope.gene_cyano) # 3589 genes
 # 3636-3589=47 genes with duplicated counts
 
 ###################################
-## Low quality samples filtering ##
+## Low quality genes filtering ##
 ###################################
-
-## Investigate outliers (my function)
-makeClusterWGCNA(t(RSEM_final_hope.gene_chytrid))
-## In11 clear outlier
-makeClusterWGCNA(t(RSEM_final_hope.gene_cyano))
-# no clear outlier
-
-#####!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-## Rm In11 from the chytrid dataset
-RSEM_final_hope.gene_chytrid = RSEM_final_hope.gene_chytrid[
-  !names(RSEM_final_hope.gene_chytrid) %in% "met_both_In11"]
-## rm genes with zero counts (196 genes of chytrid were only in In11!!)
-RSEM_final_hope.gene_chytrid = RSEM_final_hope.gene_chytrid[
-  rowSums(RSEM_final_hope.gene_chytrid) != 0,]
-
 # To determine if a sample has been sufficiently sequenced, a saturation curve
 # can be generated with software like vegan in R
 
 # if (!requireNamespace("BiocManager", quietly = TRUE))
-  # install.packages("BiocManager")
+# install.packages("BiocManager")
 ## BiocManager::install("NOISeq")
-
 library(NOISeq)
 
 # Sequencing depth & Expression Quantification
@@ -173,10 +157,8 @@ eset_chy <- ExpressionSet(assayData = counts_chy)
 mysaturation_chy = dat(eset_chy, k = 0, ndepth = 7, type = "saturation")
 ## Chytrid alone:
 explo.plot(mysaturation_chy, toplot = 1, samples = 1:11)
-## Saturation of chytrid low (between 29.7% and 44.1%)
 ## Both organisms:
 explo.plot(mysaturation_chy, toplot = 1, samples = 12:18)
-## 34.4 to 50.1%
 
 counts_cyano <- as.matrix(RSEM_final_hope.gene_cyano)
 eset_cyano <- ExpressionSet(assayData = counts_cyano)
@@ -184,30 +166,44 @@ mysaturation_cyano = dat(eset_cyano, k = 0, ndepth = 7, type = "saturation")
 
 ## Both organisms:
 explo.plot(mysaturation_cyano, toplot = 1, samples = 1:8) 
-# good (60+) except for In2 and In11 (<35%)
 ## Cyano alone
 explo.plot(mysaturation_cyano, toplot = 1, samples = 9:20) 
-# very good saturation level >97.3%
 
-#####!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-## Rm In2 and In11 from the cyano dataset
+## Due to the discrepancies between the groups, we remove genes with
+## zeros in at least 3/group (met+inf)
+RSEM_final_hope.gene_chytrid <- filterRSEMno3Nullpergp(RSEM_final_hope.gene_chytrid)
+RSEM_final_hope.gene_cyano <- filterRSEMno3Nullpergp(RSEM_final_hope.gene_cyano)
+
+## check saturation
+counts_chy <- as.matrix(RSEM_final_hope.gene_chytrid)
+eset_chy <- ExpressionSet(assayData = counts_chy)
+mysaturation_chy = dat(eset_chy, k = 0, ndepth = 7, type = "saturation")
+
+ncol(RSEM_final_hope.gene_chytrid)
+## all
+explo.plot(mysaturation_chy, toplot = 1, samples = 1:19)
+## 86.9 to 100% genes detected
+
+counts_cyano <- as.matrix(RSEM_final_hope.gene_cyano)
+eset_cyano <- ExpressionSet(assayData = counts_cyano)
+mysaturation_cyano = dat(eset_cyano, k = 0, ndepth = 7, type = "saturation")
+
+names(RSEM_final_hope.gene_cyano)
+explo.plot(mysaturation_cyano, toplot = 1, samples = 1:20) 
+## Both organisms:
+explo.plot(mysaturation_cyano, toplot = 1, samples = 1:9) 
+## Cyano alone
+explo.plot(mysaturation_cyano, toplot = 1, samples = 10:20) 
+## meth_both_In11 58.9% everything else 92.5 to 100%
+
 RSEM_final_hope.gene_cyano = RSEM_final_hope.gene_cyano[
-  !names(RSEM_final_hope.gene_cyano) %in% c("control_both_In2", "met_both_In11")]
-## rm genes with zero counts
-RSEM_final_hope.gene_cyano = RSEM_final_hope.gene_cyano[
-  rowSums(RSEM_final_hope.gene_cyano) != 0,]
+  !names(RSEM_final_hope.gene_cyano) %in% c("met_both_In11")]
 
-###################################
-## Low quality genes filtering ##
-###################################
+nrow(RSEM_final_hope.gene_chytrid) # 835
+names(RSEM_final_hope.gene_chytrid)
 
-RSEM_final_hope.gene_chytrid <- RSEM_final_hope.gene_chytrid[
-  rowSums(RSEM_final_hope.gene_chytrid >= 10) >= 3,]
-RSEM_final_hope.gene_cyano <- RSEM_final_hope.gene_cyano[
-  rowSums(RSEM_final_hope.gene_cyano >= 10) >= 3,]
-
-nrow(RSEM_final_hope.gene_chytrid) # 1336
-nrow(RSEM_final_hope.gene_cyano) # 3497
+nrow(RSEM_final_hope.gene_cyano) # 555
+names(RSEM_final_hope.gene_cyano)
 
 #####################
 ## DESeq2 jan 2025 ##
@@ -299,13 +295,11 @@ venn_data <- list("infection effect chytrid - control"=
                     getGenes(contrast_chytridgenome$resr_met_effect_2orgs),
                   "infection effect chytrid - met"= 
                     getGenes(contrast_chytridgenome$resr_inf_effect_met))
-  
-pdf("../../figures/Fig3-part1_Venn.pdf", width = 5, height = 5)
+
 ggvenn(
   venn_data, show_percentage = F, fill_color = rep("white", 4),
   stroke_size = 0.5, set_name_size = 4
 )
-dev.off()
 
 # Combine the lists into a named list for the Venn diagram
 venn_data <- list("infection effect cyano - control"= 
@@ -317,12 +311,10 @@ venn_data <- list("infection effect cyano - control"=
                   "infection effect cyano - met"= 
                     getGenes(contrast_cyanogenome$resr_inf_effect_met))
 
-pdf("../../figures/Fig4-part1_Venncyano.pdf", width = 5, height = 5)
 ggvenn(
   venn_data, show_percentage = F, fill_color = rep("white", 4),
   stroke_size = 0.5, set_name_size = 4
 )
-dev.off()
 
 ## Save results in tables
 selectDEGenes <- function(x) {x[x$padj < 0.05 & !is.na(x$padj),]}
@@ -396,246 +388,53 @@ contrast_cyanogenome_DEG$comparison[
 table(contrast_cyanogenome_DEG$comparison)
 
 fullDEGTable <- rbind(contrast_chytridgenome_DEG, contrast_cyanogenome_DEG)
-  
+
 fullDEGTable$padj <- signif(fullDEGTable$padj, 2)
 fullDEGTable$log2FoldChange <- signif(fullDEGTable$log2FoldChange, 2)
 
 write.csv(fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", row.names = F)        
 
-##################### 
-## Important genes ##
-##################### 
+#############################################
+## GO of the four groups per transcriptome ##
+#############################################
 
-## TBC from here
+universe_chytrid = rownames(RSEM_final_hope.gene_chytrid)
+universe_cyano = rownames(RSEM_final_hope.gene_cyano)
 
-#############
-## Chytrid ##
-a=getGenes(contrast_chytridgenome$resr_met_effect_1org)
-b=getGenes(contrast_chytridgenome$resr_met_effect_2orgs)
-c=getGenes(contrast_chytridgenome$resr_inf_effect_control)
-d=getGenes(contrast_chytridgenome$resr_inf_effect_met)
+getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
+             genelist = getGenes(contrast_chytridgenome$resr_inf_effect_control), 
+             GO_df = GO_chytrid, isbubble = F)
+## axoneme (cellular component) padj=0.003898744
 
-## Metolachlor effect on free-living AND infecting chytrid: 3 genes ##
-intersect(a, b)[!intersect(a, b) %in% union(c, d)]
-# 3 catabolism linked protein
-# "PCCB_PIG"    "PDX1_DICDI"  "PRP16_ARATH"
-
-##################################################################
-## Infection effect on control AND metolachlor chytrid: 6 genes ##
-intersect(c, d)[!intersect(c, d) %in% union(a, b)]
-# "APC1_DICDI"  "ERT1_USTMA"  "LORF2_MOUSE" "NEP1_YEAST"  "SCP36_ARATH" "XDH_DICDI"  
-
-## TBC from here
-
-
-#################
-## GO analysis ##
-
-## take into account filtration
-universe_chytrid = rownames(RSEM_final_hope.gene_chytrid[rowSums(RSEM_final_hope.gene_chytrid >= 10) >= 3,])
-universe_cyano = rownames(RSEM_final_hope.gene_cyano[rowSums(RSEM_final_hope.gene_cyano >= 10) >= 3,])
-## done before!
-
-
-getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, isDE = F, 
-             genelist = a, GO_df = GO_chytrid, isbubble = F)
-getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, isDE = F, 
-             genelist = b, GO_df = GO_chytrid, isbubble = F)
-getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, isDE = F, 
-             genelist = c, GO_df = GO_chytrid, isbubble = F)
-getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, isDE = F, 
-             genelist = d, GO_df = GO_chytrid, isbubble = F)
-
+getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
+             genelist = getGenes(contrast_chytridgenome$resr_met_effect_1org), 
+             GO_df = GO_chytrid, isbubble = F)
 # no significant GO terms
 
-###################
-## Cyanobacteria ##
-a=getGenes(contrast_cyanogenome$resr_met_effect_1org) # empty
-b=getGenes(contrast_cyanogenome$resr_met_effect_2orgs)
-c=getGenes(contrast_cyanogenome$resr_inf_effect_control)
-d=getGenes(contrast_cyanogenome$resr_inf_effect_met)
+getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
+             genelist = getGenes(contrast_chytridgenome$resr_met_effect_2orgs), 
+             GO_df = GO_chytrid, isbubble = F)
+# axoneme p.adj 0.007747258
 
-## metolachlor effect on cyanobacteria, infected of not -> nul
-intersect(a, b)[!intersect(a, b) %in% union(c, d)]
+# getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
+#              genelist = getGenes(contrast_chytridgenome$resr_inf_effect_met), 
+#              GO_df = GO_chytrid, isbubble = F)
 
-## Infection effect on control AND metolachlor cyano: 217 genes ##
-intersect(c, d)[!intersect(c, d) %in% union(a, b)]
+## 2. Cyano
+# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
+#              genelist = getGenes(contrast_cyanogenome$resr_inf_effect_control), 
+#              GO_df = GO_cyano, isbubble = F)
+getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
+              genelist = getGenes(contrast_cyanogenome$resr_met_effect_1org), 
+              GO_df = GO_cyano, isbubble = F)
+# no signif
 
-#################
-## GO analysis ##
-getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, isDE = F, 
-             genelist = b, GO_df = GO_cyano, isbubble = F)
-getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, isDE = F, 
-             genelist = c, GO_df = GO_cyano, isbubble = F)
-# no significant GO terms
+# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
+#              genelist = getGenes(contrast_cyanogenome$resr_met_effect_2orgs), 
+#              GO_df = GO_cyano, isbubble = F)
 
-d_cyano_GO = getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, isDE = F, 
-             genelist = d, GO_df = GO_cyano, isbubble = F)
+## infection effect on cyanobacteria in presence of metolachlor
+# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
+#              genelist = getGenes(contrast_cyanogenome$resr_inf_effect_met), 
+#                GO_df = GO_cyano, isbubble = F)
 
-d_cyano_GO$enrichment[d_cyano_GO$enrichment$p.adjust < 0.05,]
-# DNA-binding transcription factor activity GO:0003700 gene ratio 0.02807018 12/1450 p.adjust 0.01254802
-
-##########################################
-## Top genes expressed in each category ##
-contrast_cyanogenome$resr_met_effect_2orgs$padj < 0.05
-
-x=contrast_cyanogenome$resr_met_effect_2orgs
-x=x[!is.na(x$padj),]
-head(x[order(x$log2FoldChange),], n=10)
-tail(x[order(x$log2FoldChange),], n=10)
-
-############ PREV
-RSEM_final_hope.gene_chytrid[grepl("YI31B_YEAST", rownames(RSEM_final_hope.gene_chytrid)),]
-
-
-head(contrast_chytridgenome$resr_met_effect_2orgs) #let's look at the results table
-
-
-table(contrast_chytridgenome$resr_met_effect_2orgs$padj < 0.05 &
-        contrast_chytridgenome$resr_met_effect_2orgs$log2FoldChange)
-
-
-result <- sapply(contrast_chytridgenome[2:5], function(x) 
-  renameDESeq(x, annotation = annotationChytrid))
-
-chytrid_met_effect_2orgs <- renameDESeq(contrast_chytridgenome$resr_met_effect_2orgs, 
-                                        annotation = annotationChytrid)
-chytrid_met_effect_1org <- renameDESeq(contrast_chytridgenome$resr_met_effect_1org, 
-                                       annotation = annotationChytrid)
-chytrid_inf_effect_control <- renameDESeq(contrast_chytridgenome$resr_inf_effect_control, 
-                                          annotation = annotationChytrid)
-chytrid_inf_effect_met <- renameDESeq(contrast_chytridgenome$resr_inf_effect_met, 
-                                      annotation = annotationChytrid)
-
-contrast_chytridgenome <- list(chytrid_met_effect_2orgs=chytrid_met_effect_2orgs,
-                               chytrid_met_effect_1org=chytrid_met_effect_1org,
-                               chytrid_inf_effect_control=chytrid_inf_effect_control,
-                        chytrid_inf_effect_met=chytrid_inf_effect_met)
-                        
-
-
-table(contrast_chytridgenome$chytrid_met_effect_2orgs$padj < 0.05)
-
-makeVolcano <- function(res, title){
-  results_df = as.data.frame(res)
-  results_df = results_df[order(results_df$padj),]
-  
-  # Subset the results to keep only significant genes
-  ressig = results_df[results_df$padj < 0.05 & !is.na(results_df$padj),]
-  
-  ## Volcano plot
-  plot = EnhancedVolcano(results_df,
-                         lab = row.names(results_df),
-                         x = 'log2FoldChange', title = title,
-                         y = 'padj', pCutoff = 0.05,
-                         drawConnectors = TRUE, labSize = 3)
-  
-  return(list(signifGenes = ressig, plot = plot))
-}
-
-makeVolcano(
-  res = chytrid_met_effect_2orgs,
-  title =  "MET effect on chytrid infecting bacteria gene expression")
-
-## rm 
-
-table(chytrid_met_effect_2orgs$padj < 0.05)
-
-# Can you plot the shrunken LFC using lfcShrink.
-
-
-# My guess is that the groups are too heterogenous to combine them and you should just run pairs, like so
-# https://support.bioconductor.org/p/9150170/
-
-### Genes of interest only present in one condition:
-rownames(RSEM_final_hope.gene) <- RSEM_final_hope.gene$X
-
-dds <- DESeqDataSetFromMatrix(countData = countData, colData = colData, design = ~ condition)
-
-
-
-> dds <- DESeq(dds)
-> res<-results(dds,independentFiltering = F)
-
-
-
-################################################################################
-# (a) 360 chytrid genes in chytrid alone only
-RSEM_final_hope.gene_a <- RSEM_final_hope.gene[
-  RSEM_final_hope.gene$whichOrg %in% "in_chytrid_alone" &
-    RSEM_final_hope.gene$whichTranscriptome %in% "chytrid",]
-## Select only chytrid samples
-RSEM_final_hope.gene_a<- RSEM_final_hope.gene_a[
-  grep("chy", names(RSEM_final_hope.gene_a))]
-
-
-
-
-# 
-# 
-# ## Keep genes with expression levels in at least 3 samples/trt (met/nomet)
-# RSEM_final_hope.gene_d = RSEM_final_hope.gene_d[
-#   (rowSums(RSEM_final_hope.gene_d[grep("control", names(RSEM_final_hope.gene_d))]>0)>
-#      ncol(RSEM_final_hope.gene_d[grep("control", names(RSEM_final_hope.gene_d))])/2) &
-#     (rowSums(RSEM_final_hope.gene_d[grep("met", names(RSEM_final_hope.gene_d))]>0)>
-#        ncol(RSEM_final_hope.gene_d[grep("met", names(RSEM_final_hope.gene_d))])/2),]
-
-################################################################################
-
-
-### Genes for DESeq2 -> see next script R01 R02
-
-
-
-
-
-
-# (d)
-# 215 --> cyano genes only expressed outside of infection?
-## TO DO
-# in how many samples are they found (>half)
-# top expressed
-# --> GO on these to find the big functions
-# DEG MET/not MET --> does met affects the virulence?
-RSEM_final_hope.gene_d <- RSEM_final_hope.gene[
-  RSEM_final_hope.gene$whichOrg %in% "in_cyano_alone" &
-    RSEM_final_hope.gene$whichTranscriptome %in% "cyano",]
-## Select only cyano samples
-RSEM_final_hope.gene_d <- RSEM_final_hope.gene_d[
-  grep("cyano", names(RSEM_final_hope.gene_d))]
-
-## At least gene exp non null in half of each group met/not met
-RSEM_final_hope.gene_d = RSEM_final_hope.gene_d[
-  (rowSums(RSEM_final_hope.gene_d[grep("control", names(RSEM_final_hope.gene_d))]>0)>
-     ncol(RSEM_final_hope.gene_d[grep("control", names(RSEM_final_hope.gene_d))])/2) &
-    (rowSums(RSEM_final_hope.gene_d[grep("met", names(RSEM_final_hope.gene_d))]>0)>
-       ncol(RSEM_final_hope.gene_d[grep("met", names(RSEM_final_hope.gene_d))])/2),]
-
-nrow(RSEM_final_hope.gene_d) # 124 remaining!!
-# GO on those TBC --> see R03 script: no significant GO term
-
-# DE on met? --> R01 no DEG found
-
-df = melt(RSEM_final_hope.gene_d)
-df$trt = ifelse(grepl("met", df$variable), "met", "control")
-t.test(df$value[df$trt %in% "met"], df$value[df$trt %in% "control"])
-## no difference between metolachlor values
-
-## describe top 10
-
-# (e)
-## one gene cyano only expressed during infection
-RSEM_final_hope.gene_e <- RSEM_final_hope.gene[
-  RSEM_final_hope.gene$whichOrg %in% "in_both_organisms" &
-    RSEM_final_hope.gene$whichTranscriptome %in% "cyano",]
-## Select only cyano samples
-RSEM_final_hope.gene_e <- RSEM_final_hope.gene_e[
-  grep("both", names(RSEM_final_hope.gene_e))]
-
-## At least gene exp non null in half of each group met/not met
-RSEM_final_hope.gene_e[
-  (rowSums(RSEM_final_hope.gene_e[grep("control", names(RSEM_final_hope.gene_e))]>0)>
-     ncol(RSEM_final_hope.gene_e[grep("control", names(RSEM_final_hope.gene_e))])/2) &
-    (rowSums(RSEM_final_hope.gene_e[grep("met", names(RSEM_final_hope.gene_e))]>0)>
-       ncol(RSEM_final_hope.gene_e[grep("met", names(RSEM_final_hope.gene_e))])/2),]
-## no

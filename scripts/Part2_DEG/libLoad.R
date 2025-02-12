@@ -140,3 +140,8 @@ install_and_load_bioc_packages <- function(package_list) {
 
 message("Loading bioconductor packages...")
 install_and_load_bioc_packages(bioc_packages)
+
+library(DESeq2)
+
+# install.packages(c("boot", "class", "cluster", "codetools", "foreign", "KernSmooth", "lattice", "MASS", "Matrix", "nlme",
+    # "nnet", "rpart", "spatial", "survival"))

@@ -1,8 +1,40 @@
 ## List of functions used
+# filterRSEMno2Nullpergp
 # makeClusterWGCNA
 # makeVolcano for volcano plot
 # calculateContrasts calculate DESeq2 and contrast
 # getGOBubbleZ for GO analysis
+
+filterRSEMno3Nullpergp <- function(RSEM){
+  # Reshape the data for easier grouping and filtering
+  df_long <- RSEM %>%
+    rownames_to_column("row_name") %>% # Keep row names as a column
+    pivot_longer(-row_name, names_to = "sample", values_to = "value") %>%
+    separate(sample, into = c("met", "inf", "sampleshort"), sep = "_")
+  
+  df_long$group <- paste(df_long$met, df_long$inf)
+  df_long$sample <- paste(df_long$met, df_long$inf, df_long$sampleshort, sep ="_")
+  
+  # Filter rows where there are at least two samples with values >0 per group
+  filtered_df <- df_long %>%
+    group_by(row_name, group) %>%
+    summarise(nonzero_count = sum(value > 0), .groups = "drop") %>%
+    filter(nonzero_count >= 3) %>%
+    inner_join(df_long, by = c("row_name", "group")) %>%
+    select(-nonzero_count)
+  
+  # Reshape back to wide format, preserving zeros
+  RSEM_2 <- filtered_df %>%
+    select(row_name, value, sample) %>%
+    pivot_wider(names_from = sample, values_from = value
+    ) %>%
+    column_to_rownames("row_name") %>%
+    na.omit() %>% as.data.frame()
+  
+  RSEM_2 %>% select(all_of(names(RSEM)))
+  
+  return(RSEM_2)
+}
 
 makeClusterWGCNA <- function(datExpr){
   gsg = WGCNA::goodSamplesGenes(datExpr, verbose = 3)
@@ -72,8 +104,8 @@ calculateContrasts <- function(my_countsmatrix, my_org, my_samples=samples_data,
   ddsr <- DESeq(ddsr)
   
   # Variance stabilising transformation
-  vstr <- as.data.frame(assay(vst(ddsr)))
-  vstr$Gene <- rownames(vstr)
+  # vstr <- as.data.frame(assay(vst(ddsr)))
+  # vstr$Gene <- rownames(vstr)
   
   ## Calculate the contrasts (pairwise comparisons of interest)
   print(paste0("comparison of groups: ", my_groups[1], " vs ", my_groups[2]))
@@ -105,8 +137,7 @@ calculateContrasts <- function(my_countsmatrix, my_org, my_samples=samples_data,
   return(list(resr_met_effect_2orgs=resr_met_effect_2orgs, 
               resr_met_effect_1org=resr_met_effect_1org,
               resr_inf_effect_control=resr_inf_effect_control,
-              resr_inf_effect_met=resr_inf_effect_met,
-              vstr=vstr))
+              resr_inf_effect_met=resr_inf_effect_met))
 }
 
 ##### GO analysis: 4 files needed
@@ -120,32 +151,25 @@ calculateContrasts <- function(my_countsmatrix, my_org, my_samples=samples_data,
 ## 3. a GO file with "GO.accession", "GO.ontology", "GO.name"
 ### GO_chytrid and GO_cyano
 
-## 4. a list of genes of interest in gene_name format
-# mylistResDESEQ2 (results DESEq2, R01)
-## rownames must be the genes names
+## 4. a vector of genes of interest
 
 # https://github.com/dadrasarmin/enrichment_analysis_for_non_model_organism
-getGOBubbleZ <- function(universe, annotation, GO_df, group, isbubble=T, isDE=T, genelist=NA){
-  if (isDE){ # by default after differential gene expression
-    DESeqDF = mylistResDESEQ2[[group]][
-      mylistResDESEQ2[[group]]$padj < 0.05 & 
-        !is.na(mylistResDESEQ2[[group]]$padj),]
-    
-    # A list of genes of interest from DESeq
-    genes = rownames(DESeqDF)
-  } else {
-    genes = genelist
-  }
-  
+getGOBubbleZ <- function(universe, annotation, GO_df, group, isbubble=T, genelist=NA){
   # A table that matches Term to Gene ID
   term2gene = annotation[c("GO.accession", "gene_name")] %>%
-    dplyr::rename("term" = "GO.accession", "gene" = "gene_name") %>% data.frame()
+    dplyr::rename("term" = "GO.accession", "gene" = "gene_name") %>% 
+    unique %>% data.frame()
+  
+  ## Select for genes which have a GO term associated
+  term2gene = term2gene[!is.na(term2gene$term),]
+  genelist = genelist[genelist %in% term2gene$gene]
+  universe = universe[universe %in% term2gene$gene]
   
   # A table that matches Term to names
   term2name = GO_df[c("GO.accession", "GO.name")] %>% 
-    dplyr::rename("term" = "GO.accession", "name" = "GO.name")
+    dplyr::rename("term" = "GO.accession", "name" = "GO.name") %>% unique
   
-  enrichment <- clusterProfiler::enricher(gene = genes,
+  enrichment <- clusterProfiler::enricher(gene = genelist,
                                           TERM2GENE = term2gene,
                                           TERM2NAME = term2name, 
                                           pvalueCutoff = 0.05,
@@ -154,7 +178,7 @@ getGOBubbleZ <- function(universe, annotation, GO_df, group, isbubble=T, isDE=T,
                                           pAdjustMethod = "fdr")
   
   ## Add GO info
-  enrichmentRes = enrichment@result %>% 
+  enrichmentRes = enrichment@result %>%
     rename("GO.name"="Description") 
   enrichmentRes = merge(enrichmentRes, GO_df)
   
