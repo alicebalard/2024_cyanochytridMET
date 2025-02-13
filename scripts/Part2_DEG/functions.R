@@ -97,7 +97,7 @@ calculateContrasts <- function(my_countsmatrix, my_org, my_samples=samples_data,
                                  design = ~ condition)
   ## Filter for low count (less than 10 in less than the smallest group size)
   ## see "prefiltering" in vignette
-  keep = rowSums(counts(ddsr) >= 10) >= smallestGroupSize
+  keep = rowSums(counts(ddsr) >= 10) >= smallestGroupSize # already filtered before
   ddsr = ddsr[keep,]
   
   ## Run the DE seq

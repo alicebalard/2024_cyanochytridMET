@@ -158,7 +158,7 @@ mysaturation_chy = dat(eset_chy, k = 0, ndepth = 7, type = "saturation")
 ## Chytrid alone:
 explo.plot(mysaturation_chy, toplot = 1, samples = 1:11)
 ## Both organisms:
-explo.plot(mysaturation_chy, toplot = 1, samples = 12:18)
+explo.plot(mysaturation_chy, toplot = 1, samples = 12:19)
 
 counts_cyano <- as.matrix(RSEM_final_hope.gene_cyano)
 eset_cyano <- ExpressionSet(assayData = counts_cyano)
@@ -410,6 +410,15 @@ getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid,
              genelist = getGenes(contrast_chytridgenome$resr_met_effect_1org), 
              GO_df = GO_chytrid, isbubble = F)
 # no significant GO terms
+# getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
+#              genelist = getGenes(contrast_chytridgenome$resr_met_effect_1org[
+#                contrast_chytridgenome$resr_met_effect_1org$log2FoldChange < 0,]), 
+#              GO_df = GO_chytrid, isbubble = F)
+
+getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
+             genelist = getGenes(contrast_cyanogenome$resr_met_effect_1org[
+               contrast_cyanogenome$resr_met_effect_1org$log2FoldChange > 0,]), 
+             GO_df = GO_cyano, isbubble = F)
 
 getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
              genelist = getGenes(contrast_chytridgenome$resr_met_effect_2orgs), 
@@ -421,20 +430,34 @@ getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid,
 #              GO_df = GO_chytrid, isbubble = F)
 
 ## 2. Cyano
-# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
-#              genelist = getGenes(contrast_cyanogenome$resr_inf_effect_control), 
+# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
+#              genelist = getGenes(contrast_cyanogenome$resr_inf_effect_control),
 #              GO_df = GO_cyano, isbubble = F)
+# no DEG
+
 getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
               genelist = getGenes(contrast_cyanogenome$resr_met_effect_1org), 
               GO_df = GO_cyano, isbubble = F)
-# no signif
+# "no significant GO terms"
 
-# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
-#              genelist = getGenes(contrast_cyanogenome$resr_met_effect_2orgs), 
+## if we split up and downreg? Nope
+getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
+             genelist = getGenes(contrast_cyanogenome$resr_met_effect_1org[
+               contrast_cyanogenome$resr_met_effect_1org$log2FoldChange > 0,]), 
+             GO_df = GO_cyano, isbubble = F)
+
+# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
+#              genelist = getGenes(contrast_cyanogenome$resr_met_effect_2orgs),
 #              GO_df = GO_cyano, isbubble = F)
+# no DEG
 
 ## infection effect on cyanobacteria in presence of metolachlor
-# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
-#              genelist = getGenes(contrast_cyanogenome$resr_inf_effect_met), 
-#                GO_df = GO_cyano, isbubble = F)
+getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
+             genelist = getGenes(contrast_cyanogenome$resr_inf_effect_met),
+               GO_df = GO_cyano, isbubble = F)
+# no signif
+
+#####################
+## Important genes ##
+#####################
 
