@@ -401,6 +401,10 @@ write.csv(fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", row.names = F)
 universe_chytrid = rownames(RSEM_final_hope.gene_chytrid)
 universe_cyano = rownames(RSEM_final_hope.gene_cyano)
 
+## KEGG
+myKEGG <- GSEA(genelist[order(genelist, decreasing = T)], 
+               TERM2GENE=term2gene, TERM2NAME=term2name)
+
 getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
              genelist = getGenes(contrast_chytridgenome$resr_inf_effect_control), 
              GO_df = GO_chytrid, isbubble = F)
@@ -457,7 +461,7 @@ getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
                GO_df = GO_cyano, isbubble = F)
 # no signif
 
-#####################
-## Important genes ##
-#####################
+###########################
+## KEGG pathway analysis ##
+###########################
 
