@@ -66,12 +66,22 @@ makeVolcano <- function(res, title, subtitle){
   # Subset the results to keep only significant genes
   ressig = results_df[results_df$padj < 0.05 & !is.na(results_df$padj),]
   
+  ## simplify gene ID name for cyano
+  labs = gsub("GeneID:", "", row.names(results_df))
+  
   ## Volcano plot
   plot = EnhancedVolcano(results_df,
-                         lab = row.names(results_df),
+                         lab = labs,
                          x = 'log2FoldChange', title = title,
                          y = 'padj', pCutoff = 0.05,
-                         drawConnectors = TRUE, labSize = 3) + 
+                         widthConnectors = .1,
+                         arrowheads = TRUE,
+                         max.overlaps = Inf,
+                         boxedLabels = TRUE,
+                         drawConnectors = TRUE, labSize = 4,
+                         ylim = c(0, 4),
+                         # ylim = c(0, max(-log10(results_df$padj)) * 1.2),
+                         ylab = bquote(~-Log[10]~adjusted~italic(P))) +
     ggtitle(label = title, subtitle = subtitle) 
   
   return(list(signifGenes = ressig, plot = plot))
