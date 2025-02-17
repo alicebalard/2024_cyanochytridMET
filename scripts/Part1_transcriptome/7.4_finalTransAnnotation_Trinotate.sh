@@ -72,10 +72,10 @@ $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_tmhmmv2 tmh
 $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --report --incl_pep --incl_trans > assemblyMergedFungi.tsv
 
 ## Simplify output for later use with DESeq2:
-cat assemblyMergedFungi.tsv | cut -f 1,2,3,13 > assemblyMergedFungi_simplified.tsv
+cat assemblyMergedFungi.tsv | cut -f 1,2,3,12,13 > assemblyMergedFungi_simplified_GOKegg.tsv
 
 awk 'BEGIN {OFS="\t"} 
      NR==1 {print $0, "gene_name"} 
-     NR > 1 {split($3, a, "^"); print $0, a[1]}' assemblyMergedFungi_simplified.tsv > temp
+     NR > 1 {split($3, a, "^"); print $0, a[1]}' assemblyMergedFungi_simplified_GOKegg.tsv > temp
 
-mv temp assemblyMergedFungi_simplified.tsv
+mv temp assemblyMergedFungi_simplified_GOKegg.tsv

@@ -1,6 +1,6 @@
 
 ## Load annotation
-newAnnot <- read.csv("/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_simplified.tsv", sep = "\t")
+newAnnot <- read.csv("/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_simplified_GOKegg.tsv", sep = "\t")
 
 ## Remove everything before "Full"; Extract the first word after the first "^"; rm ;
 extractBlastxTaxa <- function(x){
@@ -71,4 +71,4 @@ write.table(gtm[gtm$V2 %in% eukTransc,], "/scratch/alicebalard/outData/assemblyM
 
 #################################################
 ## Subset annotation file for the Eukaryotic hits
-write.table(newAnnot[newAnnot$blastxKingdom %in% "Eukaryota",], "/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified.tsv", sep = "\t", quote = F, row.names=F, col.names=T)
+write.table(newAnnot[newAnnot$blastxKingdom %in% "Eukaryota",], "/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv", sep = "\t", quote = F, row.names=F, col.names=T)
