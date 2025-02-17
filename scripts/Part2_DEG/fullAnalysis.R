@@ -262,7 +262,7 @@ V_cyano_met_effect_2orgs <- makeVolcano(
 
 ## open bigger window
 dev.new(width = 15, height = 12)
-pdf("../../figures/Fig1_chytrid_volc.pdf", width = 15, height = 15)
+pdf("../../figures/Fig3_chytrid_volc.pdf", width = 15, height = 15)
 cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
                    V_chytrid_inf_effect_met$plot,
                    V_chytrid_met_effect_1org$plot,
@@ -271,7 +271,7 @@ cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
 dev.off()
 
 dev.new(width = 15, height = 12)
-pdf("../../figures/Fig2_cyano_volc.pdf", width = 15, height = 15)
+pdf("../../figures/Fig4_cyano_volc.pdf", width = 15, height = 15)
 cowplot::plot_grid(V_cyano_inf_effect_control$plot,
                    V_cyano_inf_effect_met$plot,
                    V_cyano_met_effect_1org$plot,

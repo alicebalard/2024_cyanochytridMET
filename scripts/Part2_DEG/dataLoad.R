@@ -13,14 +13,17 @@ samples_data <- read.table(
 # gene_trans_map: /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map
 
 # annotation: /scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified.tsv
-annotationChytridFULL <- read.csv("../../gitignore/assemblyMergedFungi_filterEuk_simplified.tsv", sep = "\t")
+annotationChytridFULL <- read.csv("../../gitignore/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv", sep = "\t")
 ## extract GO terms
 annotationChytridFULL$GO.accession <- str_extract_all(annotationChytridFULL$gene_ontology_BLASTX, "GO:\\d+")
+## Extract Kegg terms
+annotationChytridFULL$Kegg <- strsplit(annotationChytridFULL$Kegg, split = "`", fixed = TRUE)
 
-########################################################################
-## make an annotation df with: customGeneName, gene_name, GOaccession ##
-annotationChytrid <- annotationChytridFULL[c("X.gene_id", "gene_name", "GO.accession")] %>% 
+##############################################################################
+## make an annotation df with: customGeneName, gene_name, GOaccession, Kegg ##
+annotationChytrid <- annotationChytridFULL[c("X.gene_id", "gene_name", "GO.accession", "Kegg")] %>% 
   unnest(GO.accession, keep_empty = T) %>%
+  unnest(Kegg, keep_empty = T) %>%
   dplyr::rename("custom_gene_name" = "X.gene_id") %>% data.frame()
 
 annotationChytrid <- unique(annotationChytrid)
