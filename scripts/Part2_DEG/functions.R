@@ -110,12 +110,11 @@ calculateContrasts <- function(my_countsmatrix, my_org, my_samples=samples_data,
   keep = rowSums(counts(ddsr) >= 10) >= smallestGroupSize # already filtered before
   ddsr = ddsr[keep,]
   
+  # Variance stabilising transformation for downstream analysis (done by default in DESeq)
+  vstr <-  assay(varianceStabilizingTransformation(ddsr))
+  
   ## Run the DE seq
   ddsr <- DESeq(ddsr)
-  
-  # Variance stabilising transformation
-  # vstr <- as.data.frame(assay(vst(ddsr)))
-  # vstr$Gene <- rownames(vstr)
   
   ## Calculate the contrasts (pairwise comparisons of interest)
   print(paste0("comparison of groups: ", my_groups[1], " vs ", my_groups[2]))
@@ -147,7 +146,8 @@ calculateContrasts <- function(my_countsmatrix, my_org, my_samples=samples_data,
   return(list(resr_met_effect_2orgs=resr_met_effect_2orgs, 
               resr_met_effect_1org=resr_met_effect_1org,
               resr_inf_effect_control=resr_inf_effect_control,
-              resr_inf_effect_met=resr_inf_effect_met))
+              resr_inf_effect_met=resr_inf_effect_met, 
+              vstr=vstr))
 }
 
 ##### GO analysis: 4 files needed

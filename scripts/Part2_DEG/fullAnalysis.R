@@ -461,7 +461,3 @@ getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
                GO_df = GO_cyano, isbubble = F)
 # no signif
 
-###########################
-## KEGG pathway analysis ##
-###########################
-
