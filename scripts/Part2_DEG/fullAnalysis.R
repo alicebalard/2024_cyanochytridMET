@@ -140,7 +140,7 @@ nrow(RSEM_final_hope.gene_cyano) # 3589 genes
 
 # if (!requireNamespace("BiocManager", quietly = TRUE))
 # install.packages("BiocManager")
-## BiocManager::install("NOISeq")
+# BiocManager::install("NOISeq")
 library(NOISeq)
 
 # Sequencing depth & Expression Quantification
@@ -221,48 +221,50 @@ contrast_cyanogenome <- calculateContrasts(
 
 ## Volcano plots
 V_chytrid_inf_effect_control <- makeVolcano(
-  res = contrast_chytridgenome$resr_inf_effect_control,
-  title = "Infection effect on chytrid gene expression", 
-  subtitle = "absence of metolachlor")
+    res = contrast_chytridgenome$resr_inf_effect_control,
+    title = "no MET, chytrids zoospores vs chytrids infecting",
+    mylogo="logos/logo1.png", positionLogo = "left")
 
 V_chytrid_inf_effect_met <- makeVolcano(
   res = contrast_chytridgenome$resr_inf_effect_met,
-  title = "Infection effect on chytrid gene expression", 
-  subtitle = "presence of metolachlor")
+  title = "MET, chytrids zoospores vs chytrids infecting ",
+  mylogo="logos/logo2.png", positionLogo = "left")
 
 V_chytrid_met_effect_1org <- makeVolcano(
   res = contrast_chytridgenome$resr_met_effect_1org,
-  title = "Metolachlor effect on chytrid gene expression", 
-  subtitle = "free-living zoospores")
+  title = "free-living zoospores, no MET vs MET",
+  mylogo="logos/logo3.png", positionLogo = "left")
 
 V_chytrid_met_effect_2orgs <- makeVolcano(
   res = contrast_chytridgenome$resr_met_effect_2orgs,
-  title = "Metolachlor effect on chytrid gene expression", 
-  subtitle = "during infection")
+  title = "chytrids infecting, no MET vs MET",
+  mylogo="logos/logo4.png", positionLogo = "left")
 
 V_cyano_inf_effect_control <- makeVolcano(
   res = contrast_cyanogenome$resr_inf_effect_control,
-  title = "Infection effect on cyanobacteria gene expression", 
-  subtitle = "absence of metolachlor")
+  title = "no MET, uninfected vs infected cyanobacteria",
+  mylogo="logos/logo5.png", positionLogo = "left")
 
 V_cyano_inf_effect_met <- makeVolcano(
   res = contrast_cyanogenome$resr_inf_effect_met,
-  title = "Infection effect on cyanobacteria gene expression", 
-  subtitle = "presence of metolachlor")
+  title = "MET, uninfected vs infected cyanobacteria",
+  mylogo="logos/logo6.png", positionLogo = "left")
 
 V_cyano_met_effect_1org <- makeVolcano(
   res = contrast_cyanogenome$resr_met_effect_1org,
-  title = "Metolachlor effect on cyanobacteria gene expression", 
-  subtitle = "uninfected cyanobacteria")
+  title = "uninfected cyanobacteria, no MET vs MET",
+  mylogo="logos/logo7.png", positionLogo = "right")
 
 V_cyano_met_effect_2orgs <- makeVolcano(
   res = contrast_cyanogenome$resr_met_effect_2orgs,
-  title = "Metolachlor effect on cyanobacteria gene expression", 
-  subtitle = "infected cyanobacteria")
+  title = "infected cyanobacteria, no MET vs MET",
+  mylogo="logos/logo8.png", positionLogo = "left")
 
 ## open bigger window
-dev.new(width = 15, height = 12)
-pdf("../../figures/Fig3_chytrid_volc.pdf", width = 15, height = 15)
+W=10; H=8
+
+dev.new(width = W, height = H)
+pdf("../../figures/Fig2_chytrid_volc.pdf", width = W, height = H)
 cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
                    V_chytrid_inf_effect_met$plot,
                    V_chytrid_met_effect_1org$plot,
@@ -270,8 +272,8 @@ cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
                    labels = c("a", "b", "c", "d"), label_size = 20)
 dev.off()
 
-dev.new(width = 15, height = 12)
-pdf("../../figures/Fig4_cyano_volc.pdf", width = 15, height = 15)
+dev.new(width = W, height = H)
+pdf("../../figures/Fig3_cyano_volc.pdf", width = W, height = H)
 cowplot::plot_grid(V_cyano_inf_effect_control$plot,
                    V_cyano_inf_effect_met$plot,
                    V_cyano_met_effect_1org$plot,
@@ -401,10 +403,6 @@ write.csv(fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", row.names = F)
 universe_chytrid = rownames(RSEM_final_hope.gene_chytrid)
 universe_cyano = rownames(RSEM_final_hope.gene_cyano)
 
-## KEGG
-myKEGG <- GSEA(genelist[order(genelist, decreasing = T)], 
-               TERM2GENE=term2gene, TERM2NAME=term2name)
-
 getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
              genelist = getGenes(contrast_chytridgenome$resr_inf_effect_control), 
              GO_df = GO_chytrid, isbubble = F)
@@ -444,20 +442,13 @@ getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
               GO_df = GO_cyano, isbubble = F)
 # "no significant GO terms"
 
-## if we split up and downreg? Nope
-getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
-             genelist = getGenes(contrast_cyanogenome$resr_met_effect_1org[
-               contrast_cyanogenome$resr_met_effect_1org$log2FoldChange > 0,]), 
-             GO_df = GO_cyano, isbubble = F)
-
 # getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
 #              genelist = getGenes(contrast_cyanogenome$resr_met_effect_2orgs),
 #              GO_df = GO_cyano, isbubble = F)
 # no DEG
 
 ## infection effect on cyanobacteria in presence of metolachlor
-getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano,
-             genelist = getGenes(contrast_cyanogenome$resr_inf_effect_met),
-               GO_df = GO_cyano, isbubble = F)
+# getGOBubbleZ(universe = universe_cyano, annotation = annotationCyano, 
+#              genelist = getGenes(contrast_cyanogenome$resr_inf_effect_met), 
+#              GO_df = GO_cyano, isbubble = F)
 # no signif
-

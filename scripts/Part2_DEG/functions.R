@@ -21,17 +21,17 @@ filterRSEMno3Nullpergp <- function(RSEM){
     summarise(nonzero_count = sum(value > 0), .groups = "drop") %>%
     filter(nonzero_count >= 3) %>%
     inner_join(df_long, by = c("row_name", "group")) %>%
-    select(-nonzero_count)
+    dplyr::select(-nonzero_count)
   
   # Reshape back to wide format, preserving zeros
   RSEM_2 <- filtered_df %>%
-    select(row_name, value, sample) %>%
+    dplyr::select(row_name, value, sample) %>%
     pivot_wider(names_from = sample, values_from = value
     ) %>%
     column_to_rownames("row_name") %>%
     na.omit() %>% as.data.frame()
   
-  RSEM_2 %>% select(all_of(names(RSEM)))
+  RSEM_2 %>% dplyr::select(all_of(names(RSEM)))
   
   return(RSEM_2)
 }
@@ -59,7 +59,7 @@ makeClusterWGCNA <- function(datExpr){
   return(data.frame(t(datExpr)))
 }
 
-makeVolcano <- function(res, title, subtitle){
+makeVolcano <- function(res, title, mylogo, positionLogo){
   results_df = as.data.frame(res)
   results_df = results_df[order(results_df$padj),]
   
@@ -67,23 +67,52 @@ makeVolcano <- function(res, title, subtitle){
   ressig = results_df[results_df$padj < 0.05 & !is.na(results_df$padj),]
   
   ## simplify gene ID name for cyano
-  labs = gsub("GeneID:", "", row.names(results_df))
+  results_df$labs = sub("_.*", "", gsub("GeneID:", "", row.names(results_df)))
   
   ## Volcano plot
-  plot = EnhancedVolcano(results_df,
-                         lab = labs,
-                         x = 'log2FoldChange', title = title,
-                         y = 'padj', pCutoff = 0.05,
-                         widthConnectors = .1,
-                         arrowheads = TRUE,
-                         max.overlaps = Inf,
-                         boxedLabels = TRUE,
-                         drawConnectors = TRUE, labSize = 4,
-                         ylim = c(0, 4),
-                         # ylim = c(0, max(-log10(results_df$padj)) * 1.2),
-                         ylab = bquote(~-Log[10]~adjusted~italic(P))) +
-    ggtitle(label = title, subtitle = subtitle) 
+  results_df <- results_df %>%
+    mutate(
+      negLog10Padj = -log10(padj),
+      sig = ifelse(padj < 0.05, "Significant", "Not significant")
+    )
   
+  # Basic volcano plot
+  plot <- ggplot(results_df, aes(x = log2FoldChange, y = negLog10Padj)) +
+    geom_hline(yintercept = -log10(0.05), colour = "grey", linetype = "dashed")+
+    geom_vline(xintercept = -1, colour = "grey", linetype = "dashed")+
+    geom_vline(xintercept = 1, colour = "grey", linetype = "dashed")+
+    geom_point(aes(color = sig), size = 2) +
+    scale_color_manual(values = c("Significant" = "red", "Not significant" = "grey")) +
+    theme_minimal() +
+    labs(title = title,
+      x = expression(Log[2]~Fold~Change),
+      y = expression(-Log[10]~adjusted~italic(P))) +
+    theme(legend.position = "none") 
+
+  # Add labels for significant points
+  plot <- plot +
+    geom_label_repel(
+      data = subset(results_df, padj < 0.05),
+      aes(label = labs),
+      max.overlaps = Inf,
+      size = 4,
+      box.padding = 0.3,
+      point.padding = 0.2,
+      segment.size = 0.5, segment.colour = "grey",
+      arrow = arrow(length = unit(0.02, "npc"))
+    ) + ylim(0, 4) + xlim(-5.5, 5.5)
+
+  # Load your image
+  img = png::readPNG(mylogo)
+  logo_grob = rasterGrob(img, interpolate = TRUE)
+  
+  if (positionLogo == "right"){
+    plot <- plot +
+      annotation_custom(logo_grob, xmin = 1, xmax = 5, ymin = 3, ymax = 4)
+  } else if (positionLogo == "left"){
+    plot <- plot +
+      annotation_custom(logo_grob, xmin = -5, xmax = -1, ymin = 3, ymax = 4)
+  }
   return(list(signifGenes = ressig, plot = plot))
 }
 
@@ -189,8 +218,7 @@ getGOBubbleZ <- function(universe, annotation, GO_df, group, isbubble=T, genelis
   
   ## Add GO info
   enrichmentRes = enrichment@result %>%
-    rename("GO.name"="Description") 
-  enrichmentRes = merge(enrichmentRes, GO_df)
+    left_join(GO_df, by = c("ID" = "GO.accession"))
   
   if (sum(enrichmentRes$p.adjust < 0.05)==0){
     message("no significant GO terms")

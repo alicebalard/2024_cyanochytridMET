@@ -6,13 +6,13 @@
 #################
 ## Libraries load
 list.of.packages <- c(
-  "ggplot2", "reshape2","viridis", "pheatmap","RColorBrewer", "cowplot", "ggvenn",
-  "MASS",
-  "WGCNA",
+  "ggplot2", "ggrepel", "reshape2","viridis", "pheatmap","RColorBrewer",
+  "cowplot", "ggvenn","MASS", "png", "grid",
+  "WGCNA", "data.table", "pheatmap",
   "GOplot", # plot GO results
   "stringr", # to modify characters
   "tidyverse")  # tidyverse will pull in ggplot2, readr, other useful libraries
-
+  
 message("Install CRAN packages if missing, and load CRAN packages...")
 
 ## install from CRAN and require all libraries from CRAN and github
@@ -99,7 +99,6 @@ install_and_load_github_packages(packages_to_install)
 ## Biocmanager packages 
 bioc_packages <- c("Category", # for hypergeometric GO test
                    "clusterProfiler", # more GO functions
-                   "EnhancedVolcano",
                    "GOstats", # for GO analysis
                    "GSEABase",  # for GO term GeneSetCollection
                    "GOSim",# link GO terms and ID
@@ -107,7 +106,8 @@ bioc_packages <- c("Category", # for hypergeometric GO test
                    "qvalue", # for FDR after PQLseq
                    "impute", "preprocessCore",#for WGCNA
                    "DESeq2",
-                   "rtracklayer"
+                   "rtracklayer", 
+                   "openxlsx"
 ) 
 # devtools::install_version("dbplyr", version = "2.3.4") # if buggy UniProt.ws
 

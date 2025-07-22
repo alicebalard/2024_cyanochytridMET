@@ -79,7 +79,7 @@ annotationCyano2 <- import("../../data/annotations/GCF_904830935.1_P._agardhii_N
 annotationCyano2 <- annotationCyano2[!is.na(annotationCyano2$Ontology_term),
                                    c("protein_id", "product", "gene", "Ontology_term", "go_function", "go_process", "go_component")] %>%
   data.frame()
-annotationCyano2 <- annotationCyano2 %>% melt(id.vars = names(annotationCyano2)[1:9])
+annotationCyano2 <- annotationCyano2 %>% reshape2::melt(id.vars = names(annotationCyano2)[1:9])
 annotationCyanoFULL <- merge(annotationCyanoFULL, annotationCyano2, all = T)
                           
 annotationCyano = annotationCyanoFULL[c("custom_gene_name", "gene_name", "Ontology_term")] %>%
