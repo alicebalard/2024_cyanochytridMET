@@ -326,7 +326,15 @@ hub_genes <- hub_genes %>%
   mutate(org = ifelse(gene %in% annotationChytrid$gene_name, "chytrid",
                       ifelse(gene %in% annotationCyano$gene_name, "cyano", NA)))
 
-install.packages("openxlsx")
+## Which hub genes are also DEG?
+intersect(hub_genes$gene, fullDEGTable$geneName)
+## "GeneID:77286325" "HDA1A_XENLA"     "RS15A_BOVIN" 
+
+hub_genes[hub_genes$module %in% hub_genes[grep("GeneID:77286325", hub_genes$gene),"module"],]
+hub_genes[hub_genes$module %in% hub_genes[grep("HDA1A_XENLA", hub_genes$gene),"module"],]
+hub_genes[hub_genes$module %in% hub_genes[grep("RS15A_BOVIN", hub_genes$gene),"module"],]
+
+## Save xls file for hub genes:
 library(openxlsx)
 
 summary_table <- hub_genes %>%
@@ -444,3 +452,5 @@ plots <- compact(plots)
 pdf("../../figures/Fig5c.network.pdf", width = 12, height = 1)
 wrap_plots(plots, ncol = 4)
 dev.off()
+
+
