@@ -8,10 +8,10 @@
    version="1.1"
    id="svg5"
    inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
-   sodipodi:docname="Figure2.svg"
-   inkscape:export-filename="Figure2.png"
-   inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96"
+   sodipodi:docname="FigureS1.svg"
+   inkscape:export-filename="FigureS1.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -27,9 +27,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.65312309"
-     inkscape:cx="601.72424"
-     inkscape:cy="643.82963"
+     inkscape:zoom="1.3062462"
+     inkscape:cx="567.27438"
+     inkscape:cy="563.8294"
      inkscape:window-width="1854"
      inkscape:window-height="1011"
      inkscape:window-x="0"
@@ -423,32 +423,28 @@
        transform="translate(-45.56365,-85.471742)"><tspan
          x="22.379442"
          y="339.00165"
-         id="tspan2945"><tspan
+         id="tspan1889"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan2943">Transcriptome annotation
+           id="tspan1887">Transcriptome annotation
 </tspan></tspan><tspan
          x="22.379442"
          y="344.57698"
-         id="tspan2953"><tspan
-           style="fill:#000000;stroke:none"
-           id="tspan2947">(</tspan><tspan
-           style="font-style:italic;-inkscape-font-specification:'Helvetica Italic';fill:#000000;stroke:none"
-           id="tspan2949">Trinotate, TransDecoder, Diamond, pfam,</tspan><tspan
-           style="fill:#000000;stroke:none"
-           id="tspan2951"></tspan><tspan
-           y="344.57698"
-           id="tspan2955"> </tspan></tspan><tspan
+         id="tspan1895"><tspan
+   style="fill:#000000;stroke:none"
+   id="tspan1891">(</tspan><tspan
+   style="font-style:italic;-inkscape-font-specification:'Helvetica Italic';fill:#000000;stroke:none"
+   id="tspan1893">Trinotate, TransDecoder, Diamond, pfam,</tspan><tspan
+   y="344.57698"
+   id="tspan1897"> </tspan></tspan><tspan
          x="22.379442"
          y="350.15232"
-         id="tspan2963"><tspan
-           style="font-style:italic;-inkscape-font-specification:'Helvetica Italic';fill:#000000;stroke:none"
-           id="tspan2957">HMMER, infernal, signalP,TMHMM, SQLite</tspan><tspan
-           style="fill:#000000;stroke:none"
-           id="tspan2959">)</tspan><tspan
-           style="fill:#000000;stroke:none"
-           id="tspan2961"></tspan><tspan
-           y="350.15232"
-           id="tspan2965"> </tspan></tspan></text>
+         id="tspan1903"><tspan
+   style="font-style:italic;-inkscape-font-specification:'Helvetica Italic';fill:#000000;stroke:none"
+   id="tspan1899">HMMER, infernal, signalP,TMHMM, SQLite</tspan><tspan
+   style="fill:#000000;stroke:none"
+   id="tspan1901">)</tspan><tspan
+   y="350.15232"
+   id="tspan1905"> </tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-size:5.29167px;line-height:1;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:90.4546;display:inline;fill:#ffffff;stroke:#000000;stroke-width:1;stop-color:#000000"
@@ -458,23 +454,23 @@
        transform="translate(-29.474398,-62.908816)"><tspan
          x="147.53874"
          y="286.30365"
-         id="tspan2969"><tspan
+         id="tspan1909"><tspan
    style="fill:#000000;stroke:none"
-   id="tspan2967"> remove wrongly annotated transcripts</tspan><tspan
+   id="tspan1907"> remove wrongly annotated transcripts</tspan><tspan
    y="286.30365"
-   id="tspan2971"> </tspan></tspan><tspan
+   id="tspan1911"> </tspan></tspan><tspan
          x="147.53874"
          y="291.5953"
-         id="tspan2975"><tspan
+         id="tspan1915"><tspan
    style="fill:#000000;stroke:none"
-   id="tspan2973">(chytrid transcript found in uninfected</tspan><tspan
+   id="tspan1913">(chytrid transcript found in uninfected</tspan><tspan
    y="291.5953"
-   id="tspan2977"> </tspan></tspan><tspan
+   id="tspan1917"> </tspan></tspan><tspan
          x="147.53874"
          y="296.88695"
-         id="tspan2981"><tspan
+         id="tspan1921"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan2979">cyanobacteria)</tspan></tspan></text>
+           id="tspan1919">cyanobacteria)</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-size:5.29167px;line-height:1;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:64.0873;display:inline;fill:#ffffff;stroke:#000000;stroke-width:1;stop-color:#000000"
@@ -484,34 +480,34 @@
        transform="translate(121.57512,-65.554644)"><tspan
          x="147.53874"
          y="286.30365"
-         id="tspan2985"><tspan
+         id="tspan1925"><tspan
    style="fill:#000000;stroke:none"
-   id="tspan2983"> remove wrongly annotated</tspan><tspan
+   id="tspan1923"> remove wrongly annotated</tspan><tspan
    y="286.30365"
-   id="tspan2987"> </tspan></tspan><tspan
+   id="tspan1927"> </tspan></tspan><tspan
          x="147.53874"
          y="291.5953"
-         id="tspan2993"><tspan
+         id="tspan1933"><tspan
    style="fill:#000000;stroke:none"
-   id="tspan2989">transcripts</tspan> <tspan
+   id="tspan1929">transcripts</tspan> <tspan
    style="fill:#000000;stroke:none"
-   id="tspan2991">(cyanobacteria</tspan><tspan
+   id="tspan1931">(cyanobacteria</tspan><tspan
    y="291.5953"
-   id="tspan2995"> </tspan></tspan><tspan
+   id="tspan1935"> </tspan></tspan><tspan
          x="147.53874"
          y="296.88695"
-         id="tspan3001"><tspan
+         id="tspan1941"><tspan
    style="fill:#000000;stroke:none"
-   id="tspan2997">transcripts found in</tspan> <tspan
+   id="tspan1937">transcripts found in</tspan> <tspan
    style="fill:#000000;stroke:none"
-   id="tspan2999">free-</tspan></tspan><tspan
+   id="tspan1939">free-</tspan></tspan><tspan
          x="147.53874"
          y="302.17861"
-         id="tspan3007"><tspan
+         id="tspan1947"><tspan
    style="fill:#000000;stroke:none"
-   id="tspan3003">living chytrid</tspan> <tspan
+   id="tspan1943">living chytrid</tspan> <tspan
    style="fill:#000000;stroke:none"
-   id="tspan3005">zoospores)</tspan></tspan></text>
+   id="tspan1945">zoospores)</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-size:5.29167px;line-height:1;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:90.4546;display:inline;fill:#000000;stroke:none;stroke-width:1;stop-color:#000000"
@@ -521,13 +517,13 @@
        transform="translate(52.050953,-55.300743)"><tspan
          x="147.53874"
          y="286.30365"
-         id="tspan3009">check saturation levels
+         id="tspan1949">check saturation levels
 </tspan><tspan
          x="147.53874"
          y="291.87898"
-         id="tspan3013">(<tspan
+         id="tspan1953">(<tspan
    style="font-style:italic;-inkscape-font-specification:'Helvetica Italic'"
-   id="tspan3011">NOISeq</tspan>)</tspan></text>
+   id="tspan1951">NOISeq</tspan>)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:5.29167px;line-height:1;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:62.0627;display:inline;fill:#ffffff;stroke:#000000;stroke-width:1;stop-color:#000000"
@@ -537,26 +533,26 @@
        transform="translate(52.026164,-16.23515)"><tspan
          x="147.53874"
          y="286.30365"
-         id="tspan3017"><tspan
+         id="tspan1957"><tspan
    style="fill:#000000;stroke:none"
-   id="tspan3015">Differential gene</tspan><tspan
+   id="tspan1955">Differential gene</tspan><tspan
    y="286.30365"
-   id="tspan3019"> </tspan></tspan><tspan
+   id="tspan1959"> </tspan></tspan><tspan
          x="147.53874"
          y="291.5953"
-         id="tspan3023"><tspan
+         id="tspan1963"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan3021">expression analysis
+           id="tspan1961">expression analysis
 </tspan></tspan><tspan
          x="147.53874"
          y="297.17063"
-         id="tspan3031"><tspan
+         id="tspan1971"><tspan
            style="fill:#000000;stroke:none"
-           id="tspan3025">(</tspan><tspan
+           id="tspan1965">(</tspan><tspan
            style="font-style:italic;-inkscape-font-specification:'Helvetica Italic';fill:#000000;stroke:none"
-           id="tspan3027">DESeq2</tspan><tspan
+           id="tspan1967">DESeq2</tspan><tspan
            style="fill:#000000;stroke:none"
-           id="tspan3029">)</tspan></tspan></text>
+           id="tspan1969">)</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:center;text-decoration-color:#000000;text-anchor:middle;fill:#000000;stroke:none;stroke-width:1;stop-color:#000000"
@@ -588,15 +584,15 @@
          id="text9080"><tspan
            x="100.6854"
            y="5.5492959"
-           id="tspan3035"><tspan
+           id="tspan1975"><tspan
              style="font-style:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3033">Raw RNAseq reads (NovaSeq Illumina)
+             id="tspan1973">Raw RNAseq reads (NovaSeq Illumina)
 </tspan></tspan><tspan
            x="100.6854"
            y="12.447563"
-           id="tspan3039"><tspan
+           id="tspan1979"><tspan
              style="font-style:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3037"> N=36 samples</tspan></tspan></text>
+             id="tspan1977"> n = 36 samples</tspan></tspan></text>
     </g>
     <g
        id="g57960"
@@ -619,16 +615,17 @@
          transform="translate(0.22223788,49.499222)"><tspan
            x="100.6854"
            y="5.5492959"
-           id="tspan3043"><tspan
+           id="tspan1983"><tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3041">Trimmed mRNA RNAseq reads</tspan><tspan
-   y="5.5492959"
-   id="tspan3045"> </tspan></tspan><tspan
+   id="tspan1981">Trimmed mRNA RNAseq reads</tspan> 
+</tspan><tspan
            x="100.6854"
            y="12.447563"
-           id="tspan3049"><tspan
+           id="tspan1989"><tspan
              style="font-style:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3047">N=36 samples</tspan></tspan></text>
+             id="tspan1985">n = </tspan><tspan
+             style="font-style:normal;-inkscape-font-specification:Helvetica"
+             id="tspan1987">36 samples</tspan></tspan></text>
     </g>
     <text
        xml:space="preserve"
@@ -681,7 +678,11 @@
          style="stroke-width:1"
          x="80.302063"
          y="36.073948"
-         id="tspan12008">(Trimmomatic)</tspan></text>
+         id="tspan12008"><tspan
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Helvetica;-inkscape-font-specification:Helvetica"
+   id="tspan828">(</tspan>Trimmomatic<tspan
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Helvetica;-inkscape-font-specification:Helvetica"
+   id="tspan830">)</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:77.7761;display:inline;fill:#ff0000;stroke:none;stroke-width:1;stop-color:#000000"
@@ -691,27 +692,27 @@
        transform="translate(1.8211415,-2.6912678)"><tspan
          x="-13.098498"
          y="40.209904"
-         id="tspan3057"><tspan
+         id="tspan1997"><tspan
    style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold'"
-   id="tspan3051">(1) </tspan><tspan
+   id="tspan1991">(1) </tspan><tspan
    style="font-style:italic;font-weight:bold;-inkscape-font-specification:'Helvetica Bold Italic'"
-   id="tspan3053">De novo</tspan> <tspan
+   id="tspan1993">De novo</tspan> <tspan
    style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold'"
-   id="tspan3055">transcriptome</tspan><tspan
+   id="tspan1995">transcriptome</tspan><tspan
    y="40.209904"
-   id="tspan3059"> </tspan></tspan><tspan
+   id="tspan1999"> </tspan></tspan><tspan
          x="-13.098498"
          y="47.10817"
-         id="tspan3063"><tspan
+         id="tspan2003"><tspan
    style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold'"
-   id="tspan3061">assembly and annotation of</tspan><tspan
+   id="tspan2001">assembly and annotation of</tspan><tspan
    y="47.10817"
-   id="tspan3065"> </tspan></tspan><tspan
+   id="tspan2005"> </tspan></tspan><tspan
          x="-13.098498"
          y="54.006436"
-         id="tspan3069"><tspan
+         id="tspan2009"><tspan
            style="font-style:italic;font-weight:bold;-inkscape-font-specification:'Helvetica Bold Italic'"
-           id="tspan3067">Rhizophydium megarrhizum</tspan></tspan></text>
+           id="tspan2007">Rhizophydium megarrhizum</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:Helvetica;text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:91.1334;display:inline;fill:#0044aa;stroke:none;stroke-width:1;stop-color:#000000"
@@ -721,24 +722,24 @@
        transform="translate(238.08222,102.94593)"><tspan
          x="-13.098498"
          y="40.209904"
-         id="tspan3073"><tspan
+         id="tspan2013"><tspan
            style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold'"
-           id="tspan3071">(2) Differential gene expression:
+           id="tspan2011">(2) Differential gene expression:
 </tspan></tspan><tspan
          x="-13.098498"
          y="46.824491"
-         id="tspan3079"><tspan
+         id="tspan2019"><tspan
    style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold'"
-   id="tspan3075">assess impact on infection</tspan> <tspan
+   id="tspan2015">assess impact of infection</tspan> <tspan
    style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold'"
-   id="tspan3077">and</tspan><tspan
+   id="tspan2017">and</tspan><tspan
    y="46.824491"
-   id="tspan3081"> </tspan></tspan><tspan
+   id="tspan2021"> </tspan></tspan><tspan
          x="-13.098498"
          y="53.439077"
-         id="tspan3085"><tspan
+         id="tspan2025"><tspan
            style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold'"
-           id="tspan3083">metolachlor</tspan></tspan></text>
+           id="tspan2023">metolachlor</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold Italic';text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:72.74;display:inline;fill:#000000;stroke:none;stroke-width:1;stop-color:#000000"
@@ -748,15 +749,15 @@
        transform="translate(6.2632012,-4.3784479)"><tspan
          x="24.427748"
          y="105.4077"
-         id="tspan3095"><tspan
+         id="tspan2035"><tspan
            style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-           id="tspan3087">de novo</tspan><tspan
+           id="tspan2027">de novo</tspan><tspan
            style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-           id="tspan3089"> assembly 1 (</tspan><tspan
+           id="tspan2029"> assembly 1 (</tspan><tspan
            style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-           id="tspan3091">Trinity</tspan><tspan
+           id="tspan2031">Trinity</tspan><tspan
            style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-           id="tspan3093">)</tspan></tspan></text>
+           id="tspan2033">)</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold Italic';text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:147.521;display:inline;fill:#000000;stroke:none;stroke-width:1;stop-color:#000000"
@@ -766,15 +767,15 @@
        transform="translate(-29.190979,44.608255)"><tspan
          x="24.427748"
          y="105.4077"
-         id="tspan3105"><tspan
+         id="tspan2045"><tspan
            style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-           id="tspan3097">de novo</tspan><tspan
+           id="tspan2037">de novo</tspan><tspan
            style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-           id="tspan3099"> assembly 2 (</tspan><tspan
+           id="tspan2039"> assembly 2 (</tspan><tspan
            style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-           id="tspan3101">Trinity</tspan><tspan
+           id="tspan2041">Trinity</tspan><tspan
            style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-           id="tspan3103">)</tspan></tspan></text>
+           id="tspan2043">)</tspan></tspan></text>
     <g
        id="g31793-4"
        transform="translate(70.959342,64.000048)" />
@@ -805,29 +806,29 @@
              transform="translate(125.37703,81.819254)"><tspan
                x="24.427748"
                y="105.4077"
-               id="tspan3111"><tspan
+               id="tspan2051"><tspan
    style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3107">combined reference</tspan> <tspan
+   id="tspan2047">combined reference</tspan> <tspan
    style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-   id="tspan3109">P.agardhii</tspan><tspan
+   id="tspan2049">P.agardhii</tspan><tspan
    y="105.4077"
-   id="tspan3113"> </tspan></tspan><tspan
+   id="tspan2053"> </tspan></tspan><tspan
                x="24.427748"
                y="112.30597"
-               id="tspan3121"><tspan
+               id="tspan2061"><tspan
    style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3115">+ our</tspan><tspan
+   id="tspan2055">+ our</tspan><tspan
    style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-   id="tspan3117"> de</tspan> <tspan
+   id="tspan2057"> de</tspan> <tspan
    style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-   id="tspan3119">novo R. megarrhizum</tspan><tspan
+   id="tspan2059">novo R. megarrhizum</tspan><tspan
    y="112.30597"
-   id="tspan3123"> </tspan></tspan><tspan
+   id="tspan2063"> </tspan></tspan><tspan
                x="24.427748"
                y="119.20424"
-               id="tspan3127"><tspan
+               id="tspan2067"><tspan
                  style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-                 id="tspan3125">transcriptome
+                 id="tspan2065">transcriptome
 </tspan></tspan></text>
         </g>
       </g>
@@ -841,15 +842,15 @@
        transform="translate(110.75956,63.441737)"><tspan
          x="24.427748"
          y="105.4077"
-         id="tspan3131"><tspan
+         id="tspan2071"><tspan
            style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-           id="tspan3129">Reads mapping
+           id="tspan2069">Reads mapping
 </tspan></tspan><tspan
          x="24.427748"
          y="112.30597"
-         id="tspan3135"><tspan
+         id="tspan2075"><tspan
            style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-           id="tspan3133">(xxx)</tspan></tspan></text>
+           id="tspan2073">(Bowtie)</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Bold Italic';text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:65.2983;display:inline;fill:#000000;stroke:none;stroke-width:1;stop-color:#000000"
@@ -859,16 +860,20 @@
        transform="translate(171.46225,75.335344)"><tspan
          x="24.427748"
          y="105.4077"
-         id="tspan3139"><tspan
+         id="tspan2079"><tspan
    style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3137">Transcripts quantification</tspan><tspan
+   id="tspan2077">Transcripts quantification</tspan><tspan
    y="105.4077"
-   id="tspan3141"> </tspan></tspan><tspan
+   id="tspan2081"> </tspan></tspan><tspan
          x="24.427748"
          y="112.30597"
-         id="tspan3145"><tspan
+         id="tspan2089"><tspan
+           style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
+           id="tspan2083">(</tspan><tspan
            style="font-weight:normal;-inkscape-font-specification:'Helvetica Italic'"
-           id="tspan3143">(Trinity)</tspan></tspan></text>
+           id="tspan2085">Trinity</tspan><tspan
+           style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
+           id="tspan2087">)</tspan></tspan></text>
     <g
        id="g7788"
        transform="translate(0,-4.3989244)">
@@ -890,9 +895,9 @@
          transform="translate(139.98483,112.04414)"><tspan
            x="24.427748"
            y="105.4077"
-           id="tspan3149"><tspan
+           id="tspan2093"><tspan
              style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3147">RSEM chytrid matrix</tspan></tspan></text>
+             id="tspan2091">RSEM chytrid matrix</tspan></tspan></text>
     </g>
     <g
        id="g7778"
@@ -915,9 +920,9 @@
          transform="matrix(-1,0,0,1,258.73024,112.06056)"><tspan
            x="24.427748"
            y="105.4077"
-           id="tspan3153"><tspan
+           id="tspan2097"><tspan
              style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3151">RSEM cyanobacteria matrix</tspan></tspan></text>
+             id="tspan2095">RSEM cyanobacteria matrix</tspan></tspan></text>
     </g>
     <g
        id="g5550"
@@ -940,9 +945,9 @@
          transform="translate(136.88958,179.40592)"><tspan
            x="24.427748"
            y="105.4077"
-           id="tspan3157"><tspan
+           id="tspan2101"><tspan
              style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3155">chytrid count matrix, filtered</tspan></tspan></text>
+             id="tspan2099">chytrid count matrix, filtered</tspan></tspan></text>
     </g>
     <g
        id="g5550-2"
@@ -968,16 +973,16 @@
            transform="translate(116.57749,164.48245)"><tspan
              x="24.427748"
              y="105.4077"
-             id="tspan3161"><tspan
+             id="tspan2105"><tspan
    style="font-style:normal;-inkscape-font-specification:'Helvetica Bold'"
-   id="tspan3159">Differentially expressed</tspan><tspan
+   id="tspan2103">Differentially expressed</tspan><tspan
    y="105.4077"
-   id="tspan3163"> </tspan></tspan><tspan
+   id="tspan2107"> </tspan></tspan><tspan
              x="24.427748"
              y="112.30597"
-             id="tspan3167"><tspan
+             id="tspan2111"><tspan
                style="font-style:normal;-inkscape-font-specification:'Helvetica Bold'"
-               id="tspan3165">chytrid genes</tspan></tspan></text>
+               id="tspan2109">chytrid genes</tspan></tspan></text>
       </g>
       <g
          id="g8950"
@@ -1000,18 +1005,18 @@
            transform="translate(187.60723,164.49302)"><tspan
              x="24.427748"
              y="105.4077"
-             id="tspan3171"><tspan
+             id="tspan2115"><tspan
    style="font-style:normal;-inkscape-font-specification:'Helvetica Bold'"
-   id="tspan3169">Differentially expressed</tspan><tspan
+   id="tspan2113">Differentially expressed</tspan><tspan
    y="105.4077"
-   id="tspan3173"> </tspan></tspan><tspan
+   id="tspan2117"> </tspan></tspan><tspan
              x="24.427748"
              y="112.30597"
-             id="tspan3179"><tspan
+             id="tspan2123"><tspan
                style="font-style:normal;-inkscape-font-specification:'Helvetica Bold'"
-               id="tspan3175">cyanobacteria</tspan><tspan
+               id="tspan2119">cyanobacteria</tspan><tspan
                style="font-style:normal;-inkscape-font-specification:'Helvetica Bold'"
-               id="tspan3177"> genes</tspan></tspan></text>
+               id="tspan2121"> genes</tspan></tspan></text>
       </g>
       <text
          xml:space="preserve"
@@ -1040,9 +1045,9 @@
          transform="translate(216.82948,179.46773)"><tspan
            x="24.427748"
            y="105.4077"
-           id="tspan3183"><tspan
+           id="tspan2127"><tspan
              style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3181">cyanobacteria count matrix, filtered</tspan></tspan></text>
+             id="tspan2125">cyanobacteria count matrix, filtered</tspan></tspan></text>
     </g>
     <g
        id="g58053"
@@ -1067,15 +1072,17 @@
            transform="translate(-52.377523,-6.8471698)"><tspan
              x="24.427748"
              y="105.4077"
-             id="tspan3187"><tspan
+             id="tspan2131"><tspan
                style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-               id="tspan3185">chytrid zoospores reads
+               id="tspan2129">chytrid zoospores reads
 </tspan></tspan><tspan
              x="24.427748"
              y="112.30597"
-             id="tspan3191"><tspan
+             id="tspan2137"><tspan
                style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-               id="tspan3189">N=12 samples
+               id="tspan2133">n</tspan><tspan
+               style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
+               id="tspan2135"> = 12 samples
 </tspan></tspan></text>
       </g>
     </g>
@@ -1100,15 +1107,17 @@
          transform="translate(43.85267,-5.9673224)"><tspan
            x="24.427748"
            y="105.4077"
-           id="tspan3195"><tspan
+           id="tspan2141"><tspan
              style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3193">bacterial filaments infected with chytrid reads
+             id="tspan2139">bacterial filaments infected with chytrid reads
 </tspan></tspan><tspan
            x="24.427748"
            y="112.30597"
-           id="tspan3199"><tspan
+           id="tspan2147"><tspan
              style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3197">N=12 samples</tspan></tspan></text>
+             id="tspan2143">n</tspan><tspan
+             style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
+             id="tspan2145"> = 12 samples</tspan></tspan></text>
     </g>
     <g
        id="g58700"
@@ -1131,11 +1140,11 @@
          transform="translate(-49.117466,21.553822)"><tspan
            x="15.766479"
            y="123.69167"
-           id="tspan3203"><tspan
+           id="tspan2151"><tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3201"> Fungi mapped transcripts</tspan><tspan
+   id="tspan2149"> Fungi mapped transcripts</tspan><tspan
    y="123.69167"
-   id="tspan3205"> </tspan></tspan></text>
+   id="tspan2153"> </tspan></tspan></text>
     </g>
     <g
        id="g58700-9"
@@ -1158,11 +1167,11 @@
          transform="translate(-49.117466,21.553822)"><tspan
            x="15.766479"
            y="123.69167"
-           id="tspan3209"><tspan
+           id="tspan2157"><tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3207"> Fungi mapped transcripts</tspan><tspan
+   id="tspan2155"> Fungi mapped transcripts</tspan><tspan
    y="123.69167"
-   id="tspan3211"> </tspan></tspan></text>
+   id="tspan2159"> </tspan></tspan></text>
     </g>
     <text
        xml:space="preserve"
@@ -1173,13 +1182,13 @@
        transform="translate(14.882002,-11.120595)"><tspan
          x="15.766479"
          y="123.69167"
-         id="tspan3219"><tspan
+         id="tspan2167"><tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3213">Decontamination 1 </tspan><tspan
+   id="tspan2161">Decontamination 1 </tspan><tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3215">(</tspan>Diamond BLASTX<tspan
+   id="tspan2163">(</tspan>Diamond BLASTX<tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3217">)</tspan></tspan></text>
+   id="tspan2165">)</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Italic';text-align:center;text-decoration-color:#000000;text-anchor:middle;white-space:pre;inline-size:149.018;display:inline;fill:#000000;stroke:none;stroke-width:1;stop-color:#000000"
@@ -1189,11 +1198,11 @@
        transform="translate(-32.743016,47.732592)"><tspan
          x="15.766479"
          y="123.69167"
-         id="tspan3225"><tspan
+         id="tspan2173"><tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3221">Decontamination 2 (</tspan>Diamond BLASTX<tspan
+   id="tspan2169">Decontamination 2 (</tspan>Diamond BLASTX<tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3223">)</tspan></tspan></text>
+   id="tspan2171">)</tspan></tspan></text>
     <g
        id="g5906"
        transform="translate(10.432384,-34.931576)">
@@ -1215,9 +1224,9 @@
          transform="translate(4.3517207,93.696669)"><tspan
            x="15.766479"
            y="123.69167"
-           id="tspan3229"><tspan
+           id="tspan2177"><tspan
              style="font-style:normal;-inkscape-font-specification:Helvetica"
-             id="tspan3227">Eukaryote mapped transcripts</tspan></tspan></text>
+             id="tspan2175">Eukaryote mapped transcripts</tspan></tspan></text>
     </g>
     <text
        xml:space="preserve"
@@ -1228,15 +1237,19 @@
        transform="translate(14.614769,10.274955)"><tspan
          x="15.766479"
          y="123.69167"
-         id="tspan3233"><tspan
+         id="tspan2181"><tspan
    style="font-style:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3231">Paired-end reads extraction</tspan>
+   id="tspan2179">Paired-end reads extraction</tspan>
 </tspan><tspan
          x="15.766479"
          y="130.58994"
-         id="tspan3235">(minimap2, bedtools, seqtk)<tspan
+         id="tspan2187"><tspan
+   style="font-style:normal;-inkscape-font-specification:Helvetica"
+   id="tspan2183">(</tspan>minimap2, bedtools, seqtk<tspan
+   style="font-style:normal;-inkscape-font-specification:Helvetica"
+   id="tspan2185">)</tspan><tspan
    y="130.58994"
-   id="tspan3237"> </tspan></tspan></text>
+   id="tspan2189"> </tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.29167px;line-height:normal;font-family:Helvetica;-inkscape-font-specification:'Helvetica Italic';text-align:center;text-decoration-color:#000000;text-anchor:middle;fill:#000000;fill-opacity:0.498039;stroke:none;stroke-width:0.499999;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stop-color:#000000"
@@ -1305,11 +1318,11 @@
          transform="translate(-4.6372825,85.018394)"><tspan
            x="24.427748"
            y="105.4077"
-           id="tspan3241"><tspan
+           id="tspan2193"><tspan
    style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3239">chytrid draft transcriptome</tspan><tspan
+   id="tspan2191">chytrid draft transcriptome</tspan><tspan
    y="105.4077"
-   id="tspan3243"> </tspan></tspan></text>
+   id="tspan2195"> </tspan></tspan></text>
     </g>
     <g
        id="g8468"
@@ -1332,9 +1345,9 @@
          transform="translate(-124.23642,-49.576121)"><tspan
            x="147.53874"
            y="286.30365"
-           id="tspan3247"><tspan
+           id="tspan2199"><tspan
              style="fill:#000000;stroke:none"
-             id="tspan3245">Clean transcriptome</tspan></tspan></text>
+             id="tspan2197">Clean transcriptome</tspan></tspan></text>
     </g>
     <g
        id="g5456"
@@ -1360,23 +1373,23 @@
            transform="translate(-110.22792,-7.03761)"><tspan
              x="147.53874"
              y="286.30365"
-             id="tspan3255"><tspan
+             id="tspan2207"><tspan
                style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold';fill:#000000;stroke:none"
-               id="tspan3249">de novo</tspan><tspan
+               id="tspan2201">de novo</tspan><tspan
                style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold';fill:#000000;stroke:none"
-               id="tspan3251"> assembled and annotated </tspan><tspan
+               id="tspan2203"> assembled and annotated </tspan><tspan
                style="fill:#000000;stroke:none"
-               id="tspan3253">
+               id="tspan2205">
 </tspan></tspan><tspan
              x="147.53874"
              y="291.87898"
-             id="tspan3263"><tspan
+             id="tspan2215"><tspan
                style="font-style:italic;font-weight:bold;-inkscape-font-specification:'Helvetica Bold Italic';fill:#000000;stroke:none"
-               id="tspan3257">R. megarrhizum</tspan><tspan
+               id="tspan2209">R. megarrhizum</tspan><tspan
                style="fill:#000000;stroke:none"
-               id="tspan3259"> </tspan><tspan
+               id="tspan2211"> </tspan><tspan
                style="font-weight:bold;-inkscape-font-specification:'Helvetica Bold';fill:#000000;stroke:none"
-               id="tspan3261">transcriptome</tspan></tspan></text>
+               id="tspan2213">transcriptome</tspan></tspan></text>
       </g>
     </g>
     <text
@@ -1388,16 +1401,16 @@
        transform="translate(174.95493,137.62331)"><tspan
          x="24.427748"
          y="105.4077"
-         id="tspan3267"><tspan
+         id="tspan2219"><tspan
    style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-   id="tspan3265">low quality transcripts and</tspan><tspan
+   id="tspan2217">low quality transcripts and</tspan><tspan
    y="105.4077"
-   id="tspan3269"> </tspan></tspan><tspan
+   id="tspan2221"> </tspan></tspan><tspan
          x="24.427748"
          y="112.30597"
-         id="tspan3273"><tspan
+         id="tspan2225"><tspan
            style="font-style:normal;font-weight:normal;-inkscape-font-specification:Helvetica"
-           id="tspan3271">samples filtering</tspan></tspan></text>
+           id="tspan2223">samples filtering</tspan></tspan></text>
     <path
        style="fill:none;fill-opacity:0.113725;stroke:#999999;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stop-color:#000000"
        d="m 101.32298,67.23525 54.33268,0.249999 0.20131,122.443951"

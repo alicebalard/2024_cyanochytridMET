@@ -252,6 +252,10 @@ moduleTraitPvalue = corPvalueStudent(moduleTraitCor, length(treatment))
 moduleTraitCor; moduleTraitPvalue
 # MEgreenyellow: cor = 0.85060744; p-value= 0.01526171
 
+## Color greenyellow
+ggplot(data.frame(x=1,y=1), aes(x,y))+
+  geom_point(pch=21, size = 20, fill = "greenyellow")
+
 # If you plot eigengene boxplots for these 3, you’ll see how they change by treatment.
 meta <- data.frame(
   Sample = rownames(net_combined$MEs),
@@ -345,25 +349,26 @@ summary_table <- hub_genes %>%
     CyanoHubGenes = paste(gene[org == "cyano"], collapse = ", "),
     ChytridHubGenes = paste(gene[org == "chytrid"], collapse = ", ")
   ) %>%
-  arrange(desc(CyanoGenes + ChytridGenes))%>% # Order by total genes
-  filter(CyanoGenes >0 & ChytridGenes > 0)  # rm if only one organism
+  arrange(desc(CyanoGenes + ChytridGenes)) # Order by total genes
 
 modules2plot <- summary_table$module
+# 
+# 1 turquoise          4            9 "GeneID:77288813, mutS, GeneID:77289282, GeneID:77288010"                              ELP1_XENLA, WD…
+# 2 blue               5            6 "GeneID:77286691, GeneID:77287462, GeneID:77290358, GeneID:77287484, GeneID:77290423"  SYWC_SCHPO, NO…
+# 3 brown              7            1 "GeneID:77287245, GeneID:77289460, GeneID:77286317, GeneID:77289490, pgl, fni, GeneID… AFG32_HUMAN    
+#  4 green              5            2 "GeneID:77287477, GeneID:77288178, hpsU, rplV, glpX"                                   RS6B_SCHPO, KP…
+#  5 red                5            2 "
 
 # Create a workbook
 wb <- createWorkbook()
 addWorksheet(wb, "WGCNA Summary")
-
-# Add WGCNA color codes (base R handles them as named colors)
-summary_table <- summary_table %>%
-  mutate(module_color = labels2colors(module))
 
 # Write data (exclude the color column for display)
 writeData(wb, sheet = 1, x = summary_table %>% select(-module_color), startCol = 1, startRow = 1)
 
 # Highlight each cell in the module column with its module color
 for (i in seq_len(nrow(summary_table))) {
-  mod_col <- summary_table$module_color[i]
+  mod_col <- summary_table$module[i]
   
   # Set cell style with fill color
   style <- createStyle(fgFill = mod_col, fontColour = "#FFFFFF")  # White text
@@ -449,8 +454,8 @@ plots <- hub_genes %>%
 # Remove NULL plots if any
 plots <- compact(plots) 
 
-pdf("../../figures/Fig5c.network.pdf", width = 12, height = 1)
-wrap_plots(plots, ncol = 4)
+pdf("../../figures/Fig5c.network.pdf", width = 12, height = 13)
+wrap_plots(plots, ncol = 5)
 dev.off()
 
 
