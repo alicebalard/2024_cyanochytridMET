@@ -46,10 +46,10 @@ pickSoftPow <- function(vst){
   par(mfrow = c(1, ))
 }
 
-pickSoftPow(vst_chy)
+# pickSoftPow(vst_chy)
 softPower_chy <- 8 # mean connectivity 1.5900 ok
-
-pickSoftPow(vst_cyano)
+# 
+# pickSoftPow(vst_cyano)
 softPower_chy <- 14 # mean connectivity 2.090 ok
 
 ## ===============================
@@ -207,6 +207,17 @@ net_combined <- blockwiseModules(
 
 # Number of modules identified:
 table(net_combined$colors)
+
+# black          blue         brown          cyan     darkgreen       darkred 
+# 69           112            85            47            34            34 
+# darkturquoise         green   greenyellow          grey        grey60     lightcyan 
+# 33            79            53            15            43            47 
+# lightgreen   lightyellow       magenta  midnightblue          pink        purple 
+# 40            38            64            47            67            60 
+# red     royalblue        salmon           tan     turquoise        yellow 
+# 74            35            51            51           133            79 
+
+sum(table(net_combined$colors))
 
 ## ===============================
 ## 🎨 4. Dendrogram & colors
