@@ -23,5 +23,5 @@ OUT=/scratch/alicebalard/outData/assemblyMergedFungi/annotation/transdecoder
 ## Step 1: extract the long open reading frames
 perl TransDecoder.LongOrfs -t $TRAN --gene_trans_map $GTM --output_dir $OUT
 
-## Step 3: predict the likely coding regions
+## Step 2: predict the likely coding regions
 perl TransDecoder.Predict -t $TRAN --output_dir $OUT
