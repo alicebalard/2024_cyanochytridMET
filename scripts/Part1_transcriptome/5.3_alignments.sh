@@ -38,7 +38,7 @@ minimap2 -ax sr -t $num_threads $ASSEMBLY \
 | samtools sort -@$num_threads -O BAM -o assemblyZ.reads.bam -
 
 ##############################################################
-## Second assembly: In1 to In12, chytrids infected by bacteria
+## Second assembly: In1 to In12, bacteria infected by chytrids  
 ASSEMBLY=/scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
 READS1=/scratch/alicebalard/outData/assembly_In/combined_left.fq
 READS2=/scratch/alicebalard/outData/assembly_In/combined_right.fq
