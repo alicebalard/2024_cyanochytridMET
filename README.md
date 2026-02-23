@@ -8,6 +8,8 @@ This is the pipeline and the files it should create (note: some of the files are
 
 # Pipeline description:
 
+# Part 1. Transcriptome
+
 ## Step 1.1: remove rRNA
 **script:** scripts/Part1_transcriptome/1.1_runSortmeRNA.sh
 
@@ -194,13 +196,51 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 
 **output:** /scratch/alicebalard/outData/assemblyMergedFungi/BUSCO_MergedFungiTranscriptome_eukaryoteHits
 
-## TBC...
+## Step 8. Decontaminate post DEG (to do after part 2)
+**script:** 8_cleanTranscriptomeAfterDEG.sh
 
+**input:** listOfTranscriptContaminant_toRmFromChytridTranscriptome from part 2 S04
 
+**output:** /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.rmDEGconta.fasta
 
+# Part 2. DEG
 
+## Step 1. Prepare combined transcriptome
+**script:** S01_prepareCombinedTranscriptome.sh
 
+**input:**
+T_CHY=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta
+T_CHY_GTM=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map
+T_CYA=/scratch/alicebalard/outData/mergedTransc/GCF_904830935.1_P._agardhii_No.976_rna_from_genomic.fna
 
+**output:**
+/scratch/erikamr/cyano_chytrid_met/data/combined_gene_trans_map_cds_final_hope.txt
+/scratch/erikamr/cyano_chytrid_met/data/assembly_both_cds_final_hope.fna
 
+## Step 2. Mapping with bowtie 
+**script:** S02_mappingBowtie.sh
 
+**input:**
+prepared in S01: 
+ASSEMBLY_BOTH=/scratch/erikamr/cyano_chytrid_met/data/assembly_both_cds_final_hope.fna
+GTM=/scratch/erikamr/cyano_chytrid_met/data/combined_gene_trans_map_cds_final_hope.txt
 
+manually prepared (removing bad quality samples):                                             
+SAMPLE_FILE=/scratch/erikamr/cyano_chytrid_met/data/samples_file_remove.txt
+
+**output:** found in OUTDIR=/scratch/erikamr/cyano_chytrid_met/data/out_trinity_align_rsem_final_hope
+
+## Step 3. Generate count matrix
+**script:** S03_make_count_matrix_RSEM.sh
+
+**input:** 
+Created in S01: GTM=/scratch/erikamr/cyano_chytrid_met/data/combined_gene_trans_map_cds_final_hope.txt
+Manually made listing S02 results: QUANT=/scratch/erikamr/cyano_chytrid_met/data/quant_file_isoform_final_hope.txt
+
+**output:** in: /scratch/erikamr/cyano_chytrid_met/scripts/RSEM_final_hope_matrices
+
+## Step 4. DEG analysis in R
+**script:** S04_fullAnalysis (& dataload.R): generate all results for DEG, as well as data/listOfTranscriptContaminant_toRmFromChytridTranscriptome useful in part 1 script 8
+
+# Part 3. WGCNA
+**script:** networkAnalysis.R Builds up on part 2
