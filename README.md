@@ -47,7 +47,7 @@ This is the pipeline and the files it should create (note: some of the files are
 
 **output:** /scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta
 
-## Step 4.2: assemble a de novo transcriptome for the infecting chytrid R. megarrhizum *** to change Jurgen adding the extra RNAseq from co-culture experiment***
+## Step 4.2: assemble a de novo transcriptome for the infecting chytrid R. megarrhizum *** adding the new RNAseq from co-culture experiment***
 **script:** scripts/Part1_transcriptome/4.2_transcriptomeAssemblyInfectedFilaments.sh
 
 **input:** /scratch/alicebalard/outData/sortmerna/In'$i'_non_rRNA_fwd.fq.gz & In'$i'_non_rRNA_rev.fq.gz
