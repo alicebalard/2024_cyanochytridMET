@@ -63,7 +63,7 @@ This is the pipeline and the files it should create (note: some of the files are
 
 **output:** print basic transcriptome stats
 
-## Step 5.1: diamond blastx for both assemblies against uniprot *** to change Jurgen for nr ?***
+## Step 5.1: diamond blastx for both assemblies against nr *** previously uniprot, changed ***
 **script:** scripts/Part1_transcriptome/5.1_diamondBlastX.sh
 
 **input:**
