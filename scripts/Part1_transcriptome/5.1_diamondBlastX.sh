@@ -17,11 +17,6 @@
 LMOD_DISABLE_SAME_NAME_AUTOSWAP=no
 
 module purge
-module load Anaconda3
-
-source ~/.bashrc
-conda init --all
-conda activate btk
 
 cd /scratch/alicebalard/outData/diamondBlastX
 
@@ -31,20 +26,15 @@ module load BLAST+/2.13.0-gompi-2022a
 module load DIAMOND/2.1.8-GCC-12.3.0
 
 echo "Download databases:"
-wget -P /scratch/alicebalard/resources -c http://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.gz ## can be used zipped
-
-wget -P /scratch/alicebalard/resources -c http://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip
-gzip -d /scratch/alicebalard/resources/taxdmp.zip ## needs unzipped to access sub files
-
-wget -P /scratch/alicebalard/resources -c https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/nr.gz ## can be used zipped
+##wget -P /scratch/alicebalard/resources -c http://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.gz ## can be used zipped
+##
+##wget -P /scratch/alicebalard/resources -c http://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip
+##unzip -d taxdmp taxdmp.zip; rm taxdmp.zip ## needs unzipped to access sub files
+##
+##wget -P /scratch/alicebalard/resources -c https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/nr.gz ## can be used zipped
 
 echo "Make diamond db..."
-diamond makedb -p $num_threads\
-  --in /scratch/alicebalard/resources/nr.gz \
-  --db /scratch/alicebalard/resources/nr \
-  --taxonmap /scratch/alicebalard/resources/prot.accession2taxid.FULL.gz \
-  --taxonnodes /scratch/alicebalard/resources/taxdmp/nodes.dmp \
-  --taxonnames /scratch/alicebalard/resources/taxdmp/names.dmp
+diamond makedb -p $num_threads --in /scratch/alicebalard/resources/nr.gz --db /scratch/alicebalard/resources/nr --taxonmap /scratch/alicebalard/resources/prot.accession2taxid.FULL.gz --taxonnodes /scratch/alicebalard/resources/taxdmp/nodes.dmp --taxonnames /scratch/alicebalard/resources/taxdmp/names.dmp
 echo "diamond db done"
 
 echo "Start diamond blastX search..."
@@ -66,7 +56,7 @@ diamond blastx --query $ASSEMBLY \
         --threads $num_threads \
         > $OUT/assemblyZ_diamondNR_1e-5pval.out
 echo "done."
-	
+
 ##############################################################
 echo "Second assembly: In1 to In12, chytrids infected by bacteria, & coculture"
 ASSEMBLY=/scratch/alicebalard/outData/assemblies/assembly_In_coculture/Trinity.fasta
