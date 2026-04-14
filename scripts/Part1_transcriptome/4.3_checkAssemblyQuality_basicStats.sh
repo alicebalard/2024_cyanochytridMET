@@ -14,15 +14,20 @@
 module purge
 module add Trinity/2.10.0-foss-2019b-Python-3.7.4
 
-## Z1Z12
-
-ASSEMBLY="/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta"
+echo "Z1Z12:"
+ASSEMBLY="/scratch/alicebalard/outData/assemblies/assembly_Z/Trinity.fasta"
 echo "basic contig statistics"
 $TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY
 
 
-## In1In12
-
-ASSEMBLY="/scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta"
+echo "In1In12 + coculture:"
+ASSEMBLY="/scratch/alicebalard/outData/assemblies/assembly_In_coculture/Trinity.fasta"
 echo "basic contig statistics"
 $TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY
+
+echo "In1In12 only (previous):"
+ASSEMBLY="/scratch/alicebalard/outData/assemblies/assembly_In/Trinity.fasta"
+echo "basic contig statistics"
+$TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY
+
+assembliesEarlyBAK/assembly_In/
