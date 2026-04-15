@@ -30,6 +30,10 @@ echo "Download databases:"
 ##
 ##wget -P /scratch/alicebalard/resources -c http://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdmp.zip
 ##unzip -d taxdmp taxdmp.zip; rm taxdmp.zip ## needs unzipped to access sub files
+
+## Manual fix: NCBI's newer taxonomy ranks need editing for DIAMOND 2.1.8 compatibility (will be fixed in later diamond version)
+## sed -i 's/\t"domain"\t/\tsuperkingdom\t/g' /scratch/alicebalard/resources/taxdmp/nodes.dmp
+## sed -i 's/\trealm\t/\tsuperkingdom\t/g' /scratch/alicebalard/resources/taxdmp/nodes.dmp
 ##
 ##wget -P /scratch/alicebalard/resources -c https://ftp.ncbi.nlm.nih.gov/blast/db/FASTA/nr.gz ## can be used zipped
 
