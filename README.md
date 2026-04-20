@@ -78,19 +78,19 @@ This is the pipeline and the files it should create (note: some of the files are
 **script:** scripts/Part1_transcriptome/5.2_selectFungi.R
 
 **input:**
-- /scratch/alicebalard/outData/diamondBlastX/assemblyZ_diamond_1e-5pval.out
-- /scratch/alicebalard/outData/diamondBlastX/assemblyIn_diamond_1e-5pval.out
+- /scratch/alicebalard/outData/diamondBlastX/assemblyZ_diamondNR_1e-5pval.out
+- /scratch/alicebalard/outData/diamondBlastX/assemblyIn_cocult_diamondNR_1e-5pval.out
   
 **output:** 
-- /scratch/alicebalard/outData/diamondBlastX/assZ_Fungi_transcripts
-- /scratch/alicebalard/outData/diamondBlastX/assIn_Fungi_transcripts
+- /scratch/alicebalard/outData/diamondBlastX/assZ_nr_Fungi_transcripts
+- /scratch/alicebalard/outData/diamondBlastX/assInCo_nr_Fungi_transcripts
 
 ## Step 5.3: align the original reads to their transcriptomes
 **script:** scripts/Part1_transcriptome/5.3_alignments.sh
 
 **input:**
-- both assemblies (/scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta or /scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta)
-- both sets of combined reads from step 4.1 (/scratch/alicebalard/outData/assembly/combined_left.fq and right, and /scratch/alicebalard/outData/assembly_In/combined_left.fq and right)
+- both assemblies (/scratch/alicebalard/outData/assemblies/assembly_Z/Trinity.fasta or assembly_In_coculture/Trinity.fasta)
+- both sets of combined reads from step 4.1 (assembly_Z/combined_left.fq and right, and assembly_In_coculture/combined_left.fq and right)
   
 **output:** 
 - /scratch/alicebalard/outData/alignments/assemblyZ.reads.bam
@@ -100,7 +100,7 @@ This is the pipeline and the files it should create (note: some of the files are
 **script:** scripts/Part1_transcriptome/5.4_filterReads.sh
 
 **input:**
-- fungi transcripts from 5.2 (/scratch/alicebalard/outData/diamondBlastX/assZ_Fungi_transcripts and In)
+- fungi transcripts from 5.2 (/scratch/alicebalard/outData/diamondBlastX/assZ_nr_Fungi_transcripts and In)
 - bam files from 5.3 (/scratch/alicebalard/outData/alignments/assemblyZ.reads.bam and In)
 
 **output:**
