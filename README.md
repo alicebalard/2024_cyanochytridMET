@@ -67,8 +67,8 @@ This is the pipeline and the files it should create (note: some of the files are
 **script:** scripts/Part1_transcriptome/5.1_diamondBlastX.sh
 
 **input:**
-- assembly 1: /scratch/alicebalard/outData/assembly/trinity_out_dir/Trinity.fasta 
-- assembly 2: /scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
+- assembly 1: /scratch/alicebalard/outData/assemblies/assembly_Z/Trinity.fasta 
+- assembly 2: /scratch/alicebalard/outData/assemblies/assembly_In_coculture/Trinity.fasta
 
 **output:** 
 - /scratch/alicebalard/outData/diamondBlastX/assemblyZ_diamondNR_1e-5pval.out
