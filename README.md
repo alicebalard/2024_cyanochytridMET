@@ -71,9 +71,8 @@ This is the pipeline and the files it should create (note: some of the files are
 - assembly 2: /scratch/alicebalard/outData/assembly_In/trinity_out_dir/Trinity.fasta
 
 **output:** 
-- /scratch/alicebalard/outData/diamondBlastX/assemblyZ_diamond_1e-5pval.out
-- /scratch/alicebalard/outData/diamondBlastX/assemblyIn_diamond_1e-5pval.out
-
+- /scratch/alicebalard/outData/diamondBlastX/assemblyZ_diamondNR_1e-5pval.out
+- /scratch/alicebalard/outData/diamondBlastX/assemblyIn_cocult_diamondNR_1e-5pval.out
 
 ## Step 5.2: Select transcripts from both transcriptomes that are blastx-ing with fungi
 **script:** scripts/Part1_transcriptome/5.2_selectFungi.R
