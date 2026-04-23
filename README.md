@@ -121,21 +121,21 @@ combined reads from 4.1 (/scratch/alicebalard/outData/assemblies/assembly_In_coc
 
 **input:** filtered reads from 5.5 lft & right for Z and In
 
-**output:** /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta
+**output:** /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta
 
 ## Step 6.2: check basic contig statistics with Trinity tools
 **script:** scripts/Part1_transcriptome/6.2_checkAssemblyQuality_basicStats.sh
 
-**input:** assembly from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
+**input:** assembly from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
 
 **output:** print basic transcriptome stats
 
 ## Step 6.3: BUSCO of the transcriptome
 **script:** scripts/Part1_transcriptome/6.3_BUSCOFungiAssembly.sh
 
-**input:** assembly from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
+**input:** assembly from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
 
-**output:** /scratch/alicebalard/outData/assemblyMergedFungi/BUSCO_MergedFungiTrannscriptome
+**output:** /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/BUSCO_MergedFungiTrannscriptome
 
 ## Step 7.1. prepare trinotate for annotation
 **script:** scripts/Part1_transcriptome/7.1_finalTransAnnotation_prepareTrinotate.sh
@@ -146,15 +146,15 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 **script:** scripts/Part1_transcriptome/7.2_finalTransAnnotation_Transdecoder.sh
 
 **input:** 
-- assembly from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
-- gene trans map from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map)
+- assembly from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
+- gene trans map from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map)
 
-**output:** /scratch/alicebalard/outData/assemblyMergedFungi/annotation/transdecoder
+**output:** /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/transdecoder
 
 ## Step 7.3. SignalP done in its own script
 **script:** scripts/Part1_transcriptome/7.3_finalTransAnnotation_SignalP.sh
 
-**input:** output of 7.2 (/scratch/alicebalard/outData/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep)
+**input:** output of 7.2 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep)
 
 **output:** /scratch/alicebalard/outData/assemblyMergedFungi/annotation/sigP6outdir/
 
@@ -162,9 +162,9 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 **script:** scripts/Part1_transcriptome/7.4_finalTransAnnotation_Trinotate.sh
 
 **input:** 
-- assembly from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
-- coding_seqs.pep from 7.2 (/scratch/alicebalard/outData/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep)
-- gene_to_trans_map from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map)
+- assembly from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
+- coding_seqs.pep from 7.2 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep)
+- gene_to_trans_map from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map)
 
 **output:** /scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_simplified_GOKegg.tsv
 
@@ -172,35 +172,35 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 **script:** scripts/Part1_transcriptome/7.5_check_annot.R
 
 **input:**
-- output for 7.4 (/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_simplified_GOKegg.tsv)
-- assembly from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
-- gene_to_trans_map from 6.1 (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map)
+- output for 7.4 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/assemblyMergedFungi_simplified_GOKegg.tsv)
+- assembly from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
+- gene_to_trans_map from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map)
 
 **output:**
-- transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
-- subset of gene trans map for eukaryote (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map)
-- subset annotation file for the Eukaryotic hits (/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv)
+- transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
+- subset of gene trans map for eukaryote (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map)
+- subset annotation file for the Eukaryotic hits (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv)
 
 ## Step 7.6: check basic contig statistics with Trinity tools
 **script:** scripts/Part1_transcriptome/7.6_checkAssembliesFilter2stats.sh
 
-**input:** output of 7.5 transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
+**input:** output of 7.5 transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
 
 **output:** print basic transcriptome stats
 
 ## Step 7.7: BUSCO of the transcriptome filtered for eukaryote hits
 **script:** scripts/Part1_transcriptome/7.7_BUSCOifFilter.sh
 
-**input:** output of 7.5 transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
+**input:** output of 7.5 transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
 
-**output:** /scratch/alicebalard/outData/assemblyMergedFungi/BUSCO_MergedFungiTranscriptome_eukaryoteHits
+**output:** /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/BUSCO_MergedFungiTranscriptome_eukaryoteHits
 
 ## Step 8. Decontaminate post DEG (to do after part 2)
 **script:** 8_cleanTranscriptomeAfterDEG.sh
 
 **input:** listOfTranscriptContaminant_toRmFromChytridTranscriptome from part 2 S04
 
-**output:** /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.rmDEGconta.fasta
+**output:** /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.rmDEGconta.fasta
 
 # Part 2. DEG
 
@@ -208,8 +208,8 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 **script:** S01_prepareCombinedTranscriptome.sh
 
 **input:**
-T_CHY=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta
-T_CHY_GTM=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map
+T_CHY=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta
+T_CHY_GTM=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map
 T_CYA=/scratch/alicebalard/outData/mergedTransc/GCF_904830935.1_P._agardhii_No.976_rna_from_genomic.fna
 
 **output:**
