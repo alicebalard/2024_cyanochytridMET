@@ -111,8 +111,8 @@ In_OUT=/scratch/alicebalard/outData/alignments/assemblyIn.reads_filteredFungi
 **script:** scripts/Part1_transcriptome/5.5_makeSubsetFastaFungalReads.sh
 
 **input:** 
-FUNGIREADS_NAMES from 5.4 (/scratch/alicebalard/outData/alignments/assemblyZ.reads_filteredFungi and In)
-combined reads from 4.1 (/scratch/alicebalard/outData/assembly/combined_left.fq, right, and In left & right)
+FUNGIREADS_NAMES from 5.4 (/scratch/alicebalard/outData/alignments/assemblies/assemblyZ.reads_filteredFungi and In)
+combined reads from 4.1 (/scratch/alicebalard/outData/assemblies/assembly_In_coculture/combined_left.fq, right, and In left & right)
 
 **output:** /scratch/alicebalard/outData/assemblyMergedFungi/assemblyZ.reads_filteredFungi_left.fq & right & same for In
 
