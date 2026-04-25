@@ -126,7 +126,7 @@ combined reads from 4.1 (/scratch/alicebalard/outData/assemblies/assembly_In_coc
 ## Step 6.2: check basic contig statistics with Trinity tools
 **script:** scripts/Part1_transcriptome/6.2_checkAssemblyQuality_basicStats.sh
 
-**input:** assembly from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity.fasta)
+**input:** assembly from 6.1 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity.fasta)
 
 **output:** print basic transcriptome stats
 
