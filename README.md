@@ -158,7 +158,14 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 
 **output:** /scratch/alicebalard/outData/assemblyMergedFungi/annotation/sigP6outdir/
 
-## Step 7.4. all the rest of the annotation done by Trinotate in one script
+## Step 7.4. BLASTP against nr done in its own script
+**script:** scripts/Part1_transcriptome/7.4_finalTransAnnotation_blastp_nr.sh
+
+**input:** output of 7.2 (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep)
+
+**output:** /scratch/alicebalard/outData/assemblyMergedFungi/annotation/blastp/diamond_nr.outfmt6
+
+## Step 7.5. all the rest of the annotation done by Trinotate in one script
 **script:** scripts/Part1_transcriptome/7.4_finalTransAnnotation_Trinotate.sh
 
 **input:** 
@@ -168,7 +175,7 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 
 **output:** /scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_simplified_GOKegg.tsv
 
-## Step 7.5. Select only the transcripts with eukaryote hits
+## Step 7.6. Select only the transcripts with eukaryote hits
 **script:** scripts/Part1_transcriptome/7.5_check_annot.R
 
 **input:**
@@ -181,14 +188,14 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 - subset of gene trans map for eukaryote (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map)
 - subset annotation file for the Eukaryotic hits (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv)
 
-## Step 7.6: check basic contig statistics with Trinity tools
+## Step 7.7: check basic contig statistics with Trinity tools
 **script:** scripts/Part1_transcriptome/7.6_checkAssembliesFilter2stats.sh
 
 **input:** output of 7.5 transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
 
 **output:** print basic transcriptome stats
 
-## Step 7.7: BUSCO of the transcriptome filtered for eukaryote hits
+## Step 7.8: BUSCO of the transcriptome filtered for eukaryote hits
 **script:** scripts/Part1_transcriptome/7.7_BUSCOifFilter.sh
 
 **input:** output of 7.5 transcriptome filtered for eukaryote hits (/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta)
