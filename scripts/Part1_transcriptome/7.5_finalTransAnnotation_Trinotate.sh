@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=7.4_trinotate
+#SBATCH --job-name=7.5_trinotate
 #SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
 #SBATCH --mail-user=alicebalard@zedat.fu-berlin.de  
@@ -22,21 +22,21 @@ conda init --all
 ## Install Trinotate and all dependencies in TRINOTATE_DATA_DIR
 source /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/Part1_transcriptome/7.1_finalTransAnnotation_prepareTrinotate.sh
 
+OUTDIR=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi
+
 ## transcripts.fasta : your target transcriptome in fasta format
-transcripts=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta
+transcripts=$OUTDIR/Trinity.fasta
 
 ## coding_seqs.pep : coding regions translated in fasta format (specific header formatting required - see below. Most use TransDecoder to generate this)
-coding_seqs=/scratch/alicebalard/outData/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep
+coding_seqs=$OUTDIR/annotation/transdecoder/Trinity.fasta.transdecoder.pep
 
 ## gene_to_trans_map.tsv : pairwise mappings between gene and transcript isoform identifiers
-gene_to_trans_map=/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta.gene_trans_map
+gene_to_trans_map=$OUTDIR/Trinity.fasta.gene_trans_map
 
-OUTDIR=/scratch/alicebalard/outData/assemblyMergedFungi/annotation
-
-cd $OUTDIR
+cd $OUTDIR/annotation
 
 ## Initiate database in OUTDIR by dl important databases
-DB=/scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi.sqlite
+DB=$OUTDIR/annotation/assemblyMergedFungi.sqlite
 
 $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --create --db $DB --trinotate_data_dir $TRINOTATE_HOME/DATADIR --use_diamond
 
@@ -58,24 +58,31 @@ $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --CPU 20 \
 
 ## Run signalp6 (in previous script 7.3)
 ## Add to SQLite
-$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_signalp sigP6outdir/output.gff3
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_signalp $OUTDIR/annotation/sigP6outdir/output.gff3
+
+## Run Diamond blastp against nr (more thorough than swissprot) (in script 7.4)
+## Add to SQLite
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB \
+    --LOAD_custom_blast $OUTDIR/annotation/blastp/diamond_nr.outfmt6 \
+    --blast_type blastp \
+    --custom_db_name nr
 
 ## Run tmhmm outside because of python versions issues:
 conda activate myannot
-tmhmm-2.0c/bin/tmhmm --short $coding_seqs  > tmhmm.v2.out
+/scratch/alicebalard/outData/annotation/Trinotate/tmhmm-2.0c/bin/tmhmm --short $coding_seqs  > $OUTDIR/annotation/tmhmm.v2.out
 conda deactivate
 
 ## Add to SQLite
 $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_tmhmmv2 tmhmm.v2.out
 
 ## Generate Trinotate report:
-$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --report --incl_pep --incl_trans > assemblyMergedFungi.tsv
+$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --report --incl_pep --incl_trans > $OUTDIR/annotation/assemblyMergedFungi.tsv
 
 ## Simplify output for later use with DESeq2:
-cat assemblyMergedFungi.tsv | cut -f 1,2,3,12,13 > assemblyMergedFungi_simplified_GOKegg.tsv
+cat $OUTDIR/annotation/assemblyMergedFungi.tsv | cut -f 1,2,3,12,13 > $OUTDIR/annotation/assemblyMergedFungi_simplified_GOKegg.tsv
 
 awk 'BEGIN {OFS="\t"} 
      NR==1 {print $0, "gene_name"} 
-     NR > 1 {split($3, a, "^"); print $0, a[1]}' assemblyMergedFungi_simplified_GOKegg.tsv > temp
+     NR > 1 {split($3, a, "^"); print $0, a[1]}' $OUTDIR/annotation/assemblyMergedFungi_simplified_GOKegg.tsv > $OUTDIR/annotation/temp
 
-mv temp assemblyMergedFungi_simplified_GOKegg.tsv
+mv $OUTDIR/annotation/temp $OUTDIR/annotation/assemblyMergedFungi_simplified_GOKegg.tsv

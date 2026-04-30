@@ -1,5 +1,8 @@
 module purge
 
+## Enable same name autoswapping
+LMOD_DISABLE_SAME_NAME_AUTOSWAP=no
+
 ## Prepare Trinotate
 TRINOTATE_HOME=/scratch/alicebalard/outData/annotation/Trinotate
 
@@ -11,7 +14,7 @@ PATH=$PATH:$TRINOTATE_HOME
 
 ## https://github.com/Trinotate/Trinotate/wiki/Software-installation-and-data-required
 ## Trinity as module
-module add Trinity/2.10.0-foss-2019b-Python-3.7.4
+module add Trinity/2.15.2-foss-2023a
 ## Install Trinotate v4.0.2 in $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2
 ## Add to my path
 PATH=$PATH:$TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2

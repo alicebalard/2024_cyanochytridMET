@@ -13,18 +13,18 @@ LMOD_DISABLE_SAME_NAME_AUTOSWAP=no
 
 module purge
 source ~/.bashrc
-module load BEDTools
+module load BEDTools/2.31.0-GCC-12.3.0
 module load GCCcore/12.3.0
 
-Z_FUNGTRANSCRIPTS=/scratch/alicebalard/outData/diamondBlastX/assZ_Fungi_transcripts
-Z_READS1=/scratch/alicebalard/outData/assembly/combined_left.fq
-Z_READS2=/scratch/alicebalard/outData/assembly/combined_right.fq
+Z_FUNGTRANSCRIPTS=/scratch/alicebalard/outData/diamondBlastX/assZ_nr_Fungi_transcripts
+Z_READS1=/scratch/alicebalard/outData/assemblies/assembly_Z/combined_left.fq
+Z_READS2=/scratch/alicebalard/outData/assemblies/assembly_Z/combined_right.fq
 Z_BAM=/scratch/alicebalard/outData/alignments/assemblyZ.reads.bam
 Z_OUT=/scratch/alicebalard/outData/alignments/assemblyZ.reads_filteredFungi
 
-In_FUNGTRANSCRIPTS=/scratch/alicebalard/outData/diamondBlastX/assIn_Fungi_transcripts
-In_READS1=/scratch/alicebalard/outData/assembly_In/combined_left.fq
-In_READS2=/scratch/alicebalard/outData/assembly_In/combined_right.fq
+In_FUNGTRANSCRIPTS=/scratch/alicebalard/outData/diamondBlastX/assInCo_nr_Fungi_transcripts
+In_READS1=/scratch/alicebalard/outData/assemblies/assembly_In_coculture/combined_left.fq
+In_READS2=/scratch/alicebalard/outData/assemblies/assembly_In_coculture/combined_right.fq
 In_BAM=/scratch/alicebalard/outData/alignments/assemblyIn.reads.bam
 In_OUT=/scratch/alicebalard/outData/alignments/assemblyIn.reads_filteredFungi
 

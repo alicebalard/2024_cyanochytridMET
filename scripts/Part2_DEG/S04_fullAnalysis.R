@@ -1,3 +1,31 @@
+
+#You're asking about the isoform collapsing strategy — right now in S04 you're summing counts across isoforms with the same base gene name, which is a reasonable but not always ideal approach. Let me break down the options:
+#Current approach: summing counts
+#group_by(base_name) %>% summarise(across(everything(), sum))
+#Problem: If multiple isoforms represent genuinely different transcripts (alternative splicing, different domains), summing inflates counts and loses biological signal. It also inflates variance artificially for DESeq2.
+
+#Change for
+#3. Keep highest-expressed isoform (recommended for your pipeline)
+# Before the merge step, keep only the isoform with max mean expression per gene
+#RSEM_final_hope.gene_chytrid <- RSEM_final_hope.gene_chytrid %>%
+#  mutate(base_name = sub("\\.\\d+$", "", rownames(.)),
+#         mean_expr = rowMeans(.)) %>%
+#  group_by(base_name) %>%
+#  slice_max(mean_expr, n=1, with_ties=FALSE) %>%
+#  select(-mean_expr) %>%
+#  tibble::column_to_rownames("base_name") %>% data.frame()
+
+
+
+
+
+
+
+
+
+
+
+
 ## 29th of November 2024
 source("libLoad.R")
 source("dataLoad.R")

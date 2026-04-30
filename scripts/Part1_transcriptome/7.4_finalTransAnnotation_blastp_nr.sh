@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=5.1_diamondblastx_e-5
+#SBATCH --job-name=7.4_diamondblastp
 #SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
 #SBATCH --mail-user=alicebalard@zedat.fu-berlin.de  
@@ -17,8 +17,6 @@
 LMOD_DISABLE_SAME_NAME_AUTOSWAP=no
 
 module purge
-
-cd /scratch/alicebalard/outData/diamondBlastX
 
 num_threads=$SLURM_CPUS_PER_TASK
 
@@ -45,38 +43,26 @@ module load DIAMOND/2.1.8-GCC-12.3.0
 ## diamond makedb -p $num_threads --in /scratch/alicebalard/resources/nr.gz --db /scratch/alicebalard/resources/nr --taxonmap /scratch/alicebalard/resources/prot.accession2taxid.FULL.gz --taxonnodes /scratch/alicebalard/resources/taxdmp/nodes.dmp --taxonnames /scratch/alicebalard/resources/taxdmp/names.dmp
 ## echo "diamond db done"
 
-echo "Start diamond blastX search..."
-OUT=/scratch/alicebalard/outData/diamondBlastX
+cd /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation
+mkdir -p blastp
+cd blastp
+
+echo "Start diamond blastP search..."
+OUT=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/blastp
 DB=/scratch/alicebalard/resources/nr.dmnd
 
-###########################################
-#echo "First assembly: Z1 to Z12, only chytrids"
-#ASSEMBLY=/scratch/alicebalard/outData/assemblies/assembly_Z/Trinity.fasta
-
-#echo "Create DIAMOND hits..."
-## Run diamond
-#diamond blastx --query $ASSEMBLY \
-#	--db $DB \
-#        --outfmt 6 qseqid staxids bitscore qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sscinames sskingdoms skingdoms sphylums \
-#	--sensitive \
-#	--max-target-seqs 1 \
-#        --evalue 1e-5 \
-#        --threads $num_threads \
-#        > $OUT/assemblyZ_diamondNR_1e-5pval.out
-#echo "done."
-
-##############################################################
-echo "Second assembly: In1 to In12, chytrids infected by bacteria, & coculture"
-ASSEMBLY=/scratch/alicebalard/outData/assemblies/assembly_In_coculture/Trinity.fasta
+## blastp: protein query (TransDecoder peptides) against nr
+coding_seqs=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/transdecoder/Trinity.fasta.transdecoder.pep
 
 echo "Create DIAMOND hits..."
 ## Run diamond
-diamond blastx --query $ASSEMBLY \
+diamond blastp -q $coding_seqs \
 	--db $DB \
-        --outfmt 6 qseqid staxids bitscore qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore sscinames sskingdoms skingdoms sphylums \
+        --outfmt 6 \
 	--sensitive \
-	--max-target-seqs 1 \
+	--max-target-seqs 10 \
+        --max-hsps 1 \
         --evalue 1e-5 \
         --threads $num_threads \
-        > $OUT/assemblyIn_cocult_diamondNR_1e-5pval.out
+	-o $OUT/diamond_nr.outfmt6
 echo "done."

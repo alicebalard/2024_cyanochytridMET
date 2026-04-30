@@ -16,7 +16,7 @@
 module purge
 module add Trinity/2.15.2-foss-2023a
 
-DIR=/scratch/alicebalard/outData/assembly_Z
+DIR=/scratch/alicebalard/outData/assemblies/assembly_Z
 
 mkdir -p $DIR; cd $DIR
 ## the output will be 'trinity_out_dir/Trinity.fasta' and 'Trinity.fasta.gene_trans_map'

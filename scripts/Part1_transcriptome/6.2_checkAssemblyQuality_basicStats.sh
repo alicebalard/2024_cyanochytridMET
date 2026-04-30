@@ -12,10 +12,10 @@
 #SBATCH --partition=main
 
 module purge
-module add Trinity/2.10.0-foss-2019b-Python-3.7.4
+module add Trinity/2.15.2-foss-2023a
 
 ## Assembly Final
 
-ASSEMBLY="/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity.fasta"
+ASSEMBLY="/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity.fasta"
 echo "basic contig statistics"
 $TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY

@@ -14,11 +14,6 @@
 module purge
 module add Trinity/2.10.0-foss-2019b-Python-3.7.4
 
-ASSEMBLY="/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta"
+ASSEMBLY="/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity_eukaryoteHits.fasta"
 echo "basic contig statistics for Trinity_eukaryoteHits.fasta:"
 $TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY
-
-ASSEMBLY="/scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_fungiHits.fasta"
-echo "basic contig statistics for Trinity_fungiHits.fasta:"
-$TRINITY_HOME/util/TrinityStats.pl $ASSEMBLY
-

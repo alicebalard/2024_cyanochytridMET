@@ -19,7 +19,7 @@ module load Anaconda3
 source ~/.bashrc
 conda init --all
 
-cd /scratch/alicebalard/outData/assemblyMergedFungi/annotation
+cd /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation
 
 coding_seqs=transdecoder/Trinity.fasta.transdecoder.pep
 

@@ -6,8 +6,22 @@
 # FIX: fixed original_headers_cds.txt to keep full original headers for traceability
 # FIX: added set -euo pipefail for safer execution
 # FIX: updated output paths to match new working directory
+#SBATCH --job-name=S01
+#SBATCH --mail-user=alicebalard@zedat.fu-berlin.de                                                                                                                                      
+#SBATCH --mail-type=end,fail                                                                                                                                                            
+#SBATCH --ntasks=1                                                                                                                                                                      
+#SBATCH --cpus-per-task=8                                                                                                                                                               
+#SBATCH --mem-per-cpu=2GB                                                                                                                                                               
+#SBATCH --time=24:00:00                                                                                                                                                                 
+#SBATCH --error=/scratch/alicebalard/outData/RSEM/logs/%x.%j.err                                                                                                                        
+#SBATCH --output=/scratch/alicebalard/outData/RSEM/logs/%x.%j.out                                                                                                                       
+#SBATCH --qos=standard                                                                                                                                                                  
+#SBATCH --partition=main,begendiv                                                                                                                                                       
+#SBATCH --constraint=no_gpu                                                                                                                                                             
 
-set -euo pipefail
+set -euo pipefail                                                                                                                                                                       
+
+export LMOD_DISABLE_SAME_NAME_AUTOSWAP=no
 
 T_CHY=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity_eukaryoteHits.fasta
 T_CHY_GTM=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity_eukaryoteHits.fasta.gene_trans_map
