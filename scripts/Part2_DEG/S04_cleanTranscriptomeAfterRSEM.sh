@@ -27,43 +27,61 @@ cd $ASSEMBLYDIR
 
 MATRIX=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/RSEM_new_hope.gene.counts.matrix
 ASSEMBLY=$ASSEMBLYDIR/Trinity_eukaryoteHits.fasta
+THRESHOLD=1  # adjust if needed
 
-# Get column indices of samples starting with C or In (control_cyano_C*, met_cyano_C*, control_both_In*, met_both_In*)
+# ============================================================
+# STEP 1: Get contaminant gene IDs
+# TRINITY genes with any count in cyano-alone samples (cols 14-19, 32-37)
+# NOTE: header has leading tab causing NF=36 vs data NF=37, so hardcode columns
+# control_cyano_C1-C6 = data cols 14-19
+# met_cyano_C10-C9   = data cols 32-37
+# ============================================================
 awk '
-NR==1 {
-    for (i=2; i<=NF; i++) {
-        # Extract sample suffix after last underscore: C* or In*
-        split($i, a, "_")
-        suffix = a[length(a)]
-        if (suffix ~ /^C/ || suffix ~ /^In/) {
-            col[i] = 1
-        }
-    }
-    next
-}
-# Only TRINITY rows (chytrid assembly)
+NR==1 { next }
 /^TRINITY/ {
-    for (i in col) {
-        if ($i > 0) {
-            print $1
-            next
-        }
-    }
-}
-' "$MATRIX" > $ASSEMBLYDIR/contaminant_genes.txt
+    cyano_sum=0
+    for(i=14; i<=19; i++) cyano_sum += $i
+    for(i=32; i<=37; i++) cyano_sum += $i
+    if(cyano_sum > 0) print $1
+}' "$MATRIX" > "$ASSEMBLYDIR/contaminant_genes.txt"
 
-echo "Number of contaminant genes found:"
-wc -l $ASSEMBLYDIR/contaminant_genes.txt
+echo "Contaminant genes:    $(wc -l < $ASSEMBLYDIR/contaminant_genes.txt)"
 
-# use the awk approach but simplified to remove contaminants:
-awk 'NR==FNR {l[$1]=1; next}
-     /^>/ {
-         id = substr($1, 2)          # remove ">"
-         # match gene ID (strip _i* suffix if present)
-         gsub(/_i[0-9]+$/, "", id)
-         skip = (id in l)
-     }
-     !skip' $ASSEMBLYDIR/contaminant_genes.txt "$ASSEMBLY" > "${ASSEMBLY%.fasta}.rmConta.fasta"
+# ============================================================
+# STEP 2: Expand gene IDs to isoform IDs using FASTA headers
+# Gene IDs:   TRINITY_DN888_c0_g1
+# Isoform IDs: TRINITY_DN888_c0_g1_i18, _i2, etc.
+# ============================================================
+grep "^>" "$ASSEMBLY" | sed 's/>//' | awk '
+NR==FNR { l[$1]=1; next }
+{
+    gene=$1
+    gsub(/_i[0-9]+$/, "", gene)
+    if(gene in l) print $1
+}' "$ASSEMBLYDIR/contaminant_genes.txt" - > "$ASSEMBLYDIR/contaminant_isoforms.txt"
+
+echo "Contaminant isoforms: $(wc -l < $ASSEMBLYDIR/contaminant_isoforms.txt)"
+echo "Total isoforms:       $(grep -c '^>' $ASSEMBLY)"
+
+# ============================================================
+# STEP 3: Filter contaminating isoforms from FASTA
+# ============================================================
+awk 'NR==FNR {drop[$1]=1; next}
+     /^>/ { id=substr($1,2); skip=(id in drop) }
+     !skip' "$ASSEMBLYDIR/contaminant_isoforms.txt" "$ASSEMBLY" \
+     > "${ASSEMBLY%.fasta}.rmConta.fasta"
+
+echo "Isoforms after cleaning: $(grep -c '^>' ${ASSEMBLY%.fasta}.rmConta.fasta)"
+echo "Expected:                $(( $(grep -c '^>' $ASSEMBLY) - $(wc -l < $ASSEMBLYDIR/contaminant_isoforms.txt) ))"
+
+# ============================================================
+# STEP 4: Sanity check - verify no contaminants remain
+# ============================================================
+echo "Sanity check (should all be 0):"
+shuf -n 5 "$ASSEMBLYDIR/contaminant_genes.txt" | while read gene; do
+    count=$(grep -c "^>${gene}_i" "${ASSEMBLY%.fasta}.rmConta.fasta" 2>/dev/null || echo 0)
+    echo "  $gene: $count sequences remaining"
+done
 
 # Check counts before and after
 echo "N transcripts before clean:"
