@@ -1,3 +1,39 @@
+Your filterRSEMno3Nullpergp approach
+This was actually reasonable — removing genes with zeros in ≥3 samples per group ensures DESeq2 has enough non-zero observations to estimate dispersion. The resulting 835 chytrid / 555 cyano genes are conservative but reliable.
+The modern recommended approach
+Rather than pre-filtering zeros, let DESeq2's independent filtering + lfcShrink handle it:
+rlibrary(DESeq2)
+
+# Minimal pre-filtering only: remove genes with very low total counts
+# (keeps genes with at least 10 counts across all samples)
+keep <- rowSums(counts(dds)) >= 10
+dds <- dds[keep,]
+
+# Then use lfcShrink for reliable fold changes - this is KEY
+# It shrinks LFC of low-count genes toward 0, avoiding wild fold changes
+dds <- DESeq(dds)
+res <- lfcShrink(dds, 
+                 coef = "condition_met_vs_control",  # update to your contrast
+                 type = "apeglm")  # apeglm is recommended over normal/ashr
+The lfcShrink with apeglm directly solves your "weird log2 fold change" problem — genes with a 0 in one sample and 1 in another won't get LFC=∞ anymore, they get shrunk toward 0 because the evidence is weak.
+Practical recommendation for your new dataset
+r# Step 1: Very light pre-filtering (not by zeros, by total count)
+keep <- rowSums(counts(dds) >= 1) >= 3  # expressed in at least 3 samples
+dds <- dds[keep,]
+
+# Step 2: Let DESeq2 do the rest
+dds <- DESeq(dds)
+
+# Step 3: Always use lfcShrink, never use raw results for ranking
+res <- lfcShrink(dds, coef="your_contrast", type="apeglm")
+
+# Step 4: Filter RESULTS (not input) by significance + effect size
+sig <- res[!is.na(res$padj) & res$padj < 0.05 & abs(res$log2FoldChange) > 1, ]
+Summary
+ApproachZeros handlingRiskYour old filterRSEMno3NullpergpRemove genes with zerosToo strict, loses real DEGsRaw LFC without shrinkageInflated LFC for low countsWeird fold changes ✅ your problemlfcShrink(apeglm)Shrinks unreliable LFC to 0Recommended
+So yes — change your approach to minimal pre-filtering + lfcShrink. Your 1,663 genes with ≥10 counts in ≥3 samples is already a good starting filter, then let DESeq2 handle the rest.
+
+
 
 #You're asking about the isoform collapsing strategy — right now in S04 you're summing counts across isoforms with the same base gene name, which is a reasonable but not always ideal approach. Let me break down the options:
 #Current approach: summing counts
