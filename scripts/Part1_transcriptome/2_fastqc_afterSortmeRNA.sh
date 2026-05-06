@@ -8,8 +8,12 @@
 #SBATCH --time=4:00:00
 #SBATCH --qos=standard 
 
+module load FastQC/0.11.9-Java-11
+
 # Get the current file based on the array task ID
 FILE=$(ls /scratch/alicebalard/outData/sortmerna/*non_rRNA*fwd.fq.gz | sed -n "${SLURM_ARRAY_TASK_ID}p")
 
-/scratch/alicebalard/FastQC/fastqc -o /scratch/alicebalard/outData/fastqc/afterSortmerna $FILE
+mkdir -p /scratch/alicebalard/outData/fastqc/afterSortmerna
+
+fastqc -o /scratch/alicebalard/outData/fastqc/afterSortmerna $FILE
 

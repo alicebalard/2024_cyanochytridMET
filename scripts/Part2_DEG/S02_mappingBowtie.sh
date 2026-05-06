@@ -1,11 +1,6 @@
 #!/bin/bash
 # S02_mappingBowtie.sh
 # Maps reads to combined transcriptome and estimates abundance with RSEM
-# FIX: updated paths to match new S01 output locations (all under /scratch/alicebalard/outData/RSEM)
-# FIX: renamed job to reflect actual task
-# FIX: added --mail-type=fail so failures are also reported
-# FIX: added set -euo pipefail
-
 #SBATCH --job-name=align_rsem
 #SBATCH --mail-user=alicebalard@zedat.fu-berlin.de
 #SBATCH --mail-type=end,fail
@@ -13,8 +8,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=2GB
 #SBATCH --time=24:00:00
-#SBATCH --error=/scratch/alicebalard/outData/RSEM/logs/%x.%j.err
-#SBATCH --output=/scratch/alicebalard/outData/RSEM/logs/%x.%j.out
+#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
+#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --qos=standard
 #SBATCH --partition=main,begendiv
 #SBATCH --constraint=no_gpu
@@ -34,13 +29,12 @@ GTM=$DATADIR/combined_gene_trans_map.txt
 
 cd $DATADIR
 
-## Manually prepared sample file (tab-separated: condition, replicate, fq1, [fq2]) removing bad quality ones
-cp /scratch/erikamr/cyano_chytrid_met/data/samples_file_remove.txt .
-SAMPLE_FILE=$DATADIR/samples_file_remove.txt
+## Manually prepared sample file (tab-separated: condition, replicate, fq1, [fq2])
+cp /scratch/erikamr/cyano_chytrid_met/data/samples_file.txt .
+SAMPLE_FILE=$DATADIR/samples_file.txt
 
 OUTDIR=$DATADIR/out_trinity_align_rsem
 mkdir -p $OUTDIR
-mkdir -p $DATADIR/logs
 
 echo "[S02] Starting alignment and abundance estimation..."
 echo "[S02] Assembly: $ASSEMBLY_BOTH"

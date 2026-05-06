@@ -10,13 +10,15 @@
 #SBATCH --qos=standard              
 
 module load MultiQC/1.9-foss-2020a-Python-3.8.2
-## for reads after trimming
-# multiqc /scratch/alicebalard/outData/fastqc/afterTrim -o /scratch/alicebalard/outData/multiQC/trimmedReads
 
-## for reads after kraken2 decontamination
-#multiqc /scratch/alicebalard/outData/fastqc/afterKraken2 -o /scratch/alicebalard/outData/multiQC/decontKrakenReads
+MQCDIR=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/multiQC
+
+mkdir -p $MQCDIR
+
+## for reads after trimming
+multiqc /scratch/alicebalard/outData/fastqc/afterTrim -o $MQCDIR/trimmedReads
 
 ## for reads after sortmerna decontamination
-multiqc /scratch/alicebalard/outData/fastqc/afterSortmerna -o /scratch/alicebalard/outData/multiQC/sortmeRNA
+multiqc /scratch/alicebalard/outData/fastqc/afterSortmerna -o $MQCDIR/sortmeRNA
 
 
