@@ -82,6 +82,19 @@ echo "Isoforms after cleaning: $(grep -c '^>' ${ASSEMBLY%.fasta}.rmConta.fasta)"
 echo "Expected:                $(( $(grep -c '^>' $ASSEMBLY) - $(wc -l < $ASSEMBLYDIR/contaminant_isoforms.txt) ))"
 
 # ============================================================
+# STEP 3b: Filter contaminant genes from count matrix
+# ============================================================
+awk 'NR==FNR {drop[$1]=1; next}
+     NR==1 {print; next}          # keep header
+     !($1 in drop)                # keep non-contaminant rows
+' "$ASSEMBLYDIR/contaminant_genes.txt" "$MATRIX" \
+> "${MATRIX%.matrix}.rmConta.matrix"
+
+echo "Genes in original matrix: $(wc -l < $MATRIX)"
+echo "Genes in clean matrix:    $(wc -l < ${MATRIX%.matrix}.rmConta.matrix)"
+echo "Difference (contaminants removed): $(( $(wc -l < $MATRIX) - $(wc -l < ${MATRIX%.matrix}.rmConta.matrix) ))"
+
+# ============================================================
 # STEP 4: Sanity check - verify no contaminants remain
 # ============================================================
 echo "Sanity check (should all be 0):"
