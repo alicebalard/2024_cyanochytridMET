@@ -37,15 +37,22 @@ THRESHOLD=1  # adjust if needed
 # met_cyano_C10-C9   = data cols 32-37
 # ============================================================
 awk '
-NR==1 { next }
+NR==1 {
+    # Store column index by name - no position ambiguity
+    for(i=1;i<=NF;i++) {
+        if($i ~ /cyano/) cyanocol[i]=1
+    }
+    # Print which columns were found for verification
+    for(i in cyanocol) print "CYANO col " i ": " $i > "/dev/stderr"
+    next
+}
 /^TRINITY/ {
     cyano_sum=0
-    for(i=14; i<=19; i++) cyano_sum += $i
-    for(i=32; i<=37; i++) cyano_sum += $i
+    for(i in cyanocol) cyano_sum += $(i+1)  # +1 offset for leading tab
     if(cyano_sum > 0) print $1
 }' "$MATRIX" > "$ASSEMBLYDIR/contaminant_genes.txt"
 
-echo "Contaminant genes:    $(wc -l < $ASSEMBLYDIR/contaminant_genes.txt)"
+echo "Contaminant genes: $(wc -l < $ASSEMBLYDIR/contaminant_genes.txt)"
 
 # ============================================================
 # STEP 2: Expand gene IDs to isoform IDs using FASTA headers
