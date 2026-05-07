@@ -217,24 +217,29 @@ all installation done in /scratch/alicebalard/outData/annotation/Trinotate to pr
 **input:**
 T_CHY=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta
 T_CHY_GTM=/scratch/alicebalard/outData/assemblies/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map
-T_CYA=/scratch/alicebalard/outData/mergedTransc/GCF_904830935.1_P._agardhii_No.976_rna_from_genomic.fna
+T_CYA=/scratch/alicebalard/outData/mergedTransc/GCF_904830935.1_P._agardhii_No.976_cds_from_genomic.fna
 
 **output:**
-/scratch/erikamr/cyano_chytrid_met/data/combined_gene_trans_map_cds_final_hope.txt
-/scratch/erikamr/cyano_chytrid_met/data/assembly_both_cds_final_hope.fna
+/scratch/alicebalard/outData/RSEM/assembly_both.fna
+/scratch/alicebalard/outData/RSEM/combined_gene_trans_map.txt
+/scratch/alicebalard/outData/RSEM/header_lookup_table.txt
 
 ## Step 2. Mapping with bowtie 
 **script:** S02_mappingBowtie.sh
 
 **input:**
 prepared in S01: 
-ASSEMBLY_BOTH=/scratch/erikamr/cyano_chytrid_met/data/assembly_both_cds_final_hope.fna
-GTM=/scratch/erikamr/cyano_chytrid_met/data/combined_gene_trans_map_cds_final_hope.txt
+ASSEMBLY_BOTH=/scratch/alicebalard/outData/RSEM/assembly_both.fna
+GTM=/scratch/alicebalard/outData/RSEM/combined_gene_trans_map.txt
 
 manually prepared (removing bad quality samples):                                             
-SAMPLE_FILE=/scratch/erikamr/cyano_chytrid_met/data/samples_file_remove.txt
+SAMPLE_FILE=/scratch/erikamr/cyano_chytrid_met/data/samples_file.txt
 
-**output:** found in OUTDIR=/scratch/erikamr/cyano_chytrid_met/data/out_trinity_align_rsem_final_hope
+**output:** found in OUTDIR=/scratch/alicebalard/outData/RSEM/out_trinity_align_rsem
+
+
+### TBC
+
 
 ## Step 3. Generate count matrix
 **script:** S03_make_count_matrix_RSEM.sh
