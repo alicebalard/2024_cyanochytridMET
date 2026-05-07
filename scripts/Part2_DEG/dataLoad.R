@@ -4,16 +4,15 @@
 ## load all files needed for the project
 
 ## design table
-samples_data <- read.table(
-  "../../data/sample_data_remove_r.txt", header = TRUE, sep = "\t")
+# samples_data <- read.table(
+#   "../../data/sample_data_remove_r.txt", header = TRUE, sep = "\t")
 
 ## Chytrid
+# assembly: /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity_eukaryoteHits.rmConta.fasta
+# gene_trans_map: /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity_eukaryoteHits.fasta.gene_trans_map
 
-# assembly: /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta
-# gene_trans_map: /scratch/alicebalard/outData/assemblyMergedFungi/trinity_out_dir/Trinity_eukaryoteHits.fasta.gene_trans_map
-
-# annotation: /scratch/alicebalard/outData/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified.tsv
-annotationChytridFULL <- read.csv("../../gitignore/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv", sep = "\t")
+# annotation: /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/annotation/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv
+annotationChytridFULL <- read.csv(here("gitignore/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv"), sep = "\t")
 ## extract GO terms
 annotationChytridFULL$GO.accession <- str_extract_all(annotationChytridFULL$gene_ontology_BLASTX, "GO:\\d+")
 ## Extract Kegg terms
@@ -48,6 +47,14 @@ GO_chytrid=na.omit(GO_chytrid)
 GO_chytrid=unique(GO_chytrid)
 
 names(GO_chytrid) <- c("GO.accession", "GO.ontology", "GO.name")
+
+
+
+
+## tbc
+
+
+
 
 ## Cyanobacteria
 

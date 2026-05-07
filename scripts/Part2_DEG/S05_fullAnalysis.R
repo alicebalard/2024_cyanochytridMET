@@ -1,198 +1,136 @@
-Your filterRSEMno3Nullpergp approach
-This was actually reasonable — removing genes with zeros in ≥3 samples per group ensures DESeq2 has enough non-zero observations to estimate dispersion. The resulting 835 chytrid / 555 cyano genes are conservative but reliable.
-The modern recommended approach
-Rather than pre-filtering zeros, let DESeq2's independent filtering + lfcShrink handle it:
-rlibrary(DESeq2)
-
-# Minimal pre-filtering only: remove genes with very low total counts
-# (keeps genes with at least 10 counts across all samples)
-keep <- rowSums(counts(dds)) >= 10
-dds <- dds[keep,]
-
-# Then use lfcShrink for reliable fold changes - this is KEY
-# It shrinks LFC of low-count genes toward 0, avoiding wild fold changes
-dds <- DESeq(dds)
-res <- lfcShrink(dds, 
-                 coef = "condition_met_vs_control",  # update to your contrast
-                 type = "apeglm")  # apeglm is recommended over normal/ashr
-The lfcShrink with apeglm directly solves your "weird log2 fold change" problem — genes with a 0 in one sample and 1 in another won't get LFC=∞ anymore, they get shrunk toward 0 because the evidence is weak.
-Practical recommendation for your new dataset
-r# Step 1: Very light pre-filtering (not by zeros, by total count)
-keep <- rowSums(counts(dds) >= 1) >= 3  # expressed in at least 3 samples
-dds <- dds[keep,]
-
-# Step 2: Let DESeq2 do the rest
-dds <- DESeq(dds)
-
-# Step 3: Always use lfcShrink, never use raw results for ranking
-res <- lfcShrink(dds, coef="your_contrast", type="apeglm")
-
-# Step 4: Filter RESULTS (not input) by significance + effect size
-sig <- res[!is.na(res$padj) & res$padj < 0.05 & abs(res$log2FoldChange) > 1, ]
-Summary
-ApproachZeros handlingRiskYour old filterRSEMno3NullpergpRemove genes with zerosToo strict, loses real DEGsRaw LFC without shrinkageInflated LFC for low countsWeird fold changes ✅ your problemlfcShrink(apeglm)Shrinks unreliable LFC to 0Recommended
-So yes — change your approach to minimal pre-filtering + lfcShrink. Your 1,663 genes with ≥10 counts in ≥3 samples is already a good starting filter, then let DESeq2 handle the rest.
-
-
-
-#You're asking about the isoform collapsing strategy — right now in S04 you're summing counts across isoforms with the same base gene name, which is a reasonable but not always ideal approach. Let me break down the options:
-#Current approach: summing counts
-#group_by(base_name) %>% summarise(across(everything(), sum))
-#Problem: If multiple isoforms represent genuinely different transcripts (alternative splicing, different domains), summing inflates counts and loses biological signal. It also inflates variance artificially for DESeq2.
-
-#Change for
-#3. Keep highest-expressed isoform (recommended for your pipeline)
-# Before the merge step, keep only the isoform with max mean expression per gene
-#RSEM_final_hope.gene_chytrid <- RSEM_final_hope.gene_chytrid %>%
-#  mutate(base_name = sub("\\.\\d+$", "", rownames(.)),
-#         mean_expr = rowMeans(.)) %>%
-#  group_by(base_name) %>%
-#  slice_max(mean_expr, n=1, with_ties=FALSE) %>%
-#  select(-mean_expr) %>%
-#  tibble::column_to_rownames("base_name") %>% data.frame()
+# # Your filterRSEMno3Nullpergp approach
+# # This was actually reasonable — removing genes with zeros in ≥3 samples per group ensures DESeq2 has enough non-zero observations to estimate dispersion. The resulting 835 chytrid / 555 cyano genes are conservative but reliable.
+# # The modern recommended approach
+# # Rather than pre-filtering zeros, let DESeq2's independent filtering + lfcShrink handle it:
+# # rlibrary(DESeq2)
+# 
+# # Minimal pre-filtering only: remove genes with very low total counts
+# # (keeps genes with at least 10 counts across all samples)
+# keep <- rowSums(counts(dds)) >= 10
+# dds <- dds[keep,]
+# 
+# # Then use lfcShrink for reliable fold changes - this is KEY
+# # It shrinks LFC of low-count genes toward 0, avoiding wild fold changes
+# dds <- DESeq(dds)
+# res <- lfcShrink(dds, 
+#                  coef = "condition_met_vs_control",  # update to your contrast
+#                  type = "apeglm")  # apeglm is recommended over normal/ashr
+# The lfcShrink with apeglm directly solves your "weird log2 fold change" problem — genes with a 0 in one sample and 1 in another won't get LFC=∞ anymore, they get shrunk toward 0 because the evidence is weak.
+# Practical recommendation for your new dataset
+# r# Step 1: Very light pre-filtering (not by zeros, by total count)
+# keep <- rowSums(counts(dds) >= 1) >= 3  # expressed in at least 3 samples
+# dds <- dds[keep,]
+# 
+# # Step 2: Let DESeq2 do the rest
+# dds <- DESeq(dds)
+# 
+# # Step 3: Always use lfcShrink, never use raw results for ranking
+# res <- lfcShrink(dds, coef="your_contrast", type="apeglm")
+# 
+# # Step 4: Filter RESULTS (not input) by significance + effect size
+# sig <- res[!is.na(res$padj) & res$padj < 0.05 & abs(res$log2FoldChange) > 1, ]
+# Summary
+# ApproachZeros handlingRiskYour old filterRSEMno3NullpergpRemove genes with zerosToo strict, loses real DEGsRaw LFC without shrinkageInflated LFC for low countsWeird fold changes ✅ your problemlfcShrink(apeglm)Shrinks unreliable LFC to 0Recommended
+# So yes — change your approach to minimal pre-filtering + lfcShrink. Your 1,663 genes with ≥10 counts in ≥3 samples is already a good starting filter, then let DESeq2 handle the rest.
 
 
-
-
-
-
-
-
-
-
-
-
-## 29th of November 2024
+## Updated 2026
 source("libLoad.R")
-source("dataLoad.R")
+# source("dataLoad.R")
+library(here)
 
-## Let's observe the count matrix calculated by Trinity
-RSEM_final_hope.gene <- 
-  read.csv("../../data/run_DESEQ2_Erika/RSEM_final_hope.gene.counts.matrix", sep="\t")
-rownames(RSEM_final_hope.gene)=RSEM_final_hope.gene$X
-## 9766 genes
+## Load the count matrix calculated by Trinity
+RSEM_newhope.gene <- read.csv(here("data/RSEM_new_hope.gene.counts.rmConta.matrix"), sep="\t")
+
+RSEM_newhope.gene <- column_to_rownames(RSEM_newhope.gene, "X")
+head(RSEM_newhope.gene)
+nrow(RSEM_newhope.gene)
+## 8345 genes (after removing conta)
 
 #######################################################################
 ## Split by group depending on which gene is expressed in which case ##
 #######################################################################
-a = ifelse(rowSums(RSEM_final_hope.gene[grep("chy", names(RSEM_final_hope.gene))]) !=0,
+a = ifelse(rowSums(RSEM_newhope.gene[grep("chy", names(RSEM_newhope.gene))]) !=0,
            "in_chytrid_alone", "")
-b = ifelse(rowSums(RSEM_final_hope.gene[grep("both", names(RSEM_final_hope.gene))]) !=0,
+b = ifelse(rowSums(RSEM_newhope.gene[grep("both", names(RSEM_newhope.gene))]) !=0,
            "in_both_organisms", "")
-c = ifelse(rowSums(RSEM_final_hope.gene[grep("cyano", names(RSEM_final_hope.gene))]) !=0,
+c = ifelse(rowSums(RSEM_newhope.gene[grep("cyano", names(RSEM_newhope.gene))]) !=0,
            "in_cyano_alone", "")
 
-RSEM_final_hope.gene$whichOrg <- trimws(paste(a,b,c, sep = " "))
+RSEM_newhope.gene$whichOrg <- trimws(paste(a,b,c, sep = " "))
 
-RSEM_final_hope.gene$whichTranscriptome <- ifelse(
-  grepl("TRINITY", RSEM_final_hope.gene$X), "chytrid", "cyano")
+RSEM_newhope.gene$whichTranscriptome <- ifelse(
+  grepl("TRINITY", rownames(RSEM_newhope.gene)), "chytrid", "cyano")
 
-table(RSEM_final_hope.gene$whichTranscriptome,
-      RSEM_final_hope.gene$whichOrg)
-#            0  in_both_organisms in_both_organisms in_cyano_alone in_chytrid_alone
-# chytrid  679               1764                              751              360
-# cyano    629                  1                             3420                0
+table(RSEM_newhope.gene$whichTranscriptome,
+      RSEM_newhope.gene$whichOrg)
+# in_both_organisms in_both_organisms in_cyano_alone in_chytrid_alone in_chytrid_alone  in_cyano_alone in_chytrid_alone in_both_organisms
+# chytrid  286              1702                                0              330                                0                               1576
+# cyano    603                 2                             3401                0                                2                                  0
 # 
-#         in_chytrid_alone  in_cyano_alone in_chytrid_alone in_both_organisms
-# chytrid                                5                               1623
-# cyano                                  2                                  0
-# 
-#         in_chytrid_alone in_both_organisms in_cyano_alone in_cyano_alone
-# chytrid                                               140             16
-# cyano                                                 161            215
-
-## Figure X ##
-
-##### 1. rm contamination in my chytrid assembly #####
-# chytrid genes also found in when cyanobacteria is alone:
-# chytrid + in_both_organisms in_cyano_alone
-# chytrid + in_chytrid_alone  in_cyano_alone
-# chytrid + in_chytrid_alone in_both_organisms in_cyano_alone
-# chytrid + in_cyano_alone
-
-listOfTranscriptContaminant_toRmFromChytridTranscriptome <-
-  RSEM_final_hope.gene[
-    RSEM_final_hope.gene$whichTranscriptome %in% "chytrid" & RSEM_final_hope.gene$whichOrg %in% 
-      c("in_both_organisms in_cyano_alone",
-        "in_chytrid_alone  in_cyano_alone",
-        "in_chytrid_alone in_both_organisms in_cyano_alone",
-        "in_cyano_alone"),"X"]
-
-write.csv(listOfTranscriptContaminant_toRmFromChytridTranscriptome,
-          "../../data/listOfTranscriptContaminant_toRmFromChytridTranscriptome", quote = F, row.names = F)
+# in_chytrid_alone in_both_organisms in_cyano_alone in_cyano_alone
+# chytrid                                                 0              0
+# cyano                                                 186            257                                          161            215
 
 #### 2. Which genes have been sequenced for chytrid and cyano (and are not contamination)?
-#############
-## Chytrid ##
-sequencedChytridGenes <- RSEM_final_hope.gene[
-  RSEM_final_hope.gene$whichOrg %in% c("in_chytrid_alone in_both_organisms",
-                                       "in_chytrid_alone", "in_both_organisms") &
-    RSEM_final_hope.gene$whichTranscriptome %in% "chytrid","X"]
-length(sequencedChytridGenes) # 3747 sequenced genes
+RSEM_chytrid <- RSEM_newhope.gene[RSEM_newhope.gene$whichTranscriptome %in% "chytrid",]
+RSEM_cyano <- RSEM_newhope.gene[RSEM_newhope.gene$whichTranscriptome %in% "cyano",]
 
-## Select only "chytrid and both" genes
-# 3747 genes investigated
-RSEM_final_hope.gene_chytrid <- RSEM_final_hope.gene[
-  RSEM_final_hope.gene$X %in% sequencedChytridGenes,]
 
-## Select only "chytrid and both" samples 
-RSEM_final_hope.gene_chytrid = RSEM_final_hope.gene_chytrid[
-  grep("cyano", names(RSEM_final_hope.gene_chytrid),invert = T)] 
 
-## Clean
-RSEM_final_hope.gene_chytrid=RSEM_final_hope.gene_chytrid[
-  !names(RSEM_final_hope.gene_chytrid) %in% c("X", "whichOrg", "whichTranscriptome")]
 
-## Rename based on annotations
-rownames(RSEM_final_hope.gene_chytrid) = make.unique(annotationChytrid$gene_name[
-  match(row.names(RSEM_final_hope.gene_chytrid), annotationChytrid$custom_gene_name)])
+# ## Rename based on annotations
+# rownames(RSEM_newhope.gene_chytrid) = make.unique(annotationChytrid$gene_name[
+#   match(row.names(RSEM_newhope.gene_chytrid), annotationChytrid$custom_gene_name)])
+# 
+# nrow(RSEM_newhope.gene_chytrid) # 3747
+# 
 
-nrow(RSEM_final_hope.gene_chytrid) # 3747
 ## Merge identical proteins in only one row, suming the counts
-RSEM_final_hope.gene_chytrid = RSEM_final_hope.gene_chytrid %>%
-  mutate(base_name = sub("\\.\\d+$", "", rownames(RSEM_final_hope.gene_chytrid))) %>%
+RSEM_newhope.gene_chytrid = RSEM_newhope.gene_chytrid %>%
+  mutate(base_name = sub("\\.\\d+$", "", rownames(RSEM_newhope.gene_chytrid))) %>%
   group_by(base_name) %>%
   summarise(across(everything(), sum)) %>%
   tibble::column_to_rownames("base_name") %>% data.frame()
 
-nrow(RSEM_final_hope.gene_chytrid) # 3156 genes
+nrow(RSEM_newhope.gene_chytrid) # 3156 genes
 
 # 3747 - 3156 = 591 genes that had multiple transcript names
 
 ###################
 ## Cyanobacteria ##
-sequencedCyanoGenes <- RSEM_final_hope.gene[
-  RSEM_final_hope.gene$whichOrg %in% c("in_both_organisms in_cyano_alone",
+sequencedCyanoGenes <- RSEM_newhope.gene[
+  RSEM_newhope.gene$whichOrg %in% c("in_both_organisms in_cyano_alone",
                                        "in_cyano_alone", "in_both_organisms") &
-    RSEM_final_hope.gene$whichTranscriptome %in% "cyano","X"]
+    RSEM_newhope.gene$whichTranscriptome %in% "cyano","X"]
 length(sequencedCyanoGenes) # 3636 sequenced genes
 
 ## Select only "cyano and both" genes
-RSEM_final_hope.gene_cyano <- RSEM_final_hope.gene[
-  RSEM_final_hope.gene$X %in% sequencedCyanoGenes,]
+RSEM_newhope.gene_cyano <- RSEM_newhope.gene[
+  RSEM_newhope.gene$X %in% sequencedCyanoGenes,]
 
 ## Select only "cyano and both" samples 
-RSEM_final_hope.gene_cyano = RSEM_final_hope.gene_cyano[
-  grep("chy", names(RSEM_final_hope.gene_cyano),invert = T)] 
+RSEM_newhope.gene_cyano = RSEM_newhope.gene_cyano[
+  grep("chy", names(RSEM_newhope.gene_cyano),invert = T)] 
 
 ## Clean
-RSEM_final_hope.gene_cyano=RSEM_final_hope.gene_cyano[
-  !names(RSEM_final_hope.gene_cyano) %in% c("X", "whichOrg", "whichTranscriptome")]
+RSEM_newhope.gene_cyano=RSEM_newhope.gene_cyano[
+  !names(RSEM_newhope.gene_cyano) %in% c("X", "whichOrg", "whichTranscriptome")]
 
 ## Rename based on annotations
-rownames(RSEM_final_hope.gene_cyano) = make.unique(annotationCyano$gene_name[
-  match(row.names(RSEM_final_hope.gene_cyano), annotationCyano$custom_gene_name)])
+rownames(RSEM_newhope.gene_cyano) = make.unique(annotationCyano$gene_name[
+  match(row.names(RSEM_newhope.gene_cyano), annotationCyano$custom_gene_name)])
 
-nrow(RSEM_final_hope.gene_cyano) # 3636 genes
+nrow(RSEM_newhope.gene_cyano) # 3636 genes
 
 ## Merge identical proteins in only one row, suming the counts
-RSEM_final_hope.gene_cyano = RSEM_final_hope.gene_cyano %>%
-  mutate(base_name = sub("\\.\\d+$", "", rownames(RSEM_final_hope.gene_cyano))) %>%
+RSEM_newhope.gene_cyano = RSEM_newhope.gene_cyano %>%
+  mutate(base_name = sub("\\.\\d+$", "", rownames(RSEM_newhope.gene_cyano))) %>%
   group_by(base_name) %>%
   summarise(across(everything(), sum)) %>%
   tibble::column_to_rownames("base_name") %>% data.frame()
 
-nrow(RSEM_final_hope.gene_cyano) # 3589 genes
+nrow(RSEM_newhope.gene_cyano) # 3589 genes
 
 # 3636-3589=47 genes with duplicated counts
 
@@ -216,7 +154,7 @@ library(NOISeq)
 # The “Saturation" plot shows the number of features in the genome detected with more than k counts with
 # the sequencing depth of the sample, and with higher and lower simulated sequencing depth
 # Create an ExpressionSet object
-counts_chy <- as.matrix(RSEM_final_hope.gene_chytrid)
+counts_chy <- as.matrix(RSEM_newhope.gene_chytrid)
 eset_chy <- ExpressionSet(assayData = counts_chy)
 mysaturation_chy = dat(eset_chy, k = 0, ndepth = 7, type = "saturation")
 ## Chytrid alone:
@@ -224,7 +162,7 @@ explo.plot(mysaturation_chy, toplot = 1, samples = 1:11)
 ## Both organisms:
 explo.plot(mysaturation_chy, toplot = 1, samples = 12:19)
 
-counts_cyano <- as.matrix(RSEM_final_hope.gene_cyano)
+counts_cyano <- as.matrix(RSEM_newhope.gene_cyano)
 eset_cyano <- ExpressionSet(assayData = counts_cyano)
 mysaturation_cyano = dat(eset_cyano, k = 0, ndepth = 7, type = "saturation")
 
@@ -235,24 +173,24 @@ explo.plot(mysaturation_cyano, toplot = 1, samples = 9:20)
 
 ## Due to the discrepancies between the groups, we remove genes with
 ## zeros in at least 3/group (met+inf)
-RSEM_final_hope.gene_chytrid <- filterRSEMno3Nullpergp(RSEM_final_hope.gene_chytrid)
-RSEM_final_hope.gene_cyano <- filterRSEMno3Nullpergp(RSEM_final_hope.gene_cyano)
+RSEM_newhope.gene_chytrid <- filterRSEMno3Nullpergp(RSEM_newhope.gene_chytrid)
+RSEM_newhope.gene_cyano <- filterRSEMno3Nullpergp(RSEM_newhope.gene_cyano)
 
 ## check saturation
-counts_chy <- as.matrix(RSEM_final_hope.gene_chytrid)
+counts_chy <- as.matrix(RSEM_newhope.gene_chytrid)
 eset_chy <- ExpressionSet(assayData = counts_chy)
 mysaturation_chy = dat(eset_chy, k = 0, ndepth = 7, type = "saturation")
 
-ncol(RSEM_final_hope.gene_chytrid)
+ncol(RSEM_newhope.gene_chytrid)
 ## all
 explo.plot(mysaturation_chy, toplot = 1, samples = 1:19)
 ## 86.9 to 100% genes detected
 
-counts_cyano <- as.matrix(RSEM_final_hope.gene_cyano)
+counts_cyano <- as.matrix(RSEM_newhope.gene_cyano)
 eset_cyano <- ExpressionSet(assayData = counts_cyano)
 mysaturation_cyano = dat(eset_cyano, k = 0, ndepth = 7, type = "saturation")
 
-names(RSEM_final_hope.gene_cyano)
+names(RSEM_newhope.gene_cyano)
 explo.plot(mysaturation_cyano, toplot = 1, samples = 1:20) 
 ## Both organisms:
 explo.plot(mysaturation_cyano, toplot = 1, samples = 1:9) 
@@ -260,14 +198,14 @@ explo.plot(mysaturation_cyano, toplot = 1, samples = 1:9)
 explo.plot(mysaturation_cyano, toplot = 1, samples = 10:20) 
 ## meth_both_In11 58.9% everything else 92.5 to 100%
 
-RSEM_final_hope.gene_cyano = RSEM_final_hope.gene_cyano[
-  !names(RSEM_final_hope.gene_cyano) %in% c("met_both_In11")]
+RSEM_newhope.gene_cyano = RSEM_newhope.gene_cyano[
+  !names(RSEM_newhope.gene_cyano) %in% c("met_both_In11")]
 
-nrow(RSEM_final_hope.gene_chytrid) # 835
-names(RSEM_final_hope.gene_chytrid)
+nrow(RSEM_newhope.gene_chytrid) # 835
+names(RSEM_newhope.gene_chytrid)
 
-nrow(RSEM_final_hope.gene_cyano) # 555
-names(RSEM_final_hope.gene_cyano)
+nrow(RSEM_newhope.gene_cyano) # 555
+names(RSEM_newhope.gene_cyano)
 
 #####################
 ## DESeq2 jan 2025 ##
@@ -275,12 +213,12 @@ names(RSEM_final_hope.gene_cyano)
 
 ## I. Chytrid transcripts
 contrast_chytridgenome<- calculateContrasts(
-  my_countsmatrix=RSEM_final_hope.gene_chytrid,
+  my_countsmatrix=RSEM_newhope.gene_chytrid,
   my_org="chy")
 
 ## II. Cyano transcripts
 contrast_cyanogenome <- calculateContrasts(
-  my_countsmatrix=RSEM_final_hope.gene_cyano,
+  my_countsmatrix=RSEM_newhope.gene_cyano,
   my_org="cyano")
 
 ## Volcano plots
@@ -464,8 +402,8 @@ write.csv(fullDEGTable, "../../figures/TableS1_fullDEGTable.tsv", row.names = F)
 ## GO of the four groups per transcriptome ##
 #############################################
 
-universe_chytrid = rownames(RSEM_final_hope.gene_chytrid)
-universe_cyano = rownames(RSEM_final_hope.gene_cyano)
+universe_chytrid = rownames(RSEM_newhope.gene_chytrid)
+universe_cyano = rownames(RSEM_newhope.gene_cyano)
 
 getGOBubbleZ(universe = universe_chytrid, annotation = annotationChytrid, 
              genelist = getGenes(contrast_chytridgenome$resr_inf_effect_control), 
