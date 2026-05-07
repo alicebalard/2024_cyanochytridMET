@@ -79,7 +79,7 @@ $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --LOAD_tmhmmv2 tmh
 $TRINOTATE_HOME/Trinotate-Trinotate-v4.0.2/Trinotate --db $DB --report --incl_pep --incl_trans > $OUTDIR/annotation/assemblyMergedFungi.tsv
 
 ## Simplify output for later use with DESeq2:
-cat $OUTDIR/annotation/assemblyMergedFungi.tsv | cut -f 1,2,3,12,13 > $OUTDIR/annotation/assemblyMergedFungi_simplified_GOKegg.tsv
+cat $OUTDIR/annotation/assemblyMergedFungi.tsv | cut -f 1,2,3,13,14 > $OUTDIR/annotation/assemblyMergedFungi_simplified_GOKegg.tsv
 
 awk 'BEGIN {OFS="\t"} 
      NR==1 {print $0, "gene_name"} 
