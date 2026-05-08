@@ -81,7 +81,10 @@ echo "[S01] Combined FASTA created ($(grep -c '^>' assembly_both.fna) sequences)
 ## -------------------------------------------------------
 ## Outputs
 ## -------------------------------------------------------
+cp $OUTDIR/combined_gene_trans_map.txt /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/.
+cp $OUTDIR/header_lookup_table.txt /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/.
+
 echo "[S01] Done. Outputs:"
 echo "  $OUTDIR/assembly_both.fna"
-echo "  $OUTDIR/combined_gene_trans_map.txt"
-echo "  $OUTDIR/header_lookup_table.txt"
+echo "  /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/combined_gene_trans_map.txt"
+echo "  /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/header_lookup_table.txt"
