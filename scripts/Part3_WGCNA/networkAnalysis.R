@@ -3,7 +3,6 @@
 ## ============================================================
 library(here)
 source(here("scripts/Part2_DEG/S05_fullAnalysis.R"))
-setwd(here("scripts/Part2_WGCNA/"))
 
 library(WGCNA)
 library(igraph); library(tidygraph); library(ggraph)
