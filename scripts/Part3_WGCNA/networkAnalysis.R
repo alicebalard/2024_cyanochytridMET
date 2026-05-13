@@ -1,472 +1,368 @@
-# Load necessary libraries
-
-## Results of previous analysis
-setwd("../Part2_DEG/")
-source("fullAnalysis.R")
-
-setwd("../Part3_WGCNA/")
-
 ## ============================================================
-## 📦 1. Load Variance-stabilized matrices from previous script
+## Part 3: Co-expression & Cross-species analysis
 ## ============================================================
-vst_cyano <- contrast_cyanogenome$vstr
-vst_chy <- contrast_chytridgenome$vstr
-vst_chy %>% nrow # 835 genes
-vst_cyano %>% nrow # 555 genes
+library(here)
+source(here("scripts/Part2_DEG/S05_fullAnalysis.R"))
+setwd(here("scripts/Part2_WGCNA/"))
 
-## For big data
-options(stringsAsFactors = FALSE)
+library(WGCNA)
+library(igraph); library(tidygraph); library(ggraph)
+library(purrr); library(patchwork); library(openxlsx)
+
+options(stringsAsFactors=FALSE)
 allowWGCNAThreads()
 
-##############################################
-## I. Single species co-expression analysis ##
-##############################################
+## ============================================================
+## 1. Compute VST matrices
+## ============================================================
 
-## ===============================
-## ✅ 2.Pick soft power threshold
-## ===============================
-# The soft threshold (β) is a key parameter in WGCNA.
-# It raises the correlation matrix to this power to emphasize strong correlations 
-# and suppress weak ones, so your network approximates a scale-free topology — 
-# the biological reality that a few genes are highly connected (hubs) while most aren’t.
-# Scale-free topology fit index (SFT.R.sq): Good ≥ 0.8 (≥0.9 better); bad <0.6
-# Mean connectivity between 5 and 100 is usually reasonable to not lose meaningful connections.
-
-pickSoftPow <- function(vst){
-  par(mfrow = c(2, 1))
-  sth <- pickSoftThreshold(t(vst), powerVector = c(1:20), verbose = 5)
-  plot(sth$fitIndices$Power, sth$fitIndices$SFT.R.sq, type="b", 
-       xlab="Soft Threshold (power)", ylab="Scale Free Topology Model Fit, signed R^2",
-       main="Scale-Free Topology Fit")
-  abline(h=0.8, col="red", lty=2); abline(h=0.9, col="red", lty=1)
-  plot(sth$fitIndices$Power, sth$fitIndices$mean.k., type="b", 
-       xlab="Soft Threshold (power)", ylab="Mean connectivity",
-       main="Scale-Free Topology Fit")
-  abline(h=5, col="red", lty=2)
-  par(mfrow = c(1, ))
+getVST <- function(count) {
+  ddsr <- DESeqDataSetFromMatrix(
+    countData = round(count),
+    colData   = samples_data[colnames(count), ],
+    design    = ~ condition)
+  assay(varianceStabilizingTransformation(ddsr, blind=TRUE))
 }
 
-# pickSoftPow(vst_chy)
-softPower_chy <- 8 # mean connectivity 1.5900 ok
-# 
-# pickSoftPow(vst_cyano)
-softPower_chy <- 14 # mean connectivity 2.090 ok
+# VST for single-species analyses (MET effect contrasts only)
+all_chy_genes <- Reduce(union, lapply(
+  listCounts[intersect(grep("chy",      names(listCounts)),
+                       grep("METeffect", names(listCounts)))], rownames))
 
-## ===============================
-## 🔗 3. Build modules
-## ===============================
-cor <- WGCNA::cor
+all_cyano_genes <- Reduce(union, lapply(
+  listCounts[intersect(grep("cyano",    names(listCounts)),
+                       grep("METeffect", names(listCounts)))], rownames))
+
+# Chytrid alone samples
+counts_chy_forVST <- counts_chy[
+  rownames(counts_chy) %in% all_chy_genes,
+  grep("^control_chy|^met_chy", colnames(counts_chy))]
+counts_chy_forVST <- counts_chy_forVST[rowSums(counts_chy_forVST) > 0, ]
+vst_chy <- getVST(counts_chy_forVST)
+message("VST chy:   ", nrow(vst_chy), " genes x ", ncol(vst_chy), " samples")
+# VST chy:   958 genes x 12 samples
+
+# Cyano alone samples
+counts_cyano_forVST <- counts_cyano[
+  rownames(counts_cyano) %in% all_cyano_genes,
+  grep("cyano", colnames(counts_cyano))]
+counts_cyano_forVST <- counts_cyano_forVST[rowSums(counts_cyano_forVST) > 0, ]
+vst_cyano <- getVST(counts_cyano_forVST)
+message("VST cyano: ", nrow(vst_cyano), " genes x ", ncol(vst_cyano), " samples")
+# VST cyano: 3553 genes x 12 samples
+
+# VST for cross-species analysis (co-culture "both" samples)
+counts_chy_both_forVST <- counts_chy[
+  rownames(counts_chy) %in% all_chy_genes,
+  grep("both", colnames(counts_chy))]
+counts_chy_both_forVST <- counts_chy_both_forVST[
+  , !colnames(counts_chy_both_forVST) %in% remove_chy]
+counts_chy_both_forVST <- counts_chy_both_forVST[
+  rowSums(counts_chy_both_forVST) > 0, ]
+
+counts_cyano_both_forVST <- counts_cyano[
+  rownames(counts_cyano) %in% all_cyano_genes,
+  grep("both", colnames(counts_cyano))]
+counts_cyano_both_forVST <- counts_cyano_both_forVST[
+  , !colnames(counts_cyano_both_forVST) %in% remove_cyano]
+counts_cyano_both_forVST <- counts_cyano_both_forVST[
+  rowSums(counts_cyano_both_forVST) > 0, ]
+
+vst_chy_both   <- getVST(counts_chy_both_forVST)
+vst_cyano_both <- getVST(counts_cyano_both_forVST)
+
+# Keep only shared co-culture samples
+shared_samples <- intersect(colnames(vst_chy_both), colnames(vst_cyano_both))
+message("Shared co-culture samples: ", length(shared_samples))
+# Shared co-culture samples: 7
+
+vst_chy_both   <- vst_chy_both[,   shared_samples]
+vst_cyano_both <- vst_cyano_both[, shared_samples]
+stopifnot(all(colnames(vst_chy_both) == colnames(vst_cyano_both)))
+
+## ============================================================
+## 2. Single-species WGCNA
+## ============================================================
+
+pickSoftPow <- function(vst) {
+  par(mfrow=c(1, 2))
+  sth <- pickSoftThreshold(t(vst), powerVector=1:20, verbose=5)
+  plot(sth$fitIndices$Power, sth$fitIndices$SFT.R.sq, type="b",
+       xlab="Power", ylab="Scale Free R²", main="Scale-Free Fit")
+  abline(h=0.8, col="red", lty=2); abline(h=0.9, col="red", lty=1)
+  plot(sth$fitIndices$Power, sth$fitIndices$mean.k., type="b",
+       xlab="Power", ylab="Mean connectivity", main="Mean Connectivity")
+  abline(h=5, col="red", lty=2)
+  par(mfrow=c(1, 1))
+  invisible(sth)
+}
+
+pickSoftPow(vst_chy)
+softPower_chy <- 9
+# Power 9:  SFT.R.sq=0.828, mean.k=20.5 → R²>0.8 ✅, good connectivity ✅
+#
+pickSoftPow(vst_cyano)
+softPower_cyano <- 5  # R²=0.837, mean.k=59.5, slope=-2.76 ✅
+
+cor <- WGCNA::cor  # override base cor
 
 net_chy <- blockwiseModules(
-  datExpr = t(vst_chy),
-  power = 8, 
-  TOMType = "signed", minModuleSize = 30, reassignThreshold = 0,  
-  mergeCutHeight = 0.25, saveTOMs = TRUE, saveTOMFileBase = "chyTOM",
-  verbose = 3)
-
-# Number of modules identified:
-table(net_chy$colors)
-# blue     brown     green      grey turquoise    yellow 
-# 60        46        41       576        71        41 
-
-# Change grey to NA to rm unassigned geneds
-net_chy$colors[net_chy$colors == "grey"] <- "white"
+  datExpr        = t(vst_chy),
+  power          = softPower_chy,
+  TOMType        = "signed", minModuleSize=30,
+  reassignThreshold=0, mergeCutHeight=0.25,
+  saveTOMs=TRUE,  saveTOMFileBase="chyTOM", verbose=3)
 
 net_cyano <- blockwiseModules(
-  datExpr = t(vst_cyano),
-  power = 12, 
-  TOMType = "signed", minModuleSize = 30, reassignThreshold = 0,  
-  mergeCutHeight = 0.25, saveTOMs = TRUE, saveTOMFileBase = "cyanoTOM",
-  verbose = 3)
+  datExpr        = t(vst_cyano),
+  power          = softPower_cyano,
+  TOMType        = "signed", minModuleSize=30,
+  reassignThreshold=0, mergeCutHeight=0.25,
+  saveTOMs=TRUE,  saveTOMFileBase="cyanoTOM", verbose=3)
 
-# Number of modules identified:
-table(net_cyano$colors)
-# blue     brown      grey turquoise    yellow 
-# 107        92       126       180        50 
-
-# Change grey to NA
+net_chy$colors[net_chy$colors     == "grey"] <- "white"
 net_cyano$colors[net_cyano$colors == "grey"] <- "white"
 
-## ===============================
-## 🎨 4. Dendrogram & colors
-## ===============================
-plotDendroAndColors(
-  net_chy$dendrograms[[1]], 
-  net_chy$colors[net_chy$blockGenes[[1]]], "Module colors", 
-  dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
+message("Chytrid modules: ");  print(table(net_chy$colors))
+message("Cyano modules: ");    print(table(net_cyano$colors))
 
-plotDendroAndColors(
-  net_cyano$dendrograms[[1]], 
-  net_cyano$colors[net_cyano$blockGenes[[1]]], "Module colors", 
-  dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
-
-## ==============================
-## 5. Run enrichment on modules
-## ==============================
-res <- lapply(names(table(net_chy$colors)), function(i){
-  getGOBubbleZ(universe = colnames(t(vst_chy)),
-               annotation = annotationChytrid, 
-               genelist = names(net_chy$colors)[net_chy$colors == i], 
-               GO_df = GO_chytrid, isbubble = F)
-})
-
-res <- lapply(names(table(net_cyano$colors)), function(i){
-  getGOBubbleZ(universe = colnames(t(vst_cyano)),
-               annotation = annotationCyano, 
-               genelist = names(net_cyano$colors)[net_cyano$colors == i], 
-               GO_df = GO_cyano, isbubble = F)
-})
-
-## No significant GO term in any module
-
-## =================
-## 6. Find our DEG
-## =================
-table(na.omit(net_chy$colors[unique(fullDEGTable$geneName)]))
-data.frame(modules=na.omit(net_chy$colors[unique(fullDEGTable$geneName)])) %>% 
-  arrange(modules) ## white = no module
-
-table(na.omit(net_cyano$colors[unique(fullDEGTable$geneName)]))
-data.frame(modules=na.omit(net_cyano$colors[unique(fullDEGTable$geneName)])) %>% 
-  arrange(modules) ## white = no module
-
-## ======================================
-## 7. Test association with treatment
-## ======================================
-
-treatment <- ifelse(grepl("^control", colnames(vst_chy)), 0, 1)
-moduleTraitCor = cor(net_chy$MEs, treatment, use = "p")
-moduleTraitPvalue = corPvalueStudent(moduleTraitCor, length(treatment))
-moduleTraitCor; moduleTraitPvalue
-labeledHeatmap(Matrix = moduleTraitCor, xLabels = "Treatment",
-               yLabels = names(net_chy$MEs), colors = blueWhiteRed(50))
-
-treatment <- ifelse(grepl("chy", colnames(vst_chy)), 0, 1)
-moduleTraitCor <- cor(net_chy$MEs, treatment, use = "p")
-moduleTraitPvalue <- corPvalueStudent(moduleTraitCor, length(treatment))
-moduleTraitCor; moduleTraitPvalue
-labeledHeatmap(Matrix = moduleTraitCor, xLabels = "Treatment",
-               yLabels = names(net_chy$MEs), colors = blueWhiteRed(50))
-
-treatment <- ifelse(grepl("^control", colnames(vst_cyano)), 0, 1)
-moduleTraitCor <- cor(net_cyano$MEs, treatment, use = "p")
-moduleTraitPvalue <- corPvalueStudent(moduleTraitCor, length(treatment))
-moduleTraitCor; moduleTraitPvalue
-labeledHeatmap(Matrix = moduleTraitCor, xLabels = "Treatment",
-               yLabels = names(net_cyano$MEs), colors = blueWhiteRed(50))
-
-treatment <- ifelse(grepl("cyano", colnames(vst_cyano)), 0, 1)
-moduleTraitCor <- cor(net_cyano$MEs, treatment, use = "p")
-moduleTraitPvalue <- corPvalueStudent(moduleTraitCor, length(treatment))
-moduleTraitCor; moduleTraitPvalue
-labeledHeatmap(Matrix = moduleTraitCor, xLabels = "Treatment",
-               yLabels = names(net_cyano$MEs), colors = blueWhiteRed(50))
-
-#####################################
-## II. Dual co-expression analysis ##
-#####################################
-# We keep only "both" (dual transcriptome)
-# vst_cyano: genes x samples
-# vst_chy: genes x samples
-shared_samples <- intersect(colnames(vst_cyano), colnames(vst_chy))
-# Keep same sample order
-vst_cyano_both <- vst_cyano[, shared_samples]
-vst_chy_both <- vst_chy[, shared_samples]
-
-# Make sure samples are in same order:
-vst_cyano_both <- vst_cyano_both[, colnames(vst_chy_both)]
-stopifnot(all(colnames(vst_cyano_both) == colnames(vst_chy_both)))
-
-## combined
-vst_combined <- rbind(vst_chy_both, vst_cyano_both)
-
-## ===============================
-## ✅ 2.Pick soft power threshold
-## ===============================
-pickSoftPow(vst_combined)
-softPower_combined <- 1 # to avoid too high connectivity
-
-## ===============================
-## 🔗 3. Build modules
-## ===============================
-cor <- WGCNA::cor
-
-## Biweight midcorrelation (bicor) is a robust correlation that downweights outliers — it’s one of the best choices for cross-species WGCNA.
-
-net_combined <- blockwiseModules(
-  datExpr = t(vst_combined),
-  power = softPower_combined, 
-  corFnc = "bicor",
-  networkType = "signed",
-  TOMType = "signed",
-  minModuleSize = 30,
-  mergeCutHeight = 0.25,
-  reassignThreshold = 0,
-  verbose = 5
-)
-
-# Number of modules identified:
-table(net_combined$colors)
-
-# black          blue         brown          cyan     darkgreen       darkred 
-# 69           112            85            47            34            34 
-# darkturquoise         green   greenyellow          grey        grey60     lightcyan 
-# 33            79            53            15            43            47 
-# lightgreen   lightyellow       magenta  midnightblue          pink        purple 
-# 40            38            64            47            67            60 
-# red     royalblue        salmon           tan     turquoise        yellow 
-# 74            35            51            51           133            79 
-
-sum(table(net_combined$colors))
-
-## ===============================
-## 🎨 4. Dendrogram & colors
-## ===============================
-pdf("../../figures/Fig5a.pdf", width = 15, height = 5)
-plotDendroAndColors(
-  net_combined$dendrograms[[1]], 
-  net_combined$colors[net_combined$blockGenes[[1]]], "Module colors", 
-  dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
+# Dendrograms
+pdf(here("figures/Fig5_dendrograms.pdf"), width=15, height=5)
+plotDendroAndColors(net_chy$dendrograms[[1]],
+                    net_chy$colors[net_chy$blockGenes[[1]]], "Module colors",
+                    dendroLabels=FALSE, hang=0.03, addGuide=TRUE, guideHang=0.05,
+                    main="Chytrid co-expression modules")
+plotDendroAndColors(net_cyano$dendrograms[[1]],
+                    net_cyano$colors[net_cyano$blockGenes[[1]]], "Module colors",
+                    dendroLabels=FALSE, hang=0.03, addGuide=TRUE, guideHang=0.05,
+                    main="Cyano co-expression modules")
 dev.off()
 
-## ==============================
-## 5. Run enrichment on modules
-## ==============================
-res <- lapply(names(table(net_combined$colors)), function(i){
-  getGOBubbleZ(universe = colnames(t(vst_combined)),
-               annotation = rbind(annotationChytrid[
-                 names(annotationChytrid) %in%
-                   c("custom_gene_name", "gene_name", "GO.accession")],
-                 annotationCyano), 
-               genelist = names(net_combined$colors)[net_combined$colors == i], 
-               GO_df = rbind(GO_chytrid,GO_cyano), isbubble = F)
-})
+## ============================================================
+## 3. Single-species: module-trait correlation with MET
+## ============================================================
 
-## No significant GO term in any module
-
-## =================
-## 6. Find our DEG
-## =================
-table(na.omit(net_combined$colors[unique(fullDEGTable$geneName)]))
-data.frame(modules=na.omit(net_combined$colors[unique(fullDEGTable$geneName)])) %>% 
-  arrange(modules) 
-
-## blue, yellow, and greenyellow have a lot of DEG
-
-## ======================================
-## 7. Test association with MET treatment
-## ======================================
-
-treatment <- ifelse(grepl("^control", colnames(vst_combined)), 0, 1)
-moduleTraitCor = cor(net_combined$MEs, treatment,use = "p")
-moduleTraitPvalue = corPvalueStudent(moduleTraitCor, length(treatment))
-moduleTraitCor; moduleTraitPvalue
-# MEgreenyellow: cor = 0.85060744; p-value= 0.01526171
-
-## Color greenyellow
-ggplot(data.frame(x=1,y=1), aes(x,y))+
-  geom_point(pch=21, size = 20, fill = "greenyellow")
-
-# If you plot eigengene boxplots for these 3, you’ll see how they change by treatment.
-meta <- data.frame(
-  Sample = rownames(net_combined$MEs),
-  Treatment = sub("_.*", "",  rownames(net_combined$MEs)),
-  stringsAsFactors = TRUE)
-plot_df <- net_combined$MEs %>%
-  as.data.frame() %>%
-  mutate(Sample = rownames(.)) %>%
-  left_join(meta, by = "Sample")
-
-pdf("../../figures/Fig5b.pdf", width = 3, height = 3)
-ggplot(plot_df, aes(x = Treatment, y = MEgreenyellow, fill = Treatment)) +
-  geom_boxplot() +
-  geom_jitter(width = 0.2, size = 2) +
-  labs(title = "Module Eigengene for MEgreenyellow",
-       y = "Module Eigengene Value") +
-  theme_minimal() + theme(legend.position = "none")
-dev.off()
-# ## as well as the hub genes (core genes for a module). We could focus only on modules
-# (groups of super co-expressed genes) that have a lot of host AND parasite genes together, 
-# or plotting all. I'll prepare a plot with all and we can discuss to focus on the most interesting. 
-# I'll try to find time to do that ASAP.
-#
-## ✅ (1) Find the ratio of both species per module
-# Get gene names
-chy_genes <- row.names(vst_chy)
-cyano_genes <- row.names(vst_cyano)
-
-# Combine into a data.frame: gene + species + module
-gene_species_df <- data.frame(
-  gene = names(net_combined$colors),
-  module = net_combined$colors,
-  species = ifelse(names(net_combined$colors) %in% chy_genes, "Chytrid",
-                   ifelse(names(net_combined$colors) %in% cyano_genes, "Cyano", NA))
-)
-
-# Count table
-table_per_module <- table(gene_species_df$module, gene_species_df$species)
-print(table_per_module)
-
-# Proportions per module
-prop_table <- prop.table(table_per_module, margin = 1)
-print(round(prop_table, 2))
-
-## ✅ (2) Find top 10% hub genes in each module
-
-# Calculate adjacency
-adjacency <- adjacency(t(vst_combined), power = softPower_combined)
-
-# Calculate intramodular connectivity (kWithin)
-IMconn <- intramodularConnectivity(adjacency, net_combined$colors)
-
-# Add module membership too:
-ME <- moduleEigengenes(t(vst_combined), net_combined$colors)$eigengenes
-kME <- signedKME(t(vst_combined), ME)
-
-# Combine results
-hub_df <- data.frame(
-  gene = rownames(vst_combined),
-  module = net_combined$colors,
-  kWithin = IMconn$kWithin,
-  kME = apply(kME, 1, max)
-)
-
-# Get top 10% per module by kWithin:
-hub_genes <- hub_df %>%
-  group_by(module) %>%
-  slice_max(order_by = kWithin, prop = 0.1)
-
-# Add a column for organism type (host vs. parasite)
-hub_genes <- hub_genes %>%
-  mutate(org = ifelse(gene %in% annotationChytrid$gene_name, "chytrid",
-                      ifelse(gene %in% annotationCyano$gene_name, "cyano", NA)))
-
-## Which hub genes are also DEG?
-intersect(hub_genes$gene, fullDEGTable$geneName)
-## "GeneID:77286325" "HDA1A_XENLA"     "RS15A_BOVIN" 
-
-hub_genes[hub_genes$module %in% hub_genes[grep("GeneID:77286325", hub_genes$gene),"module"],]
-hub_genes[hub_genes$module %in% hub_genes[grep("HDA1A_XENLA", hub_genes$gene),"module"],]
-hub_genes[hub_genes$module %in% hub_genes[grep("RS15A_BOVIN", hub_genes$gene),"module"],]
-
-## Save xls file for hub genes:
-library(openxlsx)
-
-summary_table <- hub_genes %>%
-  group_by(module) %>%
-  summarise(
-    CyanoGenes = sum(org == "cyano"),
-    ChytridGenes = sum(org == "chytrid"),
-    CyanoHubGenes = paste(gene[org == "cyano"], collapse = ", "),
-    ChytridHubGenes = paste(gene[org == "chytrid"], collapse = ", ")
-  ) %>%
-  arrange(desc(CyanoGenes + ChytridGenes)) # Order by total genes
-
-modules2plot <- summary_table$module
-# 
-# 1 turquoise          4            9 "GeneID:77288813, mutS, GeneID:77289282, GeneID:77288010"                              ELP1_XENLA, WD…
-# 2 blue               5            6 "GeneID:77286691, GeneID:77287462, GeneID:77290358, GeneID:77287484, GeneID:77290423"  SYWC_SCHPO, NO…
-# 3 brown              7            1 "GeneID:77287245, GeneID:77289460, GeneID:77286317, GeneID:77289490, pgl, fni, GeneID… AFG32_HUMAN    
-#  4 green              5            2 "GeneID:77287477, GeneID:77288178, hpsU, rplV, glpX"                                   RS6B_SCHPO, KP…
-#  5 red                5            2 "
-
-# Create a workbook
-wb <- createWorkbook()
-addWorksheet(wb, "WGCNA Summary")
-
-# Write data (exclude the color column for display)
-writeData(wb, sheet = 1, x = summary_table %>% select(-module_color), startCol = 1, startRow = 1)
-
-# Highlight each cell in the module column with its module color
-for (i in seq_len(nrow(summary_table))) {
-  mod_col <- summary_table$module[i]
+moduleTraitTest <- function(net, vst, trait_label="MET") {
+  treatment <- ifelse(grepl("^control", colnames(vst)), 0, 1)
+  MEs  <- net$MEs
+  cors <- cor(MEs, treatment, use="p")
+  pval <- corPvalueStudent(cors, length(treatment))
   
-  # Set cell style with fill color
-  style <- createStyle(fgFill = mod_col, fontColour = "#FFFFFF")  # White text
-  addStyle(wb, sheet = 1, style = style, rows = i + 1, cols = 1, gridExpand = FALSE)
+  sig <- data.frame(
+    module  = rownames(cors),
+    cor     = round(cors[,1], 3),
+    pvalue  = round(pval[,1], 4)
+  ) %>% filter(pvalue < 0.05) %>% arrange(pvalue)
+  
+  message(trait_label, " - significant modules:")
+  print(sig)
+  
+  labeledHeatmap(Matrix=cors, xLabels=trait_label,
+                 yLabels=names(MEs), colors=blueWhiteRed(50),
+                 main=paste("Module-trait:", trait_label))
+  invisible(list(cors=cors, pval=pval, sig=sig))
 }
 
-# Optional: make headers bold
-headerStyle <- createStyle(textDecoration = "bold")
-addStyle(wb, sheet = 1, style = headerStyle, rows = 1, cols = 1:5, gridExpand = TRUE)
-
-# Save the Excel file
-saveWorkbook(wb, "../../figures/WGCNA_summary_table.xlsx", overwrite = TRUE)
-
-## ✅ (3)  Plot network highlighting hub genes
-library(igraph)
-library(tidygraph)
-library(ggraph)
-library(purrr)
-library(dplyr)
-library(rlang)
-library(ggplot2)
-library(tidyr)
-library(patchwork)
-
-# Generate enhanced network plots per module
-plots <- hub_genes %>%  
-  filter(module %in% modules2plot) %>%  # remove or adjust this filter as needed
-  group_by(module) %>%
-  group_split() %>%
-  map(function(df) {
-    genes <- df$gene
-    mod <- unique(df$module)
-    
-    # Subset adjacency matrix to only these genes
-    valid_genes <- intersect(genes, rownames(adjacency))
-    if (length(valid_genes) < 2) return(NULL)
-    
-    adj_sub <- adjacency[valid_genes, valid_genes]
-    
-    # Build edge list (upper triangle)
-    edge_df <- as.data.frame(as.table(adj_sub))
-    colnames(edge_df) <- c("from", "to", "weight")
-    edge_df <- edge_df %>%
-      filter(from != to) %>%
-      filter(as.numeric(factor(from)) < as.numeric(factor(to))) %>%
-      filter(weight > 0.05)  # adjustable threshold
-    
-    if (nrow(edge_df) == 0) return(NULL)
-    
-    # Node metadata: org and kWithin
-    nodes <- df %>%
-      filter(gene %in% c(edge_df$from, edge_df$to)) %>%
-      select(gene, org, kWithin) %>%
-      distinct() %>%
-      rename(name = gene)
-    
-    g <- graph_from_data_frame(edge_df, vertices = nodes, directed = FALSE)
-    tg <- as_tbl_graph(g)
-    
-    # Plot using ggraph:
-    ggraph(tg, layout = "fr") +
-      geom_edge_link(aes(alpha = weight), color = "black", width = 0.2, show.legend = FALSE) +       # thin black edges
-      geom_node_label(
-        aes(label = gsub("GeneID:", "", sub("_.*", "", name)), 
-            color = org,  # text color mapped to org
-            fill = org), size = 4,
-        label.r = unit(0.25, "lines"),       # rounded corners = oval feel
-        label.padding = unit(0.25, "lines"),  # controls horizontal/vertical size
-        fontface = "bold", label.size = 0
-      ) +
-      scale_fill_manual(values = c("cyano" = "white", "chytrid" = "black")) +
-      scale_color_manual(values = c("cyano" = "black", "chytrid" = "white")) +
-      guides(size = "none") +
-      theme_void() +
-      ggtitle(mod) +
-      theme(
-        plot.title = element_text(hjust = 0.5, face = "bold", colour = mod),
-        legend.position = "none",
-        plot.margin = unit(c(1,1,1,1), "cm")  # add margin
-      )+   coord_cartesian(clip = "off")
-  })
-
-# Remove NULL plots if any
-plots <- compact(plots) 
-
-pdf("../../figures/Fig5c.network.pdf", width = 12, height = 13)
-wrap_plots(plots, ncol = 5)
+pdf(here("figures/Fig5_moduleTraitHeatmaps.pdf"), width=4, height=6)
+res_chy_MET   <- moduleTraitTest(net_chy,   vst_chy,   "MET (chytrid)")
+res_cyano_MET <- moduleTraitTest(net_cyano, vst_cyano, "MET (cyano)")
 dev.off()
 
+# Eigengene plots for significant modules
+plotSigEigengenes <- function(net, vst, sig_df, title) {
+  if(nrow(sig_df) == 0) { message("No significant modules for: ", title); return(NULL) }
+  meta <- data.frame(
+    Sample    = colnames(vst),
+    Treatment = sub("_.*", "", colnames(vst)))
+  plot_df <- net$MEs %>%
+    as.data.frame() %>%
+    mutate(Sample=rownames(.)) %>%
+    left_join(meta, by="Sample") %>%
+    pivot_longer(starts_with("ME"), names_to="Module", values_to="Eigengene") %>%
+    filter(Module %in% sig_df$module)
+  ggplot(plot_df, aes(x=Treatment, y=Eigengene, fill=Treatment)) +
+    geom_boxplot(alpha=0.7) +
+    geom_jitter(width=0.2, size=2) +
+    facet_wrap(~Module, scales="free_y") +
+    theme_minimal() + theme(legend.position="none") +
+    labs(title=title, y="Module Eigengene")
+}
 
+pdf(here("figures/Fig5_eigengenes.pdf"), width=8, height=4)
+print(plotSigEigengenes(net_chy,   vst_chy,
+                        res_chy_MET$sig,   "Chytrid modules correlated with MET"))
+print(plotSigEigengenes(net_cyano, vst_cyano,
+                        res_cyano_MET$sig, "Cyano modules correlated with MET"))
+dev.off()
+
+# Which DEGs fall in which module?
+message("Chytrid DEGs in modules:")
+print(data.frame(module=na.omit(
+  net_chy$colors[unique(fullDEGTable$geneName)])) %>% arrange(module))
+
+message("Cyano DEGs in modules:")
+print(data.frame(module=na.omit(
+  net_cyano$colors[unique(fullDEGTable$geneName)])) %>% arrange(module))
+# module
+# AB6C_ARATH       blue
+# AMYA_DROMA       blue
+# BIP_ASPAW        blue
+# NU4M_USTMA       blue
+# ABCB6_HUMAN turquoise
+# ACA1_SCHPO  turquoise
+# AL1A3_HUMAN turquoise
+# ARF_CRYNB   turquoise
+# CAMKI_MACNP turquoise
+# CBPC1_HUMAN turquoise
+# DBP4_CRYNJ  turquoise
+# FEN1_NEMVE  turquoise
+# MOGT1_HUMAN turquoise
+# NPAL2_HUMAN turquoise
+# PAQR1_HUMAN turquoise
+# PHOP1_MOUSE turquoise
+# PPCE_MOUSE  turquoise
+# SIK3_HUMAN  turquoise
+# SYKC_SCHPO  turquoise
+# TRNL_SCHPO  turquoise
+# ATC2_CRYNH      white
+
+## ============================================================
+## 4. Cross-species correlation (WGCNA not feasible: n=7 samples,
+##    R² < 0.57 at all powers)
+## ============================================================
+
+# Spearman correlation matrix: chytrid genes x cyano genes
+cor_matrix <- cor(t(vst_chy_both), t(vst_cyano_both), method="spearman")
+message("Correlation matrix: ", nrow(cor_matrix), " x ", ncol(cor_matrix))
+# Correlation matrix: 958 x 3500
+
+# Extract strongly correlated pairs
+high_cor <- which(abs(cor_matrix) > 0.9, arr.ind=TRUE)
+cross_cor_df <- data.frame(
+  chytrid_gene = rownames(cor_matrix)[high_cor[,1]],
+  cyano_gene   = colnames(cor_matrix)[high_cor[,2]],
+  spearman_r   = cor_matrix[high_cor]
+) %>% arrange(desc(abs(spearman_r)))
+
+message("Cross-species pairs |r|>0.9: ", nrow(cross_cor_df))
+
+# Flag zero-inflated spurious correlations
+cross_cor_df <- cross_cor_df %>%
+  rowwise() %>%
+  mutate(
+    n_nonzero_chy   = sum(vst_chy_both[chytrid_gene, ]   > 0),
+    n_nonzero_cyano = sum(vst_cyano_both[cyano_gene, ]   > 0),
+    min_nonzero     = min(n_nonzero_chy, n_nonzero_cyano),
+    suspicious      = (abs(spearman_r) >= 0.99 & min_nonzero <= 3)
+  ) %>%
+  ungroup()
+
+message("Suspicious (zero-inflated) pairs: ", sum(cross_cor_df$suspicious))
+cross_cor_df <- cross_cor_df %>% filter(!suspicious)
+message("Clean pairs remaining: ", nrow(cross_cor_df))
+
+# Add cyano gene annotation
+cross_cor_df <- cross_cor_df %>%
+  left_join(annotationCyano_final %>%
+              distinct(gene_id, locus_tag, protein, product),
+            by=c("cyano_gene"="gene_id"))
+
+# Filter to pairs involving DEGs
+cross_cor_DEG <- cross_cor_df %>%
+  filter(chytrid_gene %in% fullDEGTable$geneName |
+           cyano_gene   %in% fullDEGTable$geneName)
+
+message("DEG-involving cross-species pairs: ", nrow(cross_cor_DEG))
+print(cross_cor_DEG)
+
+## ============================================================
+## 5. Cross-species: correlation with MET treatment
+## ============================================================
+
+# For each chytrid DEG, test if its cyano partners differ by MET
+treatment_both <- ifelse(grepl("^control", shared_samples), 0, 1)
+
+# Correlate each chytrid DEG's expression with MET treatment
+chy_DEGs_in_both <- intersect(fullDEGTable$geneName, rownames(vst_chy_both))
+
+chy_MET_cor <- data.frame(
+  chytrid_gene = chy_DEGs_in_both,
+  cor_with_MET = sapply(chy_DEGs_in_both, function(g)
+    cor(vst_chy_both[g, ], treatment_both, method="spearman")),
+  pval_MET = sapply(chy_DEGs_in_both, function(g)
+    cor.test(vst_chy_both[g, ], treatment_both,
+             method="spearman")$p.value)
+) %>% arrange(pval_MET)
+
+message("Chytrid DEGs correlated with MET in co-culture (p<0.05):")
+print(chy_MET_cor %>% filter(pval_MET < 0.05))
+
+# Same for cyano DEGs
+cyano_DEGs_in_both <- intersect(fullDEGTable$geneName, rownames(vst_cyano_both))
+
+cyano_MET_cor <- data.frame(
+  cyano_gene   = cyano_DEGs_in_both,
+  cor_with_MET = sapply(cyano_DEGs_in_both, function(g)
+    cor(vst_cyano_both[g, ], treatment_both, method="spearman")),
+  pval_MET = sapply(cyano_DEGs_in_both, function(g)
+    cor.test(vst_cyano_both[g, ], treatment_both,
+             method="spearman")$p.value)
+) %>% arrange(pval_MET)
+
+message("Cyano DEGs correlated with MET in co-culture (p<0.05):")
+print(cyano_MET_cor %>% filter(pval_MET < 0.05))
+
+## ============================================================
+## 6. Visualise key cross-species pairs
+## ============================================================
+
+plot_cross_cor <- function(gene_chy, gene_cyano) {
+  cyano_info <- annotationCyano_final %>%
+    filter(gene_id==gene_cyano) %>%
+    slice(1) %>%
+    pull(product)
+  cyano_label <- ifelse(is.na(cyano_info), gene_cyano,
+                        paste0(gene_cyano, "\n(", cyano_info, ")"))
+  df <- data.frame(
+    chytrid   = vst_chy_both[gene_chy, ],
+    cyano     = vst_cyano_both[gene_cyano, ],
+    sample    = shared_samples,
+    treatment = ifelse(grepl("^control", shared_samples), "control", "MET")
+  )
+  ggplot(df, aes(x=chytrid, y=cyano, color=treatment,
+                 label=sub(".*_", "", sample))) +
+    geom_point(size=3) +
+    ggrepel::geom_text_repel(size=3) +
+    geom_smooth(method="lm", se=TRUE, color="grey40", alpha=0.2) +
+    scale_color_manual(values=c("control"="blue", "MET"="red")) +
+    labs(title = paste(gene_chy, "↔", gene_cyano),
+         subtitle = paste("Spearman r =",
+                          round(cor(df$chytrid, df$cyano,
+                                    method="spearman"), 3)),
+         x=paste("VST:", gene_chy),
+         y=cyano_label) +
+    theme_bw()
+}
+
+# Plot top DEG-involving pairs
+top_DEG_pairs <- head(cross_cor_DEG, 12)
+
+pdf(here("figures/Fig6_cross_species_correlations.pdf"), width=12, height=8)
+plots <- lapply(1:min(9, nrow(top_DEG_pairs)), function(i)
+  plot_cross_cor(top_DEG_pairs$chytrid_gene[i],
+                 top_DEG_pairs$cyano_gene[i]))
+print(cowplot::plot_grid(plotlist=plots, ncol=3))
+dev.off()
+
+## ============================================================
+## 7. Save results
+## ============================================================
+
+write.csv(cross_cor_df,    here("figures/cross_species_correlations.csv"),
+          row.names=FALSE)
+write.csv(cross_cor_DEG,   here("figures/cross_species_DEG_correlations.csv"),
+          row.names=FALSE)
+write.csv(chy_MET_cor,     here("figures/chytrid_DEG_MET_correlation.csv"),
+          row.names=FALSE)
+write.csv(cyano_MET_cor,   here("figures/cyano_DEG_MET_correlation.csv"),
+          row.names=FALSE)

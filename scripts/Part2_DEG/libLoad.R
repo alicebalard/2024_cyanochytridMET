@@ -4,11 +4,13 @@ for (pkg in c("BiocManager", "remotes")) {  # remotes instead of devtools
 
 cran_packages <- c(
   "ggplot2", "ggrepel", "reshape2", "viridis", "pheatmap", "RColorBrewer",
-  "cowplot", "ggvenn", "MASS", "png", "grid",
+  "cowplot", "ggvenn", "MASS", "png", "grid", "ggVennDiagram",
   "WGCNA", "data.table",
   "GOplot",
   "stringr",
-  "tidyverse"
+  "tidyverse",
+  "rentrez",
+  "ashr"
 )
 
 bioc_packages <- c(
@@ -23,7 +25,8 @@ bioc_packages <- c(
   "preprocessCore",
   "DESeq2",
   "rtracklayer",
-  "openxlsx"
+  "openxlsx",
+  "NOISeq"
 )
 
 github_packages <- c(

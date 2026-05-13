@@ -4,9 +4,9 @@
 ## load all files needed for the project
 
 ## design table
-# samples_data <- read.table(
-#   "../../data/sample_data_remove_r.txt", header = TRUE, sep = "\t")
+samples_data <- read.table(here("data/samples_file.txt"), header = F, sep = "\t")
 
+############################################################
 ## Chytrid
 # assembly: /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity_eukaryoteHits.rmConta.fasta
 # gene_trans_map: /scratch/alicebalard/outData/assemblies/assemblyMergedFungi/Trinity_eukaryoteHits.fasta.gene_trans_map
@@ -15,19 +15,14 @@
 annotationChytridFULL <- read.csv(here("gitignore/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv"), sep = "\t")
 ## extract GO terms
 annotationChytridFULL$GO.accession <- str_extract_all(annotationChytridFULL$gene_ontology_BLASTX, "GO:\\d+")
-## Extract Kegg terms
-annotationChytridFULL$Kegg <- strsplit(annotationChytridFULL$Kegg, split = "`", fixed = TRUE)
 
-##############################################################################
 ## make an annotation df with: customGeneName, gene_name, GOaccession, Kegg ##
 annotationChytrid <- annotationChytridFULL[c("X.gene_id", "gene_name", "GO.accession", "Kegg")] %>% 
   unnest(GO.accession, keep_empty = T) %>%
-  unnest(Kegg, keep_empty = T) %>%
   dplyr::rename("custom_gene_name" = "X.gene_id") %>% data.frame()
 
 annotationChytrid <- unique(annotationChytrid)
 
-############################################################
 ## make a GOdf table with GO accession, name and ontology ##
 split_by_backtick <- lapply(annotationChytridFULL$gene_ontology_BLASTX,
                             function(x) strsplit(x, "`")[[1]])
@@ -48,60 +43,108 @@ GO_chytrid=unique(GO_chytrid)
 
 names(GO_chytrid) <- c("GO.accession", "GO.ontology", "GO.name")
 
+message("=== Chytrid annotation summary ===")
+message("Total genes:               ", n_distinct(annotationChytridFULL$X.gene_id))
+message("With GO terms:             ", annotationChytrid %>% filter(!is.na(GO.accession)) %>% distinct(custom_gene_name) %>% nrow())
+message("Without GO terms:          ", annotationChytrid %>% filter(is.na(GO.accession))  %>% distinct(custom_gene_name) %>% nrow())
+message("Unique gene-GO pairs:      ", nrow(annotationChytrid))
+message("Unique GO terms:           ", nrow(GO_chytrid))
 
+## to keep:
+annotationChytrid_final <- annotationChytridFULL
+names(annotationChytrid_final)[names(annotationChytrid_final) %in% "X.gene_id"] <- "gene_id"
 
+rm(split_by_caret, split_by_backtick, result_list, result_df, annotationChytridFULL, annotationChytrid)
 
-## tbc
+############################################################
+## Cyanobacteria annotation
 
-
-
-
-## Cyanobacteria
-
-########################################################################
-## make an annotation df with: customGeneName, gene_name, GOaccession ##
-# 1. header_lookup_table.txt This file contains the shorter names I tried for the cyanobacterium genes and the full name separated by a tab. For the short name I add a number that represents the gene (1...4428) and the g1 and i1 even though each gene has only one isoform. For example
-# cyano_NZ_LR882952.1_cds_WP_027249510.1_1_g1_i1 >lcl|NZ_LR882952.1_cds_WP_027249510.1_1 [locus_tag=NMG88_RS00005] [db_xref=GeneID:77286138] [protein=TIGR01548 family HAD-type hydrolase] [protein_id=WP_027249510.1] [location=135..920] [gbkey=CDS]
-header_lookup_table = read.csv("../../data/run_DESEQ2_Erika/header_lookup_table.txt", sep="\t", header = F)
-header_lookup_table$V1 = gsub(">", "", header_lookup_table$V1)  
+# 1. Load header lookup table (full info & long name for each gene)
+header_lookup_table <- read.csv(here("data/header_lookup_table.txt"), sep="\t", header=FALSE)
+header_lookup_table$V1 <- gsub(">", "", header_lookup_table$V1)
 names(header_lookup_table) <- c("gene_name_long", "info")
 
-# 2. gene_trans_map_cds.txt This file contains the short name and the shortest name separated by a tab. For example
-# cyano_gene1 cyano_NZ_LR882952.1_cds_WP_027249510.1_1_g1_i1
-gene_trans_map_cyano = read.csv("../../data/run_DESEQ2_Erika/gene_trans_map_cds.txt", sep="\t", header = F)
+# 2. Load gene/transcript map (long and short name key table)
+gene_trans_map_cyano <- read.csv(here("data/combined_gene_trans_map.txt"), sep=" ", header=FALSE)
+gene_trans_map_cyano <- gene_trans_map_cyano[!grepl("TRINITY", gene_trans_map_cyano$V1),]
+gene_trans_map_cyano <- tidyr::separate(gene_trans_map_cyano, V1, into=c("V1","V2"), sep="\\t")
 names(gene_trans_map_cyano) <- c("custom_gene_name", "gene_name_long")
 
-annotationCyanoFULL <- merge(gene_trans_map_cyano, header_lookup_table)
-
-# extract protein name
-annotationCyanoFULL$protein = sub(".*\\[protein=(.*?)\\].*", "\\1", annotationCyanoFULL$info)
-annotationCyanoFULL$protein_id = sub(".*\\[protein.id=(.*?)\\].*", "\\1", annotationCyanoFULL$info)
-## not all have gene name
-annotationCyanoFULL$gene_name = sub(".*\\[db_xref=(.*?)\\].*", "\\1", annotationCyanoFULL$info)
-annotationCyanoFULL$gene_name[grep("gene=", annotationCyanoFULL$info)] = 
-  sub(".*\\[gene=(.*?)\\].*", "\\1", annotationCyanoFULL$info[grep("gene=", annotationCyanoFULL$info)])
-
-## add GO
-annotationCyano2 <- import("../../data/annotations/GCF_904830935.1_P._agardhii_No.976_genomic.gtf") 
-annotationCyano2 <- annotationCyano2[!is.na(annotationCyano2$Ontology_term),
-                                   c("protein_id", "product", "gene", "Ontology_term", "go_function", "go_process", "go_component")] %>%
+# 3. Load GTF once and build both bridge and GO table
+gtf_full <- import(here("data/GCF_904830935.1_P._agardhii_No.976_genomic.gtf")) %>%
   data.frame()
-annotationCyano2 <- annotationCyano2 %>% reshape2::melt(id.vars = names(annotationCyano2)[1:9])
-annotationCyanoFULL <- merge(annotationCyanoFULL, annotationCyano2, all = T)
-                          
-annotationCyano = annotationCyanoFULL[c("custom_gene_name", "gene_name", "Ontology_term")] %>%
-                      dplyr::rename("GO.accession" = "Ontology_term")
-                     
-############################################################
-## make a GOdf table with GO accession, name and ontology ##
-GO_cyano = data.frame(GO.ID = annotationCyanoFULL$Ontology_term,
-                    GO.cat = ifelse(annotationCyanoFULL$variable == "go_function", "molecular_biological_function", ifelse(
-                      annotationCyanoFULL$variable == "go_process", "biological_process", ifelse(
-                        annotationCyanoFULL$variable == "go_component", "cellular_component", NA))),
-                    GO.term = sapply(str_split(annotationCyanoFULL$value, "\\|"), function(x) x[1]))
 
-GO_cyano=na.omit(GO_cyano)
-GO_cyano=unique(GO_cyano)
-names(GO_cyano) <- c("GO.accession", "GO.ontology", "GO.name")
+# Bridge: locus_tag → protein_id + product name
+locus_to_protein <- gtf_full %>%
+  filter(!is.na(protein_id), !is.na(locus_tag)) %>%
+  distinct(locus_tag, protein_id, product)  # no gene here, comes from annotationCyanoFULL
 
-source("functions.R")
+# GO terms in long format
+annotationCyano_GO <- gtf_full %>%
+  filter(!is.na(Ontology_term)) %>%
+  dplyr::select(protein_id, product, gene, Ontology_term,
+                go_function, go_process, go_component) %>%
+  distinct() %>%
+  pivot_longer(
+    cols = c(go_function, go_process, go_component),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  filter(!is.na(value))
+
+# 4. Merge and extract fields from info column
+annotationCyanoFULL <- merge(gene_trans_map_cyano, header_lookup_table) %>%
+  mutate(
+    full_id   = str_extract(info, "(?<=>lcl\\|)\\S+"),
+    gene      = str_extract(info, "(?<=\\[gene=)[^\\]]+"),
+    locus_tag = str_extract(info, "(?<=\\[locus_tag=)[^\\]]+"),
+    gene_id   = str_extract(info, "(?<=\\[db_xref=GeneID:)[^\\]]+"),
+    protein   = str_extract(info, "(?<=\\[protein=)[^\\]]+")
+  ) %>%
+  left_join(
+    locus_to_protein %>%
+      dplyr::select(locus_tag, protein_id, product) %>%
+      distinct(),
+    by = "locus_tag"
+  ) %>%
+  left_join(
+    annotationCyano_GO %>% distinct(protein_id, Ontology_term, variable, value),
+    by = "protein_id",
+    relationship = "many-to-many"
+  )
+
+# 5. Slim annotation for DESeq2 (one row per gene + GO accession)
+annotationCyano <- annotationCyanoFULL %>%
+  distinct(custom_gene_name, gene, Ontology_term) %>%
+  dplyr::rename(GO.accession = Ontology_term)
+
+# 6. GO reference table (accession + ontology category + term name)
+GO_cyano <- annotationCyanoFULL %>%
+  filter(!is.na(Ontology_term), !is.na(variable), !is.na(value)) %>%
+  transmute(
+    GO.accession = Ontology_term,
+    GO.ontology = case_when(
+      variable == "go_function"  ~ "molecular_function",
+      variable == "go_process"   ~ "biological_process",
+      variable == "go_component" ~ "cellular_component",
+      TRUE ~ NA_character_
+    ),
+    GO.name = sapply(str_split(value, "\\|"), function(x) x[1])
+  ) %>%
+  distinct() %>%
+  na.omit()
+
+message("=== Cyano annotation summary ===")
+message("Total genes:               ", n_distinct(annotationCyanoFULL$custom_gene_name))
+message("With protein_id:           ", annotationCyanoFULL %>% filter(!is.na(protein_id)) %>% distinct(custom_gene_name) %>% nrow())
+message("With GO terms:             ", annotationCyanoFULL %>% filter(!is.na(Ontology_term)) %>% distinct(custom_gene_name) %>% nrow())
+message("Unmatched (no protein_id): ", annotationCyanoFULL %>% filter(is.na(protein_id)) %>% distinct(custom_gene_name) %>% nrow())
+message("Unique GO terms:           ", nrow(GO_cyano))
+message("Unique gene-GO pairs: ", nrow(annotationCyano))
+message("Unique GO terms:      ", nrow(GO_cyano))
+
+## to keep:
+annotationCyano_final <- annotationCyanoFULL
+
+rm(gtf_full, header_lookup_table, locus_to_protein, annotationCyano_GO,
+   annotationCyano,annotationCyanoFULL, gene_trans_map_cyano)
