@@ -10,7 +10,9 @@ cran_packages <- c(
   "stringr",
   "tidyverse",
   "rentrez",
-  "ashr"
+  "ashr",
+  "tidytext",
+  "UpSetR", "ggsignif"
 )
 
 bioc_packages <- c(

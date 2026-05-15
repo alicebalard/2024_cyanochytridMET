@@ -107,7 +107,7 @@ makeVolcano <- function(res, title, mylogo,   positionLogoStart = -2,
       point.padding = 0.2,
       segment.size = 0.5, segment.colour = "grey",
       arrow = arrow(length = unit(0.02, "npc"))
-    ) + ylim(0, 5) + xlim(-5.5, 5.5)
+    ) + ylim(0, 5) + xlim(-5, 5)
   
   # Load your image
   img = png::readPNG(mylogo)
