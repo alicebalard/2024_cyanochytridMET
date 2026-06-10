@@ -11,7 +11,7 @@ cran_packages <- c(
   "tidyverse",
   "rentrez",
   "ashr",
-  "tidytext",
+  "tidytext", "kableExtra", "webshot2",
   "UpSetR", "ggsignif"
 )
 
@@ -25,10 +25,11 @@ bioc_packages <- c(
   "qvalue",
   "impute",
   "preprocessCore",
-  "DESeq2",
+  "DESeq2", "edgeR",
   "rtracklayer",
   "openxlsx",
-  "NOISeq"
+  "NOISeq",
+  "apeglm"
 )
 
 github_packages <- c(

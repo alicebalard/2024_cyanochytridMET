@@ -1,0 +1,53 @@
+"Organism","Comparison","MET | Both organisms","no MET | Both organisms","MET | Alone","no MET | Alone"
+"Chytrid transcripts","MET
+Both organisms","-","Effect of MET on infecting chytrid","Effect of infection on chytrid, in presence of MET","-"
+"Chytrid transcripts","no MET
+Both organisms","out of 930 with nonzero total read count
+adjusted p-value < 0.05
+LFC > 0 (up)       : 3, 0.32%
+LFC < 0 (down)     : 1, 0.11%
+outliers [1]       : 96, 10%
+low counts [2]     : 0, 0%
+(mean count < 8)","-","-","Effect of infection on chytrid, in absence of MET"
+"Chytrid transcripts","MET
+Alone","out of 1050 with nonzero total read count
+adjusted p-value < 0.05
+LFC > 0 (up)       : 0, 0%
+LFC < 0 (down)     : 0, 0%
+outliers [1]       : 28, 2.7%
+low counts [2]     : 0, 0%
+(mean count < 6)","-","-","Effect of MET on chytrid alone"
+"Chytrid transcripts","no MET
+Alone","-","out of 882 with nonzero total read count
+adjusted p-value < 0.05
+LFC > 0 (up)       : 5, 0.57%
+LFC < 0 (down)     : 2, 0.23%
+outliers [1]       : 80, 9.1%
+low counts [2]     : 0, 0%
+(mean count < 9)","out of 1012 with nonzero total read count
+adjusted p-value < 0.05
+LFC > 0 (up)       : 2, 0.2%
+LFC < 0 (down)     : 1, 0.099%
+outliers [1]       : 27, 2.7%
+low counts [2]     : 0, 0%
+(mean count < 5)","-"
+"Cyanobacteria transcripts","MET
+Both organisms","-","Effect of MET on cyanobacteria in co-culture","Effect of infection on cyanobacteria, in presence of MET (not tested)","-"
+"Cyanobacteria transcripts","no MET
+Both organisms","out of 1943 with nonzero total read count
+adjusted p-value < 0.05
+LFC > 0 (up)       : 10, 0.51%
+LFC < 0 (down)     : 3, 0.15%
+outliers [1]       : 102, 5.2%
+low counts [2]     : 113, 5.8%
+(mean count < 5)","-","-","Effect of infection on cyanobacteria, in absence of MET (not tested)"
+"Cyanobacteria transcripts","MET
+Alone","(not tested)","-","-","Effect of MET on cyanobacteria alone"
+"Cyanobacteria transcripts","no MET
+Alone","-","(not tested)","out of 3512 with nonzero total read count
+adjusted p-value < 0.05
+LFC > 0 (up)       : 0, 0%
+LFC < 0 (down)     : 0, 0%
+outliers [1]       : 0, 0%
+low counts [2]     : 0, 0%
+(mean count < 9)","-"

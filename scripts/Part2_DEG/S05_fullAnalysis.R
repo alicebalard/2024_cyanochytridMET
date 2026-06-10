@@ -1,7 +1,7 @@
-## Updated 2026
+## Updated June 2026
 library(here)
-source("libLoad.R")
-source("dataLoad.R")
+source(here("scripts/Part2_DEG/libLoad.R"))
+source(here("scripts/Part2_DEG/dataLoad.R"))
 # === Chytrid annotation summary ===
 #   Total genes:               4860
 # With GO terms:             4842
@@ -16,7 +16,7 @@ source("dataLoad.R")
 # Unique GO terms:           1314
 # Unique gene-GO pairs: 5876
 # Unique GO terms:      1314
-source("functions.R")
+source(here("scripts/Part2_DEG/functions.R"))
 
 ## Load the count matrix calculated by Trinity
 RSEM_newhope.gene <- read.csv(here("data/RSEM_new_hope.gene.counts.rmConta.matrix"), sep="\t")
@@ -109,30 +109,145 @@ nrow(RSEM_cyano) # 4451 genes
 
 ## Chytrid
 counts_chy <- as.matrix(RSEM_chytrid)
-counts_chy <- counts_chy[rowSums(counts_chy) > 0, ]  # remove all-zero rows
+
+################################################################
+## removing repeated elements and known spurious-hit families ##
+################################################################
+annot <- read.delim(here("gitignore/assemblyMergedFungi_filterEuk_simplified_GOKegg.tsv"),
+                    sep = "\t", stringsAsFactors = FALSE)
+
+# Safe long tokens — substring match on BOTH fields (low false-positive risk)
+te_terms <- c(
+  "transpos",                 # transposon, transposable, transposase, retrotransposon
+  "retroelement", "retrovir", # retrovirus, retrovirus-related, retroviral
+  "integrase", "reverse transcriptase",
+  "mobile element", "helitron", "mariner", "harbinger",
+  "piggybac", "\\bcopia\\b", "\\bgypsy\\b", "\\bTy[0-9]",
+  "satellite", "low complexity",
+  "intron[- ]encoded", "homing endonuclease", "maturase")   # <- mitochondrial intron ORFs
+
+# Short TE phrasings — only with word boundaries
+te_phrases <- c("\\bgag-?pol\\b", "\\bpol polyprotein\\b",
+                "\\bgag polyprotein\\b", "\\bLINE-?1\\b", "\\bSINE\\b", "\\bLTR\\b")
+
+desc_pattern <- paste(c(te_terms, te_phrases), collapse = "|")   # remove rna_terms
+
+# 4) UniProt TE entry names — anchored, gene_name only (safe vs polymerases)
+entry_pattern <- "^(POL|GAG|ENV|GAGPOL|LORF[0-9]|LINE1?|L1RE[0-9]|RTBV|RTJK|TF2|TY[0-9]|AI[0-9])_"
+
+keep_override <- grepl("telomerase", annot$sprot_Top_BLASTX_hit, ignore.case = TRUE)
+
+is_bad <-
+  grepl(desc_pattern,  annot$gene_name,            ignore.case = TRUE, perl = TRUE) |
+  grepl(desc_pattern,  annot$sprot_Top_BLASTX_hit, ignore.case = TRUE, perl = TRUE) |
+  grepl(entry_pattern, annot$gene_name,            ignore.case = TRUE, perl = TRUE)
+
+is_bad <- is_bad & !keep_override
+
+# Stricter than your version: drop a gene if ANY of its annotation rows looks like a TE
+bad_genes  <- unique(annot$gene_name[is_bad])
+keep_genes <- setdiff(unique(annot$gene_name), bad_genes)
+counts_chy <- counts_chy[rownames(counts_chy) %in% keep_genes, ]
+
+# remove all-zero rows
+counts_chy <- counts_chy[rowSums(counts_chy) > 0, ] 
 
 # Remove genes detected in only 1 to 3 sample - likely artifacts
 n_samples_detected_chy <- rowSums(counts_chy > 0)
 message("Chytrid genes by n samples detected:")            
-print(table(n_samples_detected_chy))                      
+ggplot(data.frame(table(n_samples_detected_chy)), 
+       aes(x = n_samples_detected_chy, y = Freq))+
+  geom_bar(stat = "identity")+
+  theme_bw()
 
 counts_chy <- counts_chy[n_samples_detected_chy >= 4, ]
 message("Chytrid genes after removing genes covered in 3 samples or less: ",  
         nrow(counts_chy))               
-## 1349
+## 1317
 
-## Same for cyano
+## Check
+removed <- sort(setdiff(unique(annot$gene_name), keep_genes))
+head(removed, 50)                      # eyeball for false positives
+"SYKC_SCHPO"  %in% keep_genes          # TRUE
+"LORF2_HUMAN" %in% keep_genes          # FALSE
+"AI7_USTMA"  %in% keep_genes   # FALSE
+
+grep("telomerase", annot$sprot_Top_BLASTX_hit[!is_bad], ignore.case = TRUE, value = TRUE)[1] 
+# should now return TERT, while 
+"TC1A_CAEEL" %in% keep_genes # stays FALSE.
+
+grep("rRNA|fibrillarin|methyltransferase",
+     annot$sprot_Top_BLASTX_hit[!is_bad], ignore.case = TRUE, value = TRUE)[1:10]
+# rRNA-modification enzymes should now SURVIVE
+grep("polymerase|repeat", 
+     annot$sprot_Top_BLASTX_hit[!is_bad], ignore.case = TRUE, value = TRUE)[1:10]
+# ^ confirm polymerases / repeat-domain proteins SURVIVED
+
+####################
+## Same for cyano ##
+####################
 counts_cyano <- as.matrix(RSEM_cyano)
+
+# Mobile / repetitive elements (substring match is safe for these)
+te_terms <- c("transpos", "retroelement", "retrotranspos", "retron",
+              "integrase", "reverse transcriptase", "group II intron",
+              "mobile element", "insertion sequence", "\\bIS element\\b",
+              "low complexity")
+
+# Phage / viral structural — but NOT 'phage shock protein'
+phage_terms <- c("prophage", "bacteriophage", "\\bphage\\b",
+                 "capsid", "terminase", "portal protein",
+                 "baseplate", "tail fiber", "tail protein")
+
+# Structural / non-coding RNA *features* — NOT tRNA enzymes or ribosomal proteins
+aa <- paste("Ala|Arg|Asn|Asp|Cys|Gln|Glu|Gly|His|Ile|Leu|Lys|Met",
+            "Phe|Pro|Ser|Thr|Trp|Tyr|Val|Sec|Pyl|fMet|OTHER|Xxx|Undet", sep = "|")
+# structural RNA: match the feature TYPE, not the product name
+is_rna_feature <- grepl("\\[gbkey=(rRNA|tRNA|tmRNA|ncRNA|misc_RNA|antisense_RNA)\\]",
+                        annotationCyano_final$info, ignore.case = TRUE)
+
+bad_pattern_cyano <- paste(c(te_terms, phage_terms), collapse = "|")   # drop rna_terms
+is_bad <- grepl(bad_pattern_cyano, annotationCyano_final$info,
+                ignore.case = TRUE, perl = TRUE) | is_rna_feature
+
+keep_override <- grepl("phage shock", annotationCyano_final$info, ignore.case = TRUE)
+is_bad <- is_bad & !keep_override
+
+# Drop-if-any-bad-row (consistent with the fungal filter)
+bad_genes  <- unique(annotationCyano_final$gene_id[is_bad])
+keep_genes <- setdiff(unique(annotationCyano_final$gene_id), bad_genes)
+counts_cyano <- counts_cyano[rownames(counts_cyano) %in% keep_genes, ]
+
+## manual check
+removed2 <- unique(annotationCyano_final$gene_id[is_bad])
+grep("methyltransferase|pseudouridine|ribosomal protein|cell envelope|pentapeptide",
+     annotationCyano_final$protein[!is_bad], ignore.case = TRUE, value = TRUE) |> head()  # should SURVIVE
+grep("\\[gbkey=rRNA\\]", annotationCyano_final$info[is_bad])[1:3]                          # rRNA features still removed
+
+removed_cyano <- unique(annotationCyano_final[is_bad, c("gene_id", "gene", "protein")])
+removed_cyano[order(removed_cyano$protein), ]        # eyeball THIS for false positives
+
+grep("methyltransferase|pseudouridine|rRNA|ribosomal RNA",
+     removed_cyano$protein, ignore.case = TRUE, value = TRUE)
+# any hits here = real enzymes wrongly removed
+
+grep("pentapeptide repeat|cell envelope|--tRNA ligase|ribosomal protein|phage shock",
+     annotationCyano_final$info[!is_bad], ignore.case = TRUE, value = TRUE)[1:10]
+
+# remove all-zero rows
 counts_cyano <- counts_cyano[rowSums(counts_cyano) > 0, ]
 
 n_samples_detected_cyano <- rowSums(counts_cyano > 0)    
 message("Cyano genes by n samples detected:")             
-print(table(n_samples_detected_cyano))                      
+ggplot(data.frame(table(n_samples_detected_cyano)), 
+       aes(x = n_samples_detected_cyano, y = Freq))+
+  geom_bar(stat = "identity")+
+  theme_bw()
 
 counts_cyano <- counts_cyano[n_samples_detected_cyano >= 4, ]
 message("Cyano genes after removing genes covered in 3 samples or less: ",  
         nrow(counts_cyano))   
-## 3753
+## 3706
 
 # Saturation plot: number of genes detected at observed and simulated
 # sequencing depths, and marginal gain in gene detection per million additional reads
@@ -143,7 +258,7 @@ eset_cyano <- ExpressionSet(assayData = counts_cyano)
 mysaturation_cyano <- dat(eset_cyano, k = 0, ndepth = 7, type = "saturation")
 
 ## Plots:
-pdf(here("figures/Fig_S2a.saturation_plots.pdf"), width=13, height=9)
+pdf(here("figures/Fig_S2.saturation_plots.pdf"), width=13, height=9)
 
 ## Chytrid
 par(mfrow=c(2,2))  # 2x2 layout
@@ -168,12 +283,10 @@ both_cyano <- colSums(counts_cyano)[grep("both", colnames(counts_cyano))]
 common_both <- intersect(names(both_chy), names(both_cyano))
 sort(both_chy[common_both] / both_cyano[common_both])
 
-# met_both_In12 control_both_In3 control_both_In5     met_both_In9     met_both_In8 
-# 0.8774226        0.9162581        1.1230317        3.6461793        4.1771954 
-# met_both_In7 control_both_In2 control_both_In1    met_both_In10 control_both_In6 
-# 20.3524841       80.1941478      122.2305252      165.6350000      182.5740257 
-# control_both_In4    met_both_In11 
-# 361.4186156      446.0448654 
+# met_both_In12 control_both_In3 control_both_In5     met_both_In9     met_both_In8     met_both_In7 
+# 0.8445958        0.8831965        1.0774280        3.4430569        3.9483074       19.8092919 
+# control_both_In2 control_both_In1    met_both_In10 control_both_In6 control_both_In4    met_both_In11 
+# 77.0348627      118.8968005      157.5408108      177.1222394      344.7722327      429.9527636 
 
 ## ============================================================
 ## Visualise sequencing composition across all samples
@@ -265,9 +378,9 @@ composition_long <- composition_df %>%
   filter(relevant)
 
 p_ngenes <- ggplot(composition_long,
-       aes(x    = reorder_within(label, n_genes, organism),  #***
-           y    = n_genes,
-           fill = sample_type)) +
+                   aes(x    = reorder_within(label, n_genes, organism),  #***
+                       y    = n_genes,
+                       fill = sample_type)) +
   geom_col() +
   scale_x_reordered() +                                       #*** strips facet suffix
   scale_fill_manual(values = c("co-culture"    = "purple",
@@ -282,7 +395,7 @@ p_ngenes <- ggplot(composition_long,
   theme(axis.text.x  = element_text(angle=45, hjust=1),
         legend.position = "top")
 
-pdf(here("figures/Fig_S3.genes_detected.pdf"), width=11, height=6)
+pdf(here("figures/Fig2.compositionPlot.pdf"), width=11, height=6)
 cowplot::plot_grid(p_composition, p_ngenes)
 dev.off()
 
@@ -313,102 +426,84 @@ upset(fromList(gene_lists_cyano),
       mainbar.y.label = "Genes in intersection",
       sets.x.label    = "Genes per sample")
 
-# Sample          Chytrid matrix    Cyano matrix    Reason
-# ────────────────────────────────────────────────────────────────
-# met_chy_Z9      ❌ REMOVE         -               OClearr outlier
-# control_both_In1 ❌ REMOVE        ❌ REMOVE       <100 cyano genes, low chytrid
-# control_both_In4 keep             ❌ REMOVE       <100 cyano genes  
-# control_both_In6 keep             ❌ REMOVE       <100 cyano genes
-# met_both_In10   keep              ❌ REMOVE       <100 cyano genes
-# met_both_In11   ❌ REMOVE         ❌ REMOVE       Outlier in both (high chytrid ratio)
-# control_both_In2 keep             ❌ REMOVE   
-# All others      ✅ KEEP           ✅ KEEP
+# Based on saturation plots and ratio chytrid/cyano counts per sample, 
+# we remove the following samples:
+#   
+# Chytrid matrix: 
+remove_chy <- c("met_chy_Z9")
+counts_chy <- counts_chy[,!colnames(counts_chy) %in% remove_chy]
 
-## Based on (1) saturation plots and (2) ratio chytrid/cyano counts per sample,
-## we remove the following samples:
+# Cyano matrix: 
+remove_cyano <- c("control_both_In1", "control_both_In4", "control_both_In6", "met_both_In10") 
+counts_cyano <- counts_cyano[,!colnames(counts_cyano) %in% remove_cyano]
 
-# Chytrid matrix: met_chy_Z9 and control_both_In1 are clearly outliers (14.3%, 69.3%)
-remove_chy <- c("met_chy_Z9", "control_both_In1", "met_both_In11")
+# NB: strong difference infected/non infected → are the cyano missing genes in infected random, or infection related?
 
-# Cyano matrix: 2 different for cyano alone (keep all) vs co-culture (remove outliers)
-remove_cyano <- c("control_both_In1", "control_both_In4",
-                  "control_both_In6", "met_both_In10",
-                  "met_both_In11", "control_both_In2") 
+#####################
+## Part 1. Chytrid ##
+#####################
 
 ## --- 1. Infection effect in chytrid, no MET ---
 ## --- 2. Infection effect in chytrid, with MET ---
 ## --- 3. MET effect in chytrid alone ---
 ## --- 4. MET effect in chytrid infecting cyanobacteria
-## --- 5. Infection effect in cyano, no MET ---
-## --- 6. Infection effect in cyano, with MET ---
-## --- 7. MET effect in cyano alone ---
-## --- 8. MET effect in cyano infected by chytrid ---
 
-# Group-aware filtering: require >= 10 counts in >= 3 samples
-# within all groups. This prevents genes expressed
-# in only 1-2 samples from passing the filter due to cross-group pooling,
-# which would otherwise cause extreme LFC inflation.
-filter_by_group <- function(counts, min_count=10, min_samples=3) {
-  groups <- sub("_[^_]+$", "", colnames(counts))
-  keep <- sapply(rownames(counts), function(gene) {
-    all(sapply(unique(groups), function(grp) {
-      grp_counts <- counts[gene, groups == grp]
-      sum(grp_counts >= min_count) >= min_samples
-    }))
-  })
-  counts[keep, ]
+## Subset count matrices — explicit patterns to avoid cross-contamination
+
+# --- 1. Infection effect in chytrid, no MET ---
+# control_chy (alone) vs control_both (infecting), no MET
+counts1_infeffect_noMET_chy <- counts_chy[
+  , grep("^control_chy|^control_both", colnames(counts_chy))]
+colnames(counts1_infeffect_noMET_chy)
+table(sub("_[^_]+$", "", colnames(counts1_infeffect_noMET_chy)))
+# control_both control_chy
+#            6           6
+
+# --- 2. Infection effect in chytrid, with MET ---
+# met_chy (alone) vs met_both (infecting), with MET
+counts2_infeffect_MET_chy <- counts_chy[
+  , grep("^met_chy|^met_both", colnames(counts_chy))]
+colnames(counts2_infeffect_MET_chy)
+table(sub("_[^_]+$", "", colnames(counts2_infeffect_MET_chy)))
+# met_both met_chy
+#        6       5
+
+# --- 3. MET effect in chytrid alone ---
+# control_chy vs met_chy, no infection
+counts3_METeffect_alone_chy <- counts_chy[
+  , grep("^control_chy|^met_chy", colnames(counts_chy))]
+colnames(counts3_METeffect_alone_chy)
+table(sub("_[^_]+$", "", colnames(counts3_METeffect_alone_chy)))
+# control_chy met_chy
+#           6       5
+
+# --- 4. MET effect in chytrid infecting cyanobacteria ---
+# control_both vs met_both, during infection
+counts4_METeffect_infecting_chy <- counts_chy[
+  , grep("^control_both|^met_both", colnames(counts_chy))]
+colnames(counts4_METeffect_infecting_chy)
+table(sub("_[^_]+$", "", colnames(counts4_METeffect_infecting_chy)))
+# control_both met_both
+#            6        6
+
+myFilterByExpWithinComp <- function(subcount){
+  ## EdgeR::filterByExpr to determine which genes have sufficiently large counts to be retained in a statistical analysis.
+  group <- factor(sub("_[^_]+$", "", colnames(subcount)))
+  y <- DGEList(counts = subcount, group = group)
+  keep <- filterByExpr(y, group = group)
+  return(subcount[keep, ])
 }
 
-## Subset count matrices
-counts1_infeffect_noMET_chy <- counts_chy[ ,grep("control", colnames(counts_chy))]
-counts1_infeffect_noMET_chy <- counts1_infeffect_noMET_chy[
-  , !colnames(counts1_infeffect_noMET_chy) %in% remove_chy]
-colnames(counts1_infeffect_noMET_chy) # 5 vs 6
+counts1_infeffect_noMET_chy <- myFilterByExpWithinComp(counts1_infeffect_noMET_chy)
+counts2_infeffect_MET_chy <- myFilterByExpWithinComp(counts2_infeffect_MET_chy)
+counts3_METeffect_alone_chy <- myFilterByExpWithinComp(counts3_METeffect_alone_chy)
+counts4_METeffect_infecting_chy <- myFilterByExpWithinComp(counts4_METeffect_infecting_chy)
 
-counts2_infeffect_MET_chy <- counts_chy[ ,grep("met", colnames(counts_chy))]
-counts2_infeffect_MET_chy <- counts2_infeffect_MET_chy[
-  , !colnames(counts2_infeffect_MET_chy) %in% remove_chy]
-colnames(counts2_infeffect_MET_chy) # 5 vs 5
-
-counts3_METeffect_alone_chy <- counts_chy[ ,grep("chy", colnames(counts_chy))]
-counts3_METeffect_alone_chy <- counts3_METeffect_alone_chy[
-  , !colnames(counts3_METeffect_alone_chy) %in% remove_chy]
-colnames(counts3_METeffect_alone_chy) # 6 vs 5
-
-counts4_METeffect_infecting_chy <- counts_chy[ ,grep("both", colnames(counts_chy))]
-counts4_METeffect_infecting_chy <- counts4_METeffect_infecting_chy[
-  , !colnames(counts4_METeffect_infecting_chy) %in% remove_chy]
-colnames(counts4_METeffect_infecting_chy) # 5 vs 5
-
-counts5_infeffect_noMET_cyano <- counts_cyano[ ,grep("control", colnames(counts_cyano))]
-counts5_infeffect_noMET_cyano <- counts5_infeffect_noMET_cyano[
-  , !colnames(counts5_infeffect_noMET_cyano) %in% remove_cyano]
-colnames(counts5_infeffect_noMET_cyano) # 2 vs 6 NOT RELIABLE!!
-
-counts6_infeffect_MET_cyano <- counts_cyano[ ,grep("met", colnames(counts_cyano))]
-counts6_infeffect_MET_cyano <- counts6_infeffect_MET_cyano[
-  , !colnames(counts6_infeffect_MET_cyano) %in% remove_cyano]
-colnames(counts6_infeffect_MET_cyano) # 4 vs 6
-
-counts7_METeffect_alone_cyano <- counts_cyano[ ,grep("cyano", colnames(counts_cyano))]
-counts7_METeffect_alone_cyano <- counts7_METeffect_alone_cyano[
-  , !colnames(counts7_METeffect_alone_cyano) %in% remove_cyano]
-colnames(counts7_METeffect_alone_cyano) # 6 vs 6
-
-counts8_METeffect_infecting_cyano <- counts_cyano[ ,grep("both", colnames(counts_cyano))]
-counts8_METeffect_infecting_cyano <- counts8_METeffect_infecting_cyano[
-  , !colnames(counts8_METeffect_infecting_cyano) %in% remove_cyano]
-colnames(counts8_METeffect_infecting_cyano) # 2 vs 4 NOT RELIABLE!!
-
-## Reapply filtering
 # Create named list automatically from object names
 listCounts <- mget(c("counts1_infeffect_noMET_chy",
                      "counts2_infeffect_MET_chy",
                      "counts3_METeffect_alone_chy",
-                     "counts4_METeffect_infecting_chy",
-                     "counts7_METeffect_alone_cyano"))
-
-listCounts <- lapply(listCounts, filter_by_group)
+                     "counts4_METeffect_infecting_chy"))
 
 # Automated summary for all count matrices in the list
 invisible(lapply(names(listCounts), function(name) {
@@ -417,15 +512,14 @@ invisible(lapply(names(listCounts), function(name) {
 }))
 ## invisible() suppresses the NULL list output that lapply would otherwise print to console.
 
-# counts1_infeffect_noMET_chy:  11 samples, 837 genes
-# counts2_infeffect_MET_chy:  10 samples, 945 genes
-# counts3_METeffect_alone_chy:  11 samples, 941 genes
-# counts4_METeffect_infecting_chy:  10 samples, 829 genes
-# counts7_METeffect_alone_cyano:  12 samples, 3553 genes
+# counts1_infeffect_noMET_chy:  12 samples, 882 genes
+# counts2_infeffect_MET_chy:  11 samples, 1050 genes
+# counts3_METeffect_alone_chy:  11 samples, 1012 genes
+# counts4_METeffect_infecting_chy:  12 samples, 930 genes
 
-#####################
-## DESeq2          ##
-#####################
+############
+## DESeq2 ##
+############
 
 ## rebuild to match filtered samples
 samples_data <- data.frame(
@@ -456,7 +550,7 @@ myDESeq2_withlfcShrink <- function(count, a, b){
     colData   = samples_data[colnames(count), ],
     design    = ~ condition)
   
-  ddsr <- DESeq(ddsr, fitType="local")
+  ddsr <- DESeq(ddsr, fitType="mean")
   res <- results(ddsr,
                  contrast = c("condition", b, a),
                  alpha    = 0.05)
@@ -485,95 +579,73 @@ lapply(listCounts, testEffectSize)
 # https://doi.org/10.1093/biostatistics/kxw041
 
 ## --- 1. Infection effect in chytrid, no MET ---
-
 res_counts1_infeffect_noMET_chy <- myDESeq2_withlfcShrink(
   listCounts$counts1_infeffect_noMET_chy, a="control_chy", b="control_both")
-# out of 837 with nonzero total read count
+# out of 882 with nonzero total read count
 # adjusted p-value < 0.05
-# LFC > 0 (up)       : 3, 0.36%
-# LFC < 0 (down)     : 3, 0.36%
-# outliers [1]       : 24, 2.9%
+# LFC > 0 (up)       : 5, 0.57%
+# LFC < 0 (down)     : 2, 0.23%
+# outliers [1]       : 80, 9.1%
 # low counts [2]     : 0, 0%
-# (mean count < 10)
+# (mean count < 9)
 
 testIfCrazyFoldChange(res_counts1_infeffect_noMET_chy) # OK
+# baseMean log2FoldChange        padj
+# GDIR_YEAST  149.19884       3.337832 0.007524027
+# ABCB6_HUMAN 615.66917      -2.571616 0.007524027
+# AMYA_DROMA   88.31743       2.515683 0.012311049
+# RFC4_ARATH  138.09361       2.368097 0.029433416
+# CBPC1_HUMAN  55.21466      -2.095739 0.029433416
+# ACA1_SCHPO  197.41375       2.092877 0.030769149
+# TRNL_SCHPO  358.89619       1.471060 0.029433416
 
 ## --- 2. Infection effect in chytrid, with MET ---
 res_counts2_infeffect_MET_chy <- myDESeq2_withlfcShrink(
   listCounts$counts2_infeffect_MET_chy, a="met_chy", b="met_both")
-# out of 945 with nonzero total read count
+# out of 1050 with nonzero total read count
 # adjusted p-value < 0.05
-# LFC > 0 (up)       : 2, 0.21%
-# LFC < 0 (down)     : 1, 0.11%
-# outliers [1]       : 34, 3.6%
+# LFC > 0 (up)       : 0, 0%
+# LFC < 0 (down)     : 0, 0%
+# outliers [1]       : 28, 2.7%
 # low counts [2]     : 0, 0%
 # (mean count < 6)
-
-testIfCrazyFoldChange(res_counts2_infeffect_MET_chy) # OK
 
 ## --- 3. MET effect in chytrid alone ---
 res_counts3_METeffect_alone_chy <- myDESeq2_withlfcShrink(
   listCounts$counts3_METeffect_alone_chy, a="control_chy", b="met_chy")
 
-# out of 941 with nonzero total read count
+# out of 1012 with nonzero total read count
 # adjusted p-value < 0.05
-# LFC > 0 (up)       : 4, 0.43%
-# LFC < 0 (down)     : 2, 0.21%
-# outliers [1]       : 19, 2%
+# LFC > 0 (up)       : 2, 0.2%
+# LFC < 0 (down)     : 1, 0.099%
+# outliers [1]       : 27, 2.7%
 # low counts [2]     : 0, 0%
-# (mean count < 10)
+# (mean count < 5)
 
 testIfCrazyFoldChange(res_counts3_METeffect_alone_chy) # ok
+# baseMean log2FoldChange         padj
+# AATM_MOUSE   27.06906       3.297744 0.0000263773
+# ABCG2_MACMU  44.40865       2.936434 0.0022230968
+# CBPC1_HUMAN 103.36536      -2.056562 0.0336600434
 
 ## --- 4. MET effect in chytrid infecting cyanobacteria
 res_counts4_METeffect_infecting_chy <- myDESeq2_withlfcShrink(
   listCounts$counts4_METeffect_infecting_chy, a="control_both", b="met_both")
-# out of 829 with nonzero total read count
+# out of 930 with nonzero total read count
 # adjusted p-value < 0.05
-# LFC > 0 (up)       : 5, 0.6%
-# LFC < 0 (down)     : 4, 0.48%
-# outliers [1]       : 34, 4.1%
+# LFC > 0 (up)       : 3, 0.32%
+# LFC < 0 (down)     : 1, 0.11%
+# outliers [1]       : 96, 10%
 # low counts [2]     : 0, 0%
-# (mean count < 12)
+# (mean count < 8)
 
 testIfCrazyFoldChange(res_counts4_METeffect_infecting_chy)
+# baseMean log2FoldChange        padj
+# SIK3_HUMAN 281.17333       3.444385 0.004672581
+# ATC2_CRYNH 291.21001      -2.833865 0.030398485
+# YBA9_SCHPO  66.94740       2.669970 0.037918844
+# FHIT_DICDI  23.54381       2.514341 0.024805725
 
-## --- 5. Infection effect in cyano, no MET --- ***** UNRELIABLE
-
-## --- 6. Infection effect in cyano, with MET --- ***** UNRELIABLE
-
-## --- 7. MET effect in cyano alone ---
-res_counts7_METeffect_alone_cyano <- myDESeq2_withlfcShrink(
-  listCounts$counts7_METeffect_alone_cyano, a="control_cyano", b="met_cyano")
-# out of 3553 with nonzero total read count
-# adjusted p-value < 0.05
-# LFC > 0 (up)       : 0, 0%
-# LFC < 0 (down)     : 1, 0.028%
-# outliers [1]       : 0, 0%
-# low counts [2]     : 0, 0%
-# (mean count < 9)
-
-testIfCrazyFoldChange(res_counts7_METeffect_alone_cyano)
-
-# An environmentally relevant concentration of metolachlor induced minimal transcriptional 
-# response in P. agardhii, with only one gene (GeneID:77286457) significantly differentially
-# expressed (padj=0.04, LFC=0.29). This weak response is consistent with the sub-lethal, 
-# environmentally relevant exposure concentration used, and suggests that at this concentration, 
-# metolachlor does not strongly perturb cyanobacterial gene expression under single-species conditions."
-
-# What is that gene?
-annotationCyano_final[annotationCyano_final$gene_id == "77286457", 
-                      c("custom_gene_name", "locus_tag", "gene", "protein", "product")]
-# 1 DEG: iron uptake porin (GeneID:77286457, padj=0.04, LFC=0.28)
-# Minimal transcriptional response consistent with sub-lethal environmentally relevant dose
-
-## p-value distribution check (uniform = well-calibrated)
-hist(res_counts7_METeffect_alone_cyano$pvalue, breaks=50,
-     main="p-value distribution: control_cyano vs met_cyano")
-
-## --- 8. MET effect in cyano infected by chytrid ---***** UNRELIABLE
-
-## --- Combine into named lists ---
 contrast_chytridgenome <- mget(c(
   "res_counts1_infeffect_noMET_chy",  
   "res_counts2_infeffect_MET_chy",
@@ -581,212 +653,308 @@ contrast_chytridgenome <- mget(c(
   "res_counts4_METeffect_infecting_chy"
 ))
 
-contrast_cyanogenome <- mget(c(
-  "res_counts7_METeffect_alone_cyano"  # MET effect, cyano alone
-))
+## Interpretation
+lapply(contrast_chytridgenome, function(x){
+  annotationChytrid_final[match(rownames(x[
+    x$padj < 0.05 &
+      !is.na(x$padj),]),
+    annotationChytrid_final$gene_name),c("gene_name", "sprot_Top_BLASTX_hit")]
+  
+})
 
-# Automated summary for all count matrices in the list
-invisible(lapply(names(contrast_chytridgenome), function(name) {
-  x <- listCounts[[name]]
-}))
-invisible(lapply(names(contrast_cyanogenome), function(name) {
-  x <- listCounts[[name]]
-}))
+###################
+## Volcano plots ##
+###################
 
-########## PLOTS ########## 
-
-## Volcano plots
 V_chytrid_inf_effect_control <- makeVolcano(
   res          = contrast_chytridgenome$res_counts1_infeffect_noMET_chy,
   title        = "no MET, chytrids zoospores vs chytrids infecting",
   positionLogoStart = -2, positionLogoStop = 2,
-  mylogo       = "logos/logo1.png")
+  mylogo       = here("scripts/Part2_DEG/logos/logo1.png"))
 
 V_chytrid_inf_effect_met <- makeVolcano(
   res          = contrast_chytridgenome$res_counts2_infeffect_MET_chy,
   title        = "MET, chytrids zoospores vs chytrids infecting",
   positionLogoStart = -2, positionLogoStop = 2,
-  mylogo       = "logos/logo2.png")
+  mylogo       = here("scripts/Part2_DEG/logos/logo2.png"))
 
 V_chytrid_met_effect_1org <- makeVolcano(
   res          = contrast_chytridgenome$res_counts3_METeffect_alone_chy,
   title        = "free-living zoospores, no MET vs MET",
   positionLogoStart = -2, positionLogoStop = 2,
-  mylogo       = "logos/logo3.png")
+  mylogo       = here("scripts/Part2_DEG/logos/logo3.png"))
 
 V_chytrid_met_effect_2orgs <- makeVolcano(
   res          = contrast_chytridgenome$res_counts4_METeffect_infecting_chy,
   title        = "chytrids infecting, no MET vs MET",
   positionLogoStart = -2, positionLogoStop = 2,
-  mylogo       = "logos/logo4.png")
-
-# V_cyano_inf_effect_control <- makeVolcano(
-# res          = contrast_cyanogenome$res_counts5_infeffect_noMET_cyano,
-#   title        = "no MET, uninfected vs infected cyanobacteria [interpret cautiously]", #***
-#   mylogo       = "logos/logo5.png", positionLogoStart = -1, positionLogoStop = 3)
-# 
-# V_cyano_inf_effect_met <- makeVolcano(
-# res          = contrast_cyanogenome$res_counts6_infeffect_MET_cyano,
-#   title        = "MET, uninfected vs infected cyanobacteria [interpret cautiously]", #***
-#   mylogo       = "logos/logo6.png", positionLogoStart = -1, positionLogoStop = 3)
-
-V_cyano_met_effect_1org <- makeVolcano(
-  res          = contrast_cyanogenome$res_counts7_METeffect_alone_cyano,
-  title        = "uninfected cyanobacteria, no MET vs MET",
-  mylogo       = "logos/logo7.png")
-
-# V_cyano_met_effect_2orgs <- makeVolcano(
-#   res          = contrast_cyanogenome$res_counts8_METeffect_infecting_cyano,
-#   title        = "infected cyanobacteria, no MET vs MET",
-#   mylogo       = "logos/logo8.png")
-
-## Venn diagrams
-getGenes <- function(x) rownames(x[!is.na(x$padj) & x$padj < 0.05, ])
-
-p1 <- ggVennDiagram(x = list("Infection effect\nabsence of metolachlor" = 
-                               getGenes(contrast_chytridgenome$res_counts1_infeffect_noMET_chy),
-                             "Infection effect\npresence of metolachlor" = 
-                               getGenes(contrast_chytridgenome$res_counts2_infeffect_MET_chy),
-                             "Metolachlor effect\nfree living zoospores" = 
-                               getGenes(contrast_chytridgenome$res_counts3_METeffect_alone_chy),
-                             "Metolachlor effect\nduring infection"     = 
-                               getGenes(contrast_chytridgenome$res_counts4_METeffect_infecting_chy)),
-                    label = "both", label_alpha = 0, ) + 
-  scale_fill_gradient(low="grey90",high = "red")+
-  theme(legend.position = "none")+
-  coord_sf(xlim = c(-.1, 1.1))
-
-pdf(here("figures/Fig2.pdf"), width=10, height=10)
-cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
-                   V_chytrid_inf_effect_met$plot,
-                   V_chytrid_met_effect_1org$plot,
-                   V_chytrid_met_effect_2orgs$plot,
-                   p1 + ggtitle("Eﬀect on chytrid gene expression"),
-                   V_cyano_met_effect_1org$plot,
-                   labels=c("a","b","c","d", "e", "f"), nrow = 3,
-                   label_size=20)
-dev.off()
+  mylogo       = here("scripts/Part2_DEG/logos/logo4.png"))
 
 ####################################################################
 ## Raw count plots for DEGs - one plot per contrast, saved to PDF ##
 ####################################################################
-condition_levels <- c("control_chy", "control_both", "met_chy", "met_both",
-                      "control_cyano", "met_cyano")
-
-# Step 1: Collect ALL DEGs across all contrasts with their significance info
-all_deg_data <- lapply(names(contrast_chytridgenome), function(name) {
-  x          <- contrast_chytridgenome[[name]]
-  count_name <- names(listCounts)[grepl(gsub("res_", "", name), names(listCounts))]
-  co         <- listCounts[[count_name]]
-  if(is.null(x)) return(NULL)
-  genes <- getGenes(x)
-  if(length(genes) == 0) return(NULL)
-
-  # Which two conditions are compared in this contrast?
-  contrast_conditions <- list(
+rawplot <- plot_degs_raw(
+  contrast_list       = contrast_chytridgenome,
+  count_matrix        = counts_chy,
+  contrast_conditions = list(
     res_counts1_infeffect_noMET_chy     = c("control_chy",  "control_both"),
     res_counts2_infeffect_MET_chy       = c("met_chy",      "met_both"),
     res_counts3_METeffect_alone_chy     = c("control_chy",  "met_chy"),
-    res_counts4_METeffect_infecting_chy = c("control_both", "met_both")
-  )
-  conds <- contrast_conditions[[name]]
-  
-  # Get padj for each significant gene
-  sig_info <- as.data.frame(x) %>%
-    filter(!is.na(padj) & padj < 0.05) %>%
-    rownames_to_column("gene") %>%
-    dplyr::select(gene, padj) %>%
-    mutate(cond1 = conds[1], cond2 = conds[2])
-  
-  # Get counts for ALL 4 conditions for these genes
-  all_counts <- counts_chy[rownames(counts_chy) %in% genes, ] %>%
-    as.data.frame() %>%
-    rownames_to_column("gene") %>%
-    pivot_longer(-gene, names_to="sample", values_to="count") %>%
-    mutate(condition = sub("_[^_]+$", "", sample))
-  list(counts=all_counts, sig=sig_info)
-}) %>% Filter(Negate(is.null), .)
+    res_counts4_METeffect_infecting_chy = c("control_both", "met_both")),
+  condition_levels = c("control_chy", "control_both", "met_chy", "met_both"),
+  colour_map = c(control_chy = "darkgreen", met_chy = "lightgreen",
+                 control_both = "purple",  met_both = "plum"),
+  ncol = 7)
 
-# Combine counts and significance across all contrasts
-all_counts_combined <- bind_rows(lapply(all_deg_data, `[[`, "counts")) %>%
-  distinct() %>%
-  mutate(condition = factor(condition, levels=condition_levels))
-
-all_sig_combined <- bind_rows(lapply(all_deg_data, `[[`, "sig")) %>%
-  mutate(stars = case_when(
-    padj < 0.001 ~ "***",
-    padj < 0.01  ~ "**",
-    padj < 0.05  ~ "*"
-  ))
-
-# Order genes alphabetically
-all_genes <- sort(unique(all_counts_combined$gene))
-
-message("Total unique DEGs across all contrasts: ", length(all_genes))
-
-# Step 2: One plot per gene, all conditions, with significance bars
-plots_pergene <- lapply(all_genes, function(g) {
-  
-  df <- all_counts_combined %>% filter(gene == g)
-  sig_df <- all_sig_combined %>% filter(gene == g)
-  
-  # Build significance annotations for ggsignif
-  # Need y positions staggered
-  y_max <- max(log10(df$count + 1), na.rm=TRUE)
-  sig_df <- sig_df %>%
-    mutate(y_pos = y_max + 0.3 * row_number())
-  
-  p <- ggplot(df, aes(x=condition, y=count+1, color=condition)) +
-    geom_violin(alpha=0.3, aes(fill=condition)) +
-    geom_boxplot(width=0.15, alpha=0.7, outlier.shape=NA) +
-    geom_jitter(width=0.15, size=1.5, alpha=0.8) +
-    scale_y_log10() +
-    scale_color_manual(values=c("control_chy"  = "darkgreen",
-                                "met_chy"      = "lightgreen",
-                                "control_both" = "purple",
-                                "met_both"     = "plum")) +
-    scale_fill_manual(values=c("control_chy"  = "darkgreen",
-                               "met_chy"      = "lightgreen",
-                               "control_both" = "purple",
-                               "met_both"     = "plum")) +
-    ggtitle(sub("_.*", "", g))+ #  simplify gene ID name for cyano) +
-    labs(x=NULL, y="Count + 1 (log10)") +
-    coord_cartesian(clip="off") +          #*** allow drawing outside plot area
-    theme_minimal() +
-    theme(axis.text.x  = element_text(angle=45, hjust=1),
-          legend.position = "none",
-          plot.title     = element_text(size=9, face="bold"))
-  
-  # Add significance bars
-  if(nrow(sig_df) > 0) {
-    for(i in seq_len(nrow(sig_df))) {
-      p <- p + ggsignif::geom_signif(
-        comparisons = list(c(sig_df$cond1[i], sig_df$cond2[i])),
-        annotations = sig_df$stars[i],
-        y_position  = sig_df$y_pos[i],
-        tip_length  = 0.02,
-        color       = "black",
-        size        = 0.4,
-        textsize    = 4)
-    }
-  }
-  p
-})
-names(plots_pergene) <- all_genes
-
-# Step 3: Save - auto-calculate grid dimensions
-n_plots <- length(plots_pergene)
-ncols   <- 6
-nrows   <- ceiling(n_plots / ncols)
-
-pdf(here("figures/Fig_rawcounts_DEG.pdf"),
-    width  = ncols * 2.5,
-    height = nrows * 3.5)
-cowplot::plot_grid(plotlist = plots_pergene,
-                   ncol     = ncols)
+pdf(here("figures/Fig3_DEGchytrid.pdf"), width=14, height=10)
+cowplot::plot_grid(
+  cowplot::plot_grid(V_chytrid_inf_effect_control$plot,
+                     V_chytrid_inf_effect_met$plot,
+                     V_chytrid_met_effect_1org$plot,
+                     V_chytrid_met_effect_2orgs$plot,
+                     labels=c("a","b","c","d"), ncol = 4,
+                     label_size=20),
+  rawplot, labels = c("","e"), label_size=20, rel_heights = c(.5,1), ncol = 1)
 dev.off()
 
-message("Saved ", n_plots, " gene plots (", nrows, " rows x ", ncols, " cols)")
+## Cyanobacteria
+
+## 1/ MET effect in cyano alone 
+# control_cyano vs met_cyano — both cyano-dominated → classic DESeq2 is valid here
+counts1_METeffect_alone_cyano <- counts_cyano[
+  , grep("^control_cyano|^met_cyano", colnames(counts_cyano))]
+table(sub("_[^_]+$", "", colnames(counts1_METeffect_alone_cyano)))
+# control_cyano     met_cyano 
+# 6             6
+
+# mirror the chytrid pipeline: re-filter for this subset 
+counts1_METeffect_alone_cyano <- myFilterByExpWithinComp(counts1_METeffect_alone_cyano)
+
+testEffectSize(counts1_METeffect_alone_cyano)   # size factors should be ~1
+
+res_counts1_METeffect_alone_cyano <- myDESeq2_withlfcShrink(
+  counts1_METeffect_alone_cyano, a = "control_cyano", b = "met_cyano")
+
+## NO genes affected!!
+# out of 3512 with nonzero total read count
+# adjusted p-value < 0.05
+# LFC > 0 (up)       : 0, 0%
+# LFC < 0 (down)     : 0, 0%
+# outliers [1]       : 0, 0%
+# low counts [2]     : 0, 0%
+# (mean count < 9)
+
+## 2/ MET effect in cyano infected 
+# control_both vs met_both → classic DESeq2 is valid here
+counts2_METeffect_both_cyano <- counts_cyano[
+  , grep("^control_both|^met_both", colnames(counts_cyano))]
+table(sub("_[^_]+$", "", colnames(counts2_METeffect_both_cyano)))
+# control_both     met_both 
+# 3            5 
+
+# mirror the chytrid pipeline: re-filter for this subset 
+# grp  <- factor(sub("_[^_]+$", "", colnames(counts2_METeffect_both_cyano)))
+# keep <- filterByExpr(DGEList(counts = counts2_METeffect_both_cyano, group = grp), group = grp)
+# counts2_METeffect_both_cyano <- counts2_METeffect_both_cyano[keep, ]
+counts2_METeffect_both_cyano  <- myFilterByExpWithinComp(counts2_METeffect_both_cyano)
+
+testEffectSize(counts2_METeffect_both_cyano)   # size factors x18 between extremes
+
+res_counts2_METeffect_both_cyano <- myDESeq2_withlfcShrink(
+  counts2_METeffect_both_cyano, a = "control_both", b = "met_both")
+
+# out of 1943 with nonzero total read count
+# adjusted p-value < 0.05
+# LFC > 0 (up)       : 10, 0.51%
+# LFC < 0 (down)     : 3, 0.15%
+# outliers [1]       : 102, 5.2%
+# low counts [2]     : 113, 5.8%
+# (mean count < 5)
+
+testIfCrazyFoldChange(res_counts2_METeffect_both_cyano)
+# baseMean log2FoldChange        padj
+# 77287375  92.47731       5.454977 0.004956047
+# 77286711  20.98320       4.856485 0.007723129
+# 77287779 160.53516      -4.357565 0.009767132
+# 77289563  18.98694      -4.065735 0.009767132
+# 77287962  19.61255       3.713944 0.044944474
+# 77287091  15.97261       3.652874 0.049479498
+# 77287231  38.49329       3.625604 0.044944474
+# 77288018  10.44370       3.521393 0.049479498
+# 77286801  17.23683       3.432724 0.049479498
+# 77288928  11.53882       3.428198 0.049479498
+
+# Create named list automatically from object names
+listCounts <- mget(c("counts1_METeffect_alone_cyano",
+                     "counts2_METeffect_both_cyano"))
+
+# Automated summary for all count matrices in the list
+invisible(lapply(names(listCounts), function(name) {
+  x <- listCounts[[name]]
+  message(name, ":  ", ncol(x), " samples, ", nrow(x), " genes")
+}))
+
+contrast_cyanogenome <- mget(c(
+  "res_counts1_METeffect_alone_cyano",  
+  "res_counts2_METeffect_both_cyano"
+))
+
+## Interpretation
+lapply(contrast_cyanogenome, function(x){
+  annotationCyano_final[match(rownames(x[
+    x$padj < 0.05 &
+      !is.na(x$padj),]),
+    annotationCyano_final$gene_id),c("gene_id", "gene", "protein")]
+})
+
+# $res_counts2_METeffect_both_cyano
+# gene_id gene                                              protein
+# 6016 77286364 rimO 30S ribosomal protein S12 methylthiotransferase RimO
+# 2404 77286711 secY                  preprotein translocase subunit SecY
+# 4455 77286717 <NA>            DNA-directed RNA polymerase subunit alpha
+# 2113 77286801 <NA>                           recombinase family protein
+# 4609 77287091 <NA>                        RuBisCO accumulation factor 1
+# 1611 77287231 <NA>                      F0F1 ATP synthase subunit gamma
+# 5834 77287375 gvpC                             gas vesicle protein GvpC
+# 2348 77287779 <NA>                 glycosyltransferase family 2 protein
+# 3622 77287962 purB                               adenylosuccinate lyase
+# 6412 77288018 <NA>                      GNAT family N-acetyltransferase
+# 2303 77288928 groL                                     chaperonin GroEL
+# 2309 77289032 <NA>                               pseudouridine synthase
+# 1420 77289563 <NA>                NADH-quinone oxidoreductase subunit J
+
+###############################################
+################ Table results ################ 
+###############################################
+## shared, organism-neutral labels so the columns line up
+disp <- c("MET\nBoth organisms", "no MET\nBoth organisms",
+          "MET\nAlone",          "no MET\nAlone")
+
+M_chy <- build_comparison_matrix(
+  res_list = contrast_chytridgenome,
+  contrast_conditions = list(
+    res_counts1_infeffect_noMET_chy     = c("control_chy",  "control_both"),
+    res_counts2_infeffect_MET_chy       = c("met_chy",      "met_both"),
+    res_counts3_METeffect_alone_chy     = c("control_chy",  "met_chy"),
+    res_counts4_METeffect_infecting_chy = c("control_both", "met_both")),
+  conditions = c("met_both", "control_both", "met_chy", "control_chy"),
+  display    = disp, organism = "chytrid")
+
+M_cyano <- build_comparison_matrix(
+  res_list = contrast_cyanogenome,
+  contrast_conditions = list(
+    res_counts1_METeffect_alone_cyano = c("control_cyano", "met_cyano"),
+    res_counts2_METeffect_both_cyano  = c("control_both",  "met_both")),
+  conditions = c("met_both", "control_both", "met_cyano", "control_cyano"),
+  display    = disp, organism = "cyano")
+
+save_combined_matrix_csv(
+  list("Chytrid transcripts"       = M_chy,
+       "Cyanobacteria transcripts" = M_cyano),
+  file = here("figures/Table2_comparison.csv"))       
+
+###################
+## Volcano plots ##
+###################
+# label DEGs by gene symbol, falling back to protein, then gene_id
+cyano_label <- function(g) {
+  i   <- match(g, annotationCyano_final$gene_id)
+  lab <- annotationCyano_final$gene[i]
+  if (is.na(lab) || lab == "") lab <- annotationCyano_final$protein[i]
+  if (is.na(lab) || lab == "") lab <- g
+  substr(lab, 1, 28)
+}
+
+# cyano — gene symbols instead of numeric gene_ids
+V_cyano_met_effect_1org <- makeVolcano(
+  res = contrast_cyanogenome$res_counts1_METeffect_alone_cyano,
+  title = "free-living cyanobacteria, no MET vs MET",
+  mylogo = here("scripts/Part2_DEG/logos/logo7.png"),
+  label_fun = cyano_label)
+
+V_cyano_met_effect_2org <- makeVolcano(
+  res = contrast_cyanogenome$res_counts2_METeffect_both_cyano,
+  title = "infected cyanobacteria, no MET vs MET",
+  mylogo = here("scripts/Part2_DEG/logos/logo8.png"),
+  label_fun = cyano_label)
+
+####################################
+## Cyano raw-count panel + figure ##
+####################################
+
+rawplot_cyano <- plot_degs_raw(
+  contrast_list       = contrast_cyanogenome,
+  count_matrix        = counts_cyano,
+  contrast_conditions = list(
+    res_counts1_METeffect_alone_cyano = c("control_cyano", "met_cyano"),
+    res_counts2_METeffect_both_cyano  = c("control_both",  "met_both")),
+  condition_levels    = c("control_cyano", "control_both", "met_cyano", "met_both"),
+  colour_map          = c(control_cyano = "steelblue", met_cyano = "lightblue",
+                          control_both  = "purple",    met_both  = "plum"),
+  label_fun           = cyano_label, 
+  ncol = 7)
+
+pdf(here("figures/Fig4_DEGcyano.pdf"), width = 14, height = 10) 
+cowplot::plot_grid(
+  cowplot::plot_grid(V_cyano_met_effect_1org$plot,
+                     V_cyano_met_effect_2org$plot,
+                     labels = c("a", "b"), ncol = 2, label_size = 20),
+  rawplot_cyano, labels = c("", "c"), label_size = 20, rel_heights = c(.5, 1),
+  ncol = 1)
+dev.off()
+
+## ============================================================
+## Infection-linked LOSS of cyanobacterial genes
+## Do alone-expressed genes drop out of co-culture MORE than the
+## reduced cyano biomass / sequencing depth alone predicts?
+## ============================================================
+counts        <- counts_cyano
+alone_cols    <- grep("cyano", colnames(counts), value = TRUE)   # cyano alone
+infected_cols <- grep("both",  colnames(counts), value = TRUE)   # co-culture
+depth         <- colSums(counts)
+k             <- 5                                               # detection threshold (reads)
+
+## relative abundance of each gene in the cyano transcriptome when alone
+a_g      <- rowMeans(sweep(counts[, alone_cols], 2, depth[alone_cols], "/"))
+universe <- rowMeans(counts[, alone_cols] >= k) >= 0.8 & a_g > 0  # reliably ON when alone
+message(sum(universe), " genes reliably expressed when alone")
+# 3536 genes reliably expressed when alone
+
+## biomass-only null: expected reads = relative abundance x library cyano depth
+lambda   <- outer(a_g, depth[infected_cols])
+p_detect <- 1 - pnbinom(k - 1, mu = lambda, size = 1)            # NB, overdispersed
+obs_det  <- rowSums(counts[, infected_cols] >= k)
+
+## P(detections <= observed | null), Poisson-binomial lower tail
+pb_lower <- function(p, x) { d <- 1; for (pp in p) d <- c(d,0)*(1-pp) + c(0,d)*pp; sum(d[seq_len(x+1)]) }
+p_loss <- rep(NA_real_, nrow(counts))
+for (g in which(universe)) p_loss[g] <- pb_lower(p_detect[g, ], obs_det[g])
+padj_loss <- rep(NA_real_, nrow(counts))
+padj_loss[universe] <- p.adjust(p_loss[universe], method = "BH")
+
+## compositional effect size (relative-abundance log2FC, infected vs alone)
+b_g       <- rowMeans(sweep(counts[, infected_cols], 2, depth[infected_cols], "/"))
+eps       <- min(a_g[a_g > 0]) / 10
+l2fc_prop <- log2((b_g + eps) / (a_g + eps))
+
+## candidates: lost more than depth predicts, relative abundance collapsed,
+## detection genuinely expected, and absent in ~all co-culture libraries
+res <- data.frame(gene = rownames(counts),
+                  cpm_alone = round(a_g*1e6, 1), cpm_infect = round(b_g*1e6, 1),
+                  exp_infect_det = round(rowSums(p_detect), 2), obs_infect_det = obs_det,
+                  l2fc_prop = round(l2fc_prop, 2), padj_loss = padj_loss)[universe, ]
+
+candidates <- subset(res, padj_loss < 0.05 & l2fc_prop < -1 &
+                       exp_infect_det >= 0.7 * length(infected_cols) &
+                       obs_infect_det <= 1)
+candidates <- candidates[order(candidates$padj_loss), ]
+candidates$label <- sapply(candidates$gene, cyano_label)
+
+## sanity check: are candidates really ~0 even in the best-sequenced infected libraries?
+deep_inf <- names(sort(depth[infected_cols], decreasing = TRUE))
+counts[candidates$gene, deep_inf, drop = FALSE]
+
+candidates
 
 ####################
 ## Save DEG table ##
@@ -823,7 +991,8 @@ names(contrast_cyanogenome)
 contrast_cyanogenome_DEG <- format_DEG_table(
   contrast_cyanogenome,
   comparison_labels = c(
-    "MET effect on cyanobacteria gene expression, in uninfected cyanobacteria"))
+    "MET effect on cyanobacteria gene expression, in uninfected cyanobacteria",
+    "MET effect on cyanobacteria gene expression, in infected cyanobacteria"))
 
 contrast_cyanogenome_DEG <- contrast_cyanogenome_DEG[
   grep("Infection effect", contrast_cyanogenome_DEG$comparison, invert = T),]
@@ -834,16 +1003,6 @@ fullDEGTable <- rbind(contrast_chytridgenome_DEG, contrast_cyanogenome_DEG) %>%
   arrange(geneName)
 
 table(fullDEGTable$comparison)
-# Infection effect on chytrid gene expression, in the absence of MET 
-# 6 
-# Infection effect on chytrid gene expression, in the presence of MET 
-# 3 
-# MET effect on chytrid gene expression, in free-living chytrid zoospores 
-# 6 
-# MET effect on chytrid gene expression, in infecting chytrid 
-# 9 
-# MET effect on cyanobacteria gene expression, in uninfected cyanobacteria 
-# 1 
 
 ## Add annotation
 fullDEGTable$geneFull <- annotationChytrid_final$sprot_Top_BLASTX_hit[
@@ -858,101 +1017,31 @@ fullDEGTable$geneFull[which(is.na(fullDEGTable$geneFull))] <-
   x[which(is.na(fullDEGTable$geneFull))]
 rm(x)
 
-fullDEGTable$potential_explanation <- case_when(
-  fullDEGTable$geneName == "77286457" ~
-    "Iron uptake porin upregulated under MET - iron acquisition may be disrupted by MET-induced oxidative stress (MET inhibits fatty acid synthesis, indirectly affecting membrane integrity and iron transport)",
-  
-  fullDEGTable$geneName == "AB6C_ARATH" ~
-    "ABC-C transporter (MRP family) - fungal ABC transporters transport xenobiotics including herbicides and fungicides across membranes; upregulation likely reflects active efflux of MET as a detoxification response",
-  
-  fullDEGTable$geneName == "ABCB6_HUMAN" ~
-    "Mitochondrial porphyrin/heme transporter - ABCB6 regulates heme biosynthesis and reduces reactive oxygen species; downregulation during infection may reflect redirection of mitochondrial resources toward parasite growth",
-  
-  fullDEGTable$geneName %in% c("ACA1_SCHPO", "ACA1_SCHPO.1") ~
-    "N-acetyltransferase - involved in histone acetylation and gene regulation; differential expression under MET suggests epigenetic reprogramming in response to herbicide stress",
-  
-  fullDEGTable$geneName == "AL1A3_HUMAN" ~
-    "Retinaldehyde dehydrogenase 3 (ALDH) - oxidises aldehydes generated by oxidative stress; upregulation under MET consistent with oxidative stress response; SIK3-deficient mice also show low ALDH1a expression, linking this gene to the same energy-stress pathway as SIK3",
-  
-  fullDEGTable$geneName == "AMYA_DROMA" ~
-    "Alpha-amylase - starch/glycogen hydrolysis enzyme; upregulation during infection may reflect increased carbohydrate mobilisation to fuel parasite growth and zoospore production",
-  
-  fullDEGTable$geneName == "ARF_CRYNB" ~
-    "ADP-ribosylation factor - key regulator of vesicle trafficking and cytoskeletal dynamics; downregulation during MET-treated infection suggests impaired vesicle-mediated secretion, consistent with MET disrupting membrane lipid composition required for vesicle formation",
-  
-  fullDEGTable$geneName == "ATC2_CRYNH" ~
-    "Calcium-transporting ATPase - maintains intracellular Ca²⁺ homeostasis; downregulation during infection may reflect suppression of calcium signalling required for zoospore motility and host recognition",
-  
-  fullDEGTable$geneName == "BIP_ASPAW" ~
-    "ER chaperone BiP (Hsp70 family) - canonical unfolded protein response (UPR) marker; upregulation under MET indicates protein folding stress, consistent with MET disrupting lipid synthesis and membrane protein biogenesis in the ER",
-  
-  fullDEGTable$geneName == "CAMKI_MACNP" ~
-    "Calcium/calmodulin-dependent protein kinase I - mediates calcium-dependent signalling; upregulation during infection suggests activation of Ca²⁺ signalling cascades during host-parasite interaction, possibly linked to zoospore encystment and rhizoid development",
-  
-  fullDEGTable$geneName %in% c("CBPC1_HUMAN", "CBPC1_HUMAN.1") ~
-    "Cytosolic carboxypeptidase 1 - deglutamylase involved in microtubule modification; downregulation is consistent with reduced tubulin post-translational modification, potentially impairing flagellar/ciliary function critical for zoospore motility",
-  
-  fullDEGTable$geneName == "DBP4_CRYNJ" ~
-    "ATP-dependent RNA helicase DBP4 - involved in rRNA processing and ribosome biogenesis; upregulation under MET may reflect compensatory increase in translational machinery under stress conditions",
-  
-  fullDEGTable$geneName == "FEN1_NEMVE" ~
-    "Flap endonuclease 1 - DNA repair enzyme involved in Okazaki fragment processing and base excision repair; downregulation during MET-treated infection suggests reduced DNA replication/repair capacity, possibly reflecting cell cycle arrest",
-  
-  fullDEGTable$geneName == "MOGT1_HUMAN" ~
-    "2-acylglycerol O-acyltransferase 1 - catalyses monoacylglycerol re-acylation in lipid metabolism; downregulation during MET infection aligns with MET's primary mode of action as a VLCFAS inhibitor, further suppressing lipid metabolic capacity",
-  
-  fullDEGTable$geneName == "NPAL2_HUMAN" ~
-    "NIPA-like protein 2 - magnesium transporter; upregulation under MET may reflect compensatory ion transport in response to membrane disruption caused by VLCFAS inhibition",
-  
-  fullDEGTable$geneName == "NU4M_USTMA" ~
-    "NADH-ubiquinone oxidoreductase chain 4 (Complex I) - core mitochondrial respiratory chain subunit; upregulation during infection suggests increased oxidative phosphorylation to meet energy demands of parasite growth and host penetration",
-  
-  fullDEGTable$geneName == "PAQR1_HUMAN" ~
-    "Adiponectin receptor 1 - membrane receptor linked to fatty acid oxidation and AMPK activation; upregulation under MET may represent a compensatory response to MET-induced disruption of fatty acid synthesis, activating alternative lipid catabolism pathways",
-  
-  fullDEGTable$geneName == "PHOP1_MOUSE" ~
-    "Phosphoethanolamine/phosphocholine phosphatase - involved in phospholipid head group metabolism; upregulation during infection suggests active remodelling of membrane phospholipid composition during host-parasite interaction",
-  
-  fullDEGTable$geneName == "PPCE_MOUSE" ~
-    "Prolyl endopeptidase - serine protease cleaving proline-containing peptides; upregulation under MET in infecting chytrid may reflect increased proteolytic activity during host cell degradation",
-  
-  fullDEGTable$geneName == "SIK3_HUMAN" ~
-    "Salt-inducible kinase 3 (AMPK-related kinase) - central regulator of lipid and energy metabolism via LKB1-SIK3-HDAC4 axis; strongly upregulated under MET during infection (LFC=3.9, padj=6.7e-5), consistent with MET's VLCFAS inhibition triggering energy stress signalling; SIK3-deficient mice show lipodystrophy and reduced fatty acid synthesis, mirroring MET's mechanism of action",
-  
-  fullDEGTable$geneName %in% c("SYKC_SCHPO", "SYKC_SCHPO.1") ~
-    "Lysine-tRNA ligase, cytoplasmic - aminoacyl-tRNA synthetase essential for translation; differential expression may reflect altered protein synthesis capacity; also a SIK family homolog in S. pombe, suggesting conserved kinase-related stress response",
-  
-  fullDEGTable$geneName == "TRNL_SCHPO" ~
-    "tRNA ligase 1 - involved in tRNA splicing and the unfolded protein response (UPR); upregulation during infection suggests activation of the tRNA ligase-dependent UPR branch, consistent with BIP_ASPAW upregulation indicating ER stress",
-  
-  TRUE ~ NA_character_
-)
-
 write.csv(fullDEGTable, here("figures/TableS1_fullDEGTable_annotated.csv"),
           row.names=FALSE)
-
-#############################################
-## GO enrichment                           ##
-#############################################
-
-## Chytrid
-getGOBubbleZ(universe  = rownames(counts1_infeffect_noMET_chy), 
-             annotation = annotationChytrid_final,
-             genelist  = getGenes(contrast_chytridgenome$res_counts1_infeffect_noMET_chy),
-             GO_df     = GO_chytrid, isbubble = FALSE)
-
-getGOBubbleZ(universe  = rownames(counts2_infeffect_MET_chy), 
-             annotation = annotationChytrid_final,
-             genelist  = getGenes(contrast_chytridgenome$res_counts2_infeffect_MET_chy),
-             GO_df     = GO_chytrid, isbubble = FALSE)
-
-getGOBubbleZ(universe  = rownames(counts3_METeffect_alone_chy), 
-             annotation = annotationChytrid_final,
-             genelist  = getGenes(contrast_chytridgenome$res_counts3_METeffect_alone_chy),
-             GO_df     = GO_chytrid, isbubble = FALSE)
-
-getGOBubbleZ(universe  = rownames(counts4_METeffect_infecting_chy), 
-             annotation = annotationChytrid_final,
-             genelist  = getGenes(contrast_chytridgenome$res_counts4_METeffect_infecting_chy),
-             GO_df     = GO_chytrid, isbubble = FALSE)
-# no significant GO terms (not enough DEG)
+# 
+# #############################################
+# ## GO enrichment                           ##
+# #############################################
+# 
+# ## Chytrid
+# getGOBubbleZ(universe  = rownames(counts1_infeffect_noMET_chy), 
+#              annotation = annotationChytrid_final,
+#              genelist  = getGenes(contrast_chytridgenome$res_counts1_infeffect_noMET_chy),
+#              GO_df     = GO_chytrid, isbubble = FALSE)
+# 
+# getGOBubbleZ(universe  = rownames(counts2_infeffect_MET_chy), 
+#              annotation = annotationChytrid_final,
+#              genelist  = getGenes(contrast_chytridgenome$res_counts2_infeffect_MET_chy),
+#              GO_df     = GO_chytrid, isbubble = FALSE)
+# 
+# getGOBubbleZ(universe  = rownames(counts3_METeffect_alone_chy), 
+#              annotation = annotationChytrid_final,
+#              genelist  = getGenes(contrast_chytridgenome$res_counts3_METeffect_alone_chy),
+#              GO_df     = GO_chytrid, isbubble = FALSE)
+# 
+# getGOBubbleZ(universe  = rownames(counts4_METeffect_infecting_chy), 
+#              annotation = annotationChytrid_final,
+#              genelist  = getGenes(contrast_chytridgenome$res_counts4_METeffect_infecting_chy),
+#              GO_df     = GO_chytrid, isbubble = FALSE)
+# # no significant GO terms (not enough DEG)
