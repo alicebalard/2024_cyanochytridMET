@@ -200,7 +200,9 @@ getGOBubbleZ <- function(universe, annotation, GO_df, isbubble=FALSE, genelist=N
 ####################################################################
 plot_degs_raw <- function(contrast_list, count_matrix, contrast_conditions,
                           condition_levels, colour_map,
-                          label_fun = function(g) sub("_.*", "", g), ncol = 5) {
+                          label_fun = function(g) sub("_.*", "", g), ncol = 5,
+                          label_samples   = NULL,                       # <- NEW: conditions to label
+                          sample_label_fun = function(s) sub(".*_", "", s)) {  # <- NEW: e.g. "control_both_In2" -> "In2"
   
   getGenes <- function(x) rownames(x)[!is.na(x$padj) & x$padj < 0.05]
   
@@ -226,7 +228,6 @@ plot_degs_raw <- function(contrast_list, count_matrix, contrast_conditions,
   genes <- sort(unique(counts_all$gene))
   message("Total unique DEGs: ", length(genes))
   
-  # shared y-axis: global max + headroom for stacked significance bars
   log_max  <- max(log10(counts_all$count + 1), na.rm = TRUE)
   max_bars <- if (nrow(sig_all)) max(table(sig_all$gene)) else 0
   y_top    <- 10^(log_max + 0.3 * (max_bars + 1))
@@ -234,20 +235,32 @@ plot_degs_raw <- function(contrast_list, count_matrix, contrast_conditions,
   plots <- lapply(genes, function(g) {
     df <- counts_all %>% filter(gene == g)
     sig_df <- sig_all %>% filter(gene == g) %>%
-      mutate(y_pos = log_max + 0.3 * row_number())   # was max(log10(df$count + 1), ...)
-    # sig_df <- sig_all %>% filter(gene == g) %>%
-    #   mutate(y_pos = max(log10(df$count + 1), na.rm = TRUE) + 0.3 * row_number())
+      mutate(y_pos = log_max + 0.3 * row_number())
+    
+    pos <- position_jitter(width = 0.15, height = 0, seed = 42)  # <- shared jitter
+    
     p <- ggplot(df, aes(condition, count + 1, colour = condition)) +
       geom_violin(aes(fill = condition), alpha = 0.3) +
       geom_boxplot(width = 0.3, alpha = 0.7, outlier.shape = NA) +
-      geom_jitter(width = 0.15, size = 1.5, alpha = 0.8) +
-      scale_y_log10(limits = c(1, y_top)) +           # was scale_y_log10()
+      geom_point(position = pos, size = 1.5, alpha = 0.8) +        # <- was geom_jitter
+      scale_y_log10(limits = c(1, y_top)) +
       scale_colour_manual(values = colour_map) +
       scale_fill_manual(values = colour_map) +
       ggtitle(label_fun(g)) + labs(x = NULL, y = "Count + 1 (log10)") +
       coord_cartesian(clip = "off") + theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1),
             legend.position = "none", plot.title = element_text(size = 9, face = "bold"))
+    
+    # ---- NEW: label individual sample points for the requested conditions ----
+    if (!is.null(label_samples))
+      p <- p + ggrepel::geom_label_repel(
+        aes(label = ifelse(condition %in% label_samples,
+                           sample_label_fun(sample), NA_character_)),
+        position = pos, na.rm = TRUE,           # same seeded jitter -> labels match points
+        colour = "grey20", fill = alpha("white", 0.7),
+        size = 2.3, label.padding = 0.12, label.size = 0.2,
+        min.segment.length = 0, max.overlaps = Inf, show.legend = FALSE)
+    
     for (i in seq_len(nrow(sig_df)))
       p <- p + ggsignif::geom_signif(
         comparisons = list(c(sig_df$cond1[i], sig_df$cond2[i])),

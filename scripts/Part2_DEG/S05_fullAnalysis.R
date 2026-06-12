@@ -891,7 +891,8 @@ rawplot_cyano <- plot_degs_raw(
   condition_levels    = c("control_cyano", "control_both", "met_cyano", "met_both"),
   colour_map          = c(control_cyano = "steelblue", met_cyano = "lightblue",
                           control_both  = "purple",    met_both  = "plum"),
-  label_fun           = cyano_label, 
+  label_fun           = cyano_label,
+  label_samples       = c("control_both", "met_both"),   # <- only these get point labels
   ncol = 7)
 
 pdf(here("figures/Fig4_DEGcyano.pdf"), width = 14, height = 10) 
@@ -955,6 +956,47 @@ deep_inf <- names(sort(depth[infected_cols], decreasing = TRUE))
 counts[candidates$gene, deep_inf, drop = FALSE]
 
 candidates
+
+## Plot
+n_inf <- length(infected_cols)   # number of co-culture libraries
+
+plt <- res
+plt$status <- with(plt, factor(
+  ifelse(padj_loss < 0.05 & l2fc_prop < -1 &
+           exp_infect_det >= 0.7 * n_inf & obs_infect_det <= 1, "candidate",
+         ifelse(padj_loss < 0.05, "lost > biomass predicts (p<0.05)",
+                "consistent with biomass")),
+  levels = c("consistent with biomass",
+             "lost > biomass predicts (p<0.05)", "candidate")))
+
+ggplot(plt, aes(exp_infect_det, obs_infect_det)) +
+  ## candidate zone: expected in >=70% of libraries, observed in <=1
+  annotate("rect", xmin = 0.7 * n_inf, xmax = n_inf, ymin = -0.5, ymax = 1.5,
+           fill = "firebrick", alpha = 0.07) +
+  geom_abline(slope = 1, intercept = 0, linetype = 2, color = "grey40") +   # biomass-only expectation
+  geom_jitter(aes(color = status, size = status, alpha = status),
+              width = 0, height = 0.18) +
+  ggrepel::geom_text_repel(
+    data = subset(plt, status == "candidate"),
+    aes(label = sapply(gene, cyano_label)),
+    color = "firebrick", size = 3, min.segment.length = 0, box.padding = 0.6) +
+  scale_color_manual(values = c("consistent with biomass"          = "grey70",
+                                "lost > biomass predicts (p<0.05)"  = "#E69F00",
+                                "candidate"                         = "firebrick")) +
+  scale_size_manual(values  = c(0.6, 1.6, 3),  guide = "none") +
+  scale_alpha_manual(values = c(0.25, 0.85, 1), guide = "none") +
+  scale_x_continuous(breaks = 0:n_inf) +
+  scale_y_continuous(breaks = 0:n_inf) +
+  labs(x = "Expected co-culture libraries detecting the gene (biomass-only null)",
+       y = "Observed co-culture libraries detecting the gene",
+       color = NULL,
+       title = "Gene loss in co-culture matches the biomass-only prediction",
+       subtitle = sprintf("%d genes reliably expressed when alone — %d candidate after all criteria",
+                          nrow(plt), sum(plt$status == "candidate"))) +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "top")
+
+ggsave(here("figures/FigS3_infection_loss_null.pdf"), width = 7.5, height = 6.5)
 
 ####################
 ## Save DEG table ##

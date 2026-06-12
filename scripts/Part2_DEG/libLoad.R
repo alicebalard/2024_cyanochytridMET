@@ -4,12 +4,12 @@ for (pkg in c("BiocManager", "remotes")) {  # remotes instead of devtools
 
 cran_packages <- c(
   "ggplot2", "ggrepel", "reshape2", "viridis", "pheatmap", "RColorBrewer",
-  "cowplot", "ggvenn", "MASS", "png", "grid", "ggVennDiagram",
+  "cowplot", "ggvenn", "MASS", "png", "grid", "ggVennDiagram", "ggplotify",# needed to drop the base-graphics dendrogram into cowplot
   "WGCNA", "data.table",
   "GOplot",
   "stringr",
   "tidyverse",
-  "rentrez",
+  "rentrez", 
   "ashr",
   "tidytext", "kableExtra", "webshot2",
   "UpSetR", "ggsignif"
