@@ -892,7 +892,7 @@ rawplot_cyano <- plot_degs_raw(
   colour_map          = c(control_cyano = "steelblue", met_cyano = "lightblue",
                           control_both  = "purple",    met_both  = "plum"),
   label_fun           = cyano_label,
-  label_samples       = c("control_both", "met_both"),   # <- only these get point labels
+  # label_samples       = c("control_both", "met_both"),   # <- only these get point labels
   ncol = 7)
 
 pdf(here("figures/Fig4_DEGcyano.pdf"), width = 14, height = 10) 
