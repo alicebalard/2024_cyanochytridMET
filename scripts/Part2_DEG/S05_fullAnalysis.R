@@ -876,7 +876,7 @@ V_cyano_met_effect_2org <- makeVolcano(
   res = contrast_cyanogenome$res_counts2_METeffect_both_cyano,
   title = "infected cyanobacteria, no MET vs MET",
   mylogo = here("scripts/Part2_DEG/logos/logo8.png"),
-  label_fun = cyano_label)
+  label_fun = cyano_label, maxx = 5.6) 
 
 ####################################
 ## Cyano raw-count panel + figure ##

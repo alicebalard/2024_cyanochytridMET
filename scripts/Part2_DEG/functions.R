@@ -29,7 +29,8 @@ makeClusterWGCNA <- function(datExpr){
 }
 makeVolcano <- function(res, title, mylogo, positionLogoStart = -2,
                         positionLogoStop = 2, top_n = 100,
-                        label_fun = function(g) sub("_.*", "", gsub("GeneID:", "", g))) {
+                        label_fun = function(g) sub("_.*", "", gsub("GeneID:", "", g)),
+                        maxx = 5) {
   results_df <- as.data.frame(res)
   results_df <- results_df[order(results_df$padj), ]
   
@@ -72,11 +73,11 @@ makeVolcano <- function(res, title, mylogo, positionLogoStart = -2,
       aes(label = labs),
       max.overlaps = Inf,
       size = 4,
-      box.padding = 0.3,
+      box.padding = 1,
       point.padding = 0.2,
       segment.size = 0.5, segment.colour = "grey",
       arrow = arrow(length = unit(0.02, "npc"))
-    ) + ylim(0, 5) + xlim(-5, 5)
+    ) + ylim(0, 5) + xlim(-5, maxx)
   
   # Load your image
   img <- png::readPNG(mylogo)
