@@ -1,4 +1,4 @@
-## Updated June 2026
+## Updated Nov 2026 (revisions)
 library(here)
 source(here("scripts/Part2_DEG/libLoad.R"))
 source(here("scripts/Part2_DEG/dataLoad.R"))
@@ -52,6 +52,61 @@ table(RSEM_newhope.gene$whichOrg,
 # in_cyano_alone                                          0   257
 
 ## All good, contamination removed
+
+## =====================================================================
+## Read assignment per library (reviewer comment C2, new Fig. 2)
+## input pairs: read_assignment_stats.tsv (S03b, counted from the fastq)
+## chytrid / cyano: RSEM expected counts (read pairs), decontaminated matrix
+## =====================================================================
+inp <- read.delim(here("data/read_assignment_stats.tsv"))[, c("sample", "input_pairs")]
+m   <- RSEM_newhope.gene[, inp$sample]
+is_chy <- grepl("^TRINITY", rownames(m))
+read_assign <- inp %>%
+  dplyr::mutate(chytrid = colSums(m[is_chy, ]), cyano = colSums(m[!is_chy, ]),
+                pct_chytrid = 100 * chytrid / input_pairs,
+                pct_cyano   = 100 * cyano   / input_pairs,
+                pct_neither = 100 - pct_chytrid - pct_cyano,
+                sample_type = dplyr::case_when(grepl("_chy_",   sample) ~ "zoospore samples",
+                                               grepl("_both_",  sample) ~ "infected filament samples",
+                                               grepl("_cyano_", sample) ~ "uninfected cyanobacterium samples"))
+write.csv(read_assign, here("figures/TableS_readAssignment.csv"), row.names = FALSE)
+summary <- read_assign %>% dplyr::group_by(sample_type) %>%                     # numbers for the text
+  dplyr::summarise(n = dplyr::n(), Mpairs = round(sum(input_pairs) / 1e6, 1),
+                   chytrid = sprintf("%.1f (%.1f-%.1f)", median(pct_chytrid), min(pct_chytrid), max(pct_chytrid)),
+                   cyano   = sprintf("%.1f (%.1f-%.1f)", median(pct_cyano),   min(pct_cyano),   max(pct_cyano)))
+
+summary
+#    sample_type                           n Mpairs chytrid       cyano        
+# 1 infected filament samples            12   441. 0.6 (0.2-7.1) 0.1 (0.0-0.3)
+# 2 uninfected cyanobacterium samples    12   455  0.0 (0.0-0.0) 8.0 (4.2-8.4)
+# 3 zoospore samples                     12   188. 1.0 (0.3-7.7) 0.0 (0.0-0.0)
+
+summary$Mpairs
+
+## Stacked bars: one bar per library (new Fig. 2A)
+p_assign <- read_assign %>%
+  dplyr::select(sample, sample_type, pct_chytrid, pct_cyano) %>%          # no pct_neither
+  pivot_longer(starts_with("pct"), names_to = "assigned_to", values_to = "pct") %>%
+  dplyr::mutate(assigned_to = factor(assigned_to,
+                                     levels = c("pct_cyano", "pct_chytrid"),
+                                     labels = c("P. agardhii", "R. megarrhizum")),
+                label = sub(".*_", "", sample)) %>%
+  dplyr::mutate(label = factor(label, levels = unique(label[order(sub("[0-9]+$", "", label),
+                                                                  as.numeric(sub("^[A-Za-z]+", "", label)))]))) %>%
+  ggplot(aes(x = label, y = pct, fill = assigned_to)) +
+  geom_col() +
+  coord_cartesian(ylim = c(0, 10)) +                                     # zoom, data not removed
+  scale_y_continuous(expand = expansion(mult = c(0, 0.02))) +            # bars start at the axis
+  facet_grid(~ sample_type, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = c("P. agardhii" = "steelblue", "R. megarrhizum" = "darkgreen"),
+                    labels = c(expression(italic("P. agardhii")),
+                               expression(italic("R. megarrhizum")))) +
+  labs(x = "Library", y = "% of read pairs (after rRNA removal)", fill = NULL) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1),
+        legend.position = "top")
+
+p_assign # (will be merge with the rest of Figure 2 downstream)
 
 #### CHYTRID ####
 
@@ -325,37 +380,33 @@ composition_df <- data.frame(
   mutate(
     n_total     = n_chy + n_cyano,           
     sample_type = case_when(
-      grepl("both",  sample) ~ "co-culture",
-      grepl("chy",   sample) ~ "chytrid alone",
-      grepl("cyano", sample) ~ "cyano alone"
+      grepl("both",  sample) ~ "infected filament samples",
+      grepl("chy",   sample) ~ "zoospore samples",
+      grepl("cyano", sample) ~ "uninfected cyanobacterium samples"
     ),
     treatment = ifelse(grepl("^control", sample), "control", "MET"),
     label     = sub(".*_", "", sample)
   )
 
+## one shared scale for colour AND fill, used by both plots
+type_levels <- c("zoospore samples", "infected filament samples", "uninfected cyanobacterium samples")
+scale_type  <- scale_colour_manual(
+  values = c("zoospore samples" = "darkgreen", "infected filament samples" = "purple",
+             "uninfected cyanobacterium samples" = "steelblue"),
+  limits = type_levels, name = "Sample type", aesthetics = c("colour", "fill"))
+
 p_composition <- ggplot(composition_df,
-                        aes(x=pct_cyano, y=pct_chy,
-                            color=sample_type, shape=treatment)) +
-  geom_point(size = 5) +
-  ggrepel::geom_label_repel(aes(label=label), size=3, show.legend=FALSE) +
-  scale_alpha_identity() +
-  scale_color_manual(values=c("co-culture"    = "purple",
-                              "chytrid alone" = "darkgreen",
-                              "cyano alone"   = "steelblue")) +
-  scale_shape_manual(values=c("control"=16, "MET"=17)) +
-  annotate("text", x=90, y=90, label="balanced co-culture",
-           color="grey50", size=3, fontface="italic") +
-  annotate("text", x=10,  y=102, label="chytrid dominated",
-           color="grey50", size=3, fontface="italic") +
-  annotate("text", x=85, y=5,  label="cyano dominated",
-           color="grey50", size=3, fontface="italic") +
-  labs(x        = "% cyanobacterial genes detected",
-       y        = "% chytrid genes detected",
-       title    = "Sequencing composition per sample",
-       color    = "Sample type",
-       shape    = "Treatment") +
-  theme_bw() +
-  theme(legend.position="top")
+                        aes(x = pct_cyano, y = pct_chy,
+                            colour = sample_type, fill = sample_type, shape = treatment)) +
+  geom_point(size = 4) +
+  ggrepel::geom_label_repel(aes(label = label), size = 3, show.legend = FALSE, fill = "white") +
+  scale_type +
+  scale_shape_manual(values = c(control = 21, MET = 24), name = "Treatment") +   # filled shapes
+  annotate("text", x = 90, y = 90,  label = "genes of\nboth organisms", color = "grey50", size = 3, fontface = "italic") +
+  annotate("text", x = 10, y = 102, label = "chytrid genes only",      color = "grey50", size = 3, fontface = "italic") +
+  annotate("text", x = 85, y = 5,   label = "cyanobacterial genes only", color = "grey50", size = 3, fontface = "italic") +
+  theme_bw()
+
 
 composition_long <- composition_df %>%
   dplyr::select(sample, sample_type, treatment, label,
@@ -370,35 +421,54 @@ composition_long <- composition_df %>%
     ),
     # Remove rows where organism wasn't present in that sample type
     relevant = case_when(
-      organism == "Chytrid"       & sample_type == "cyano alone"   ~ FALSE,
-      organism == "Cyanobacteria" & sample_type == "chytrid alone" ~ FALSE,
+      organism == "Chytrid"       & sample_type == "uninfected cyanobacterium samples" ~ FALSE,
+      organism == "Cyanobacteria" & sample_type == "zoospore samples"                  ~ FALSE,
       TRUE ~ TRUE
     )
   ) %>%
   filter(relevant)
 
 p_ngenes <- ggplot(composition_long,
-                   aes(x    = reorder_within(label, n_genes, organism),  #***
-                       y    = n_genes,
-                       fill = sample_type)) +
+                   aes(x = reorder_within(label, n_genes, organism), y = n_genes,
+                       colour = sample_type, fill = sample_type)) +              # colour AND fill
   geom_col() +
-  scale_x_reordered() +                                       #*** strips facet suffix
-  scale_fill_manual(values = c("co-culture"    = "purple",
-                               "chytrid alone" = "darkgreen",
-                               "cyano alone"   = "steelblue")) +
-  facet_wrap(~ organism, scales="free", ncol=1) +
-  labs(x     = "Sample",
-       y     = "Number of genes detected (count > 0)",
-       title = "Genes detected per sample per organism",
-       fill  = "Sample type") +
+  scale_x_reordered() +
+  scale_type +
+  facet_wrap(~ organism, scales = "free", ncol = 1) +
+  labs(x = "Library") +
   theme_bw() +
-  theme(axis.text.x  = element_text(angle=45, hjust=1),
-        legend.position = "top")
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-pdf(here("figures/Fig2.compositionPlot.pdf"), width=11, height=6)
-cowplot::plot_grid(p_composition, p_ngenes)
+## Axis labels with the denominator spelled out (numbers taken from the data)
+lab_x <- sprintf("Cyanobacterial genes detected (%% of the %s retained genes)",
+                 format(total_cyano_genes, big.mark = ","))
+lab_y <- sprintf("Chytrid genes detected (%% of the %s retained genes)",
+                 format(total_chy_genes, big.mark = ","))
+
+p_composition <- p_composition +
+  labs(x = lab_x, y = lab_y,
+       title = "Gene detection per library",
+       subtitle = "Detected = at least 1 read in this library\nRetained = after filtering (detected in at least 4 libraries)")
+
+p_ngenes <- p_ngenes +
+  labs(y = "Number of retained genes detected (at least 1 read)",
+       title = "Retained genes detected per library and organism")
+
+## one shared legend for B and C (taken from B: sample type + treatment)
+leg <- cowplot::get_plot_component(p_composition + theme(legend.position = "top"),
+                                   "guide-box-top", return_all = TRUE)
+
+bc <- cowplot::plot_grid(p_composition + theme(legend.position = "none"),
+                         p_ngenes      + theme(legend.position = "none"),
+                         labels = c("B.", "C."))
+
+
+pdf(here("figures/Fig2.compositionPlot.pdf"), width = 11, height = 10)
+cowplot::plot_grid(p_assign, leg, bc, labels = c("A.", "", ""), ncol = 1,
+                   rel_heights = c(1, 0.12, 1.2))
 dev.off()
 
+##################################################
 # Build presence/absence matrix for each organism
 pa_chy   <- (counts_chy   > 0) * 1  # 1 if expressed, 0 if not
 pa_cyano <- (counts_cyano > 0) * 1
@@ -438,6 +508,133 @@ remove_cyano <- c("control_both_In1", "control_both_In4", "control_both_In6", "m
 counts_cyano <- counts_cyano[,!colnames(counts_cyano) %in% remove_cyano]
 
 # NB: strong difference infected/non infected → are the cyano missing genes in infected random, or infection related?
+
+## =====================================================================
+## Revisions Nov 2026
+## Reviewer comment C4: are libraries sampled from the same bottle
+## more similar to each other than libraries from different bottles?
+##
+## Two tests, run separately for each organism:
+##  (1) Permutation test on between-library distances
+##  (2) limma duplicateCorrelation: correlation of residuals within bottle
+## =====================================================================
+set.seed(1234)   # makes the permutation p-values reproducible
+
+## ---------------------------------------------------------------------
+## 0. Sample information
+## ---------------------------------------------------------------------
+## Pairs of libraries sampled from the same bottle (library suffixes)
+same_bottle_pairs <- list(c("Z5","Z6"), c("Z7","Z12"),        # zoospores
+                          c("In5","In6"), c("In11","In12"),   # infected filaments
+                          c("C2","C6"),  c("C11","C12"))      # uninfected cyanobacteria
+
+## Condition = sample name without the replicate suffix, e.g. "met_chy"
+cond_of <- function(s) sub("_[^_]+$", "", s)
+
+## Bottle ID: both libraries of a pair get the same ID; every other library is its own bottle
+bottle_of <- function(s) {
+  suf <- sub(".*_", "", s)
+  b   <- s
+  for (p in same_bottle_pairs) {
+    hit <- suf %in% p
+    if (sum(hit) == 2) b[hit] <- paste(cond_of(s[hit][1]), paste(p, collapse = "+"), sep = "_")
+  }
+  b
+}
+
+## Input matrices: chytrid (all four conditions) and uninfected cyanobacteria
+## (the only cyanobacterial condition with same-bottle pairs left after filtering)
+mats <- list(
+  chytrid = counts_chy,
+  cyano   = counts_cyano[, grepl("cyano", colnames(counts_cyano))])
+stopifnot(!"met_chy_Z9" %in% colnames(mats$chytrid))
+
+## Keep genes with enough counts (same edgeR filter as in the DE analysis)
+mats <- lapply(mats, function(m)
+  m[filterByExpr(DGEList(m), group = cond_of(colnames(m))), ])
+
+## =====================================================================
+## (1) PERMUTATION TEST
+## Question: are same-bottle pairs closer than random pairs of libraries
+##           from the same condition?
+## =====================================================================
+perm_test <- function(cnt, B = 10000) {
+  s <- colnames(cnt); g <- cond_of(s); b <- bottle_of(s)
+  
+  ## a. Variance-stabilised expression, then Euclidean distances between libraries
+  dds <- DESeqDataSetFromMatrix(round(cnt), data.frame(row.names = s, g = factor(g)), ~ g)
+  D   <- as.matrix(dist(t(assay(varianceStabilizingTransformation(dds, blind = TRUE)))))
+  
+  ## b. For each condition: all within-condition distances, scaled by the
+  ##    median distance between libraries from DIFFERENT bottles, so that
+  ##    conditions with different overall variability can be pooled
+  per_cond <- lapply(split(seq_along(s), g), function(i) {
+    ij <- t(combn(i, 2))
+    d  <- D[ij]
+    sb <- b[ij[, 1]] == b[ij[, 2]]
+    list(d_rel = d / median(d[!sb]), same = sb)
+  })
+  per_cond <- per_cond[sapply(per_cond, function(x) any(x$same))]  # conditions with a pair
+  
+  ## c. Observed statistic: mean scaled distance of the same-bottle pairs
+  obs <- mean(sapply(per_cond, function(x) x$d_rel[x$same]))
+  
+  ## d. Null: in each condition, pick one random pair of libraries instead
+  null <- replicate(B, mean(sapply(per_cond, function(x) sample(x$d_rel, 1))))
+  
+  ## e. One-sided p: how often random pairs are at least as close as the real pairs
+  data.frame(n_pairs  = length(per_cond),
+             observed = round(obs, 2),
+             p_closer = round((1 + sum(null <= obs)) / (B + 1), 2),
+             ranks    = paste(sapply(per_cond, function(x)
+               paste0(rank(x$d_rel)[x$same], "/", length(x$d_rel))), collapse = ", "))
+}
+
+perm <- do.call(rbind, lapply(mats, perm_test))
+perm
+#         n_pairs observed p_closer                    ranks
+# chytrid       4     1.06     0.49 9/15, 12/15, 6/15, 6/10
+# cyano         2     1.01     0.52             8/15, 13/15
+
+## RESULTS: observed ~ 1 and large p -> no detectable bottle effect
+
+## =====================================================================
+## (2) duplicateCorrelation
+## Question: after accounting for the experimental design, how strongly
+##           are the residuals of two libraries from the same bottle
+##           correlated? (~0 = they behave as independent samples)
+## =====================================================================
+dup_cor <- function(cnt, X) {
+  blk <- bottle_of(colnames(cnt))
+  y   <- normLibSizes(DGEList(cnt))
+  v   <- voom(y, X)
+  dc  <- duplicateCorrelation(v, X, block = blk)
+  ## re-run voom with the estimated correlation, then re-estimate (as recommended in limma)
+  v   <- voom(y, X, block = blk, correlation = dc$consensus)
+  duplicateCorrelation(v, X, block = blk)$consensus
+}
+
+## Design matrices = the experimental factors
+s_chy <- colnames(mats$chytrid)
+X_chy <- model.matrix(~ stage * MET,
+                      data.frame(stage = factor(ifelse(grepl("both", s_chy), "infecting", "zoospore")),
+                                 MET   = factor(ifelse(grepl("^met", s_chy), "MET", "control"))))
+X_cya <- model.matrix(~ MET,
+                      data.frame(MET = factor(ifelse(grepl("^met", colnames(mats$cyano)), "MET", "control"))))
+
+perm$within_bottle_cor <- round(c(dup_cor(mats$chytrid, X_chy),
+                                  dup_cor(mats$cyano,   X_cya)), 3)
+
+## ==============================
+## Results (one row per organism)
+## ==============================
+perm$n_libraries <- sapply(mats, ncol)
+perm$n_genes     <- sapply(mats, nrow)
+perm
+
+#         n_pairs observed p_closer                    ranks within_bottle_cor n_libraries n_genes
+# chytrid       4     1.06     0.49 9/15, 12/15, 6/15, 6/10             0.062          23    1071
+# cyano         2     1.01     0.52             8/15, 13/15             0.001          12    3512
 
 #####################
 ## Part 1. Chytrid ##
@@ -554,13 +751,22 @@ myDESeq2_withlfcShrink <- function(count, a, b){
   res <- results(ddsr,
                  contrast = c("condition", b, a),
                  alpha    = 0.05)
+  ## NEW (C8): keep the Wald statistic (used to rank genes for fgsea) and the
+  ## unshrunk log2FC (used to compare effect sizes between contrasts: ashr
+  ## shrinks non-significant contrasts towards 0, which would exaggerate
+  ## differences between contrasts)
+  wald_stat <- res$stat
+  lfc_mle   <- res$log2FoldChange
   res <- lfcShrink(ddsr,
                    contrast = c("condition", b, a),
                    res      = res,
                    type     = "ashr")
+  res$stat    <- wald_stat   ## NEW (C8)
+  res$lfc_mle <- lfc_mle     ## NEW (C8)
   print(summary(res))
   return(res)
 }
+## NB: DEG lists, padj and the shrunk log2FoldChange are unchanged
 
 testIfCrazyFoldChange <- function(res){
   res %>% as.data.frame() %>%
@@ -1061,29 +1267,253 @@ rm(x)
 
 write.csv(fullDEGTable, here("figures/TableS1_fullDEGTable_annotated.csv"),
           row.names=FALSE)
+
+## =====================================================================
+## Revisions Nov 2026 — Reviewer comment C8
+## (a) Chytrid: one model with a MET x life-stage interaction
+## (b) Are the infection effects consistent with and without MET?
+##     (effect sizes, not significance counts)
+## (c) Rank-based gene-set enrichment (fgsea) on the full DESeq2 results
+## =====================================================================
+set.seed(1234)   # fgsea p-values are simulation-based
+
+## ---------------------------------------------------------------------
+## (a) MET x life-stage interaction (chytrid, all 23 libraries, Z9 removed)
+## ---------------------------------------------------------------------
+cd_chy <- data.frame(
+  row.names = colnames(counts_chy),
+  stage = factor(ifelse(grepl("both", colnames(counts_chy)), "infecting", "zoospore"),
+                 levels = c("zoospore", "infecting")),
+  MET   = factor(ifelse(grepl("^met", colnames(counts_chy)), "MET", "control"),
+                 levels = c("control", "MET")))
+table(cd_chy$stage, cd_chy$MET)    
+#           control MET
+# zoospore        6   5
+# infecting       6   6
+
+## same gene filter as the pairwise contrasts, with the 4 groups
+keep_int <- filterByExpr(DGEList(counts_chy),
+                         group = interaction(cd_chy$stage, cd_chy$MET))
+dds_int <- DESeqDataSetFromMatrix(round(counts_chy[keep_int, ]), cd_chy,
+                                  design = ~ stage * MET)
+dds_int <- DESeq(dds_int, fitType = "mean")           # same settings as the pairwise fits
+resultsNames(dds_int)
+
+## Wald test of the interaction term: is the infecting-vs-zoospore log2FC
+## different under MET than in the control?
+res_int <- results(dds_int, name = "stageinfecting.METMET", alpha = 0.05)
+summary(res_int)
+# out of 1071 with nonzero total read count
+# adjusted p-value < 0.05
+# LFC > 0 (up)       : 2, 0.19%
+# LFC < 0 (down)     : 1, 0.093%
+# outliers [1]       : 71, 6.6%
+# low counts [2]     : 0, 0%
+# (mean count < 4)
+
+int_genes <- rownames(subset(res_int, padj < 0.05))
+res_int[int_genes, c("baseMean","log2FoldChange","lfcSE","padj")]
+# log2 fold change (MLE): stageinfecting.METMET 
 # 
-# #############################################
-# ## GO enrichment                           ##
-# #############################################
-# 
-# ## Chytrid
-# getGOBubbleZ(universe  = rownames(counts1_infeffect_noMET_chy), 
-#              annotation = annotationChytrid_final,
-#              genelist  = getGenes(contrast_chytridgenome$res_counts1_infeffect_noMET_chy),
-#              GO_df     = GO_chytrid, isbubble = FALSE)
-# 
-# getGOBubbleZ(universe  = rownames(counts2_infeffect_MET_chy), 
-#              annotation = annotationChytrid_final,
-#              genelist  = getGenes(contrast_chytridgenome$res_counts2_infeffect_MET_chy),
-#              GO_df     = GO_chytrid, isbubble = FALSE)
-# 
-# getGOBubbleZ(universe  = rownames(counts3_METeffect_alone_chy), 
-#              annotation = annotationChytrid_final,
-#              genelist  = getGenes(contrast_chytridgenome$res_counts3_METeffect_alone_chy),
-#              GO_df     = GO_chytrid, isbubble = FALSE)
-# 
-# getGOBubbleZ(universe  = rownames(counts4_METeffect_infecting_chy), 
-#              annotation = annotationChytrid_final,
-#              genelist  = getGenes(contrast_chytridgenome$res_counts4_METeffect_infecting_chy),
-#              GO_df     = GO_chytrid, isbubble = FALSE)
-# # no significant GO terms (not enough DEG)
+# DataFrame with 3 rows and 4 columns
+# baseMean log2FoldChange     lfcSE      padj
+# AL1A3_HUMAN   323.293        4.27466   1.11058  0.040708
+# B561J_ARATH   164.602       -7.20242   1.87474  0.040708
+# YBA9_SCHPO    156.199        8.03646   1.93549  0.032936
+
+## Annotations:
+annotationChytrid_final$sprot_Top_BLASTX_hit[
+  match(rownames(res_int[int_genes, ]), annotationChytrid_final$gene_name)]
+# [1] "AL1A3_HUMAN^AL1A3_HUMAN^Q:838-1701,H:88-377^33.9%ID^E:9.88e-38^RecName: Full=Retinaldehyde dehydrogenase 3;^Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae; Homo"                                                                                    
+# [2] "B561J_ARATH^B561J_ARATH^Q:641-249,H:158-295^29.1%ID^E:4.69e-09^RecName: Full=Cytochrome b561 and DOMON domain-containing protein At5g47530;^Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; Brassicales; Brassicaceae; Camelineae; Arabidopsis"
+# [3] "YBA9_SCHPO^YBA9_SCHPO^Q:498-809,H:82-173^48.6%ID^E:1.86e-25^RecName: Full=Uncharacterized protein C119.09c;^Eukaryota; Fungi; Dikarya; Ascomycota; Taphrinomycotina; Schizosaccharomycetes; Schizosaccharomycetales; Schizosaccharomycetaceae; Schizosaccharomyces" 
+
+## Power: standard error of the interaction vs of the life-stage effect,
+## from the same model. An interaction is a difference between two
+## differences, so its SE is ~sqrt(2) larger (more with uneven groups).
+se_ratio <- median(res_int$lfcSE, na.rm = TRUE) /
+  median(results(dds_int, name = "stage_infecting_vs_zoospore")$lfcSE, na.rm = TRUE)
+message("Median SE interaction / SE life-stage effect: ", round(se_ratio, 2))
+# Median SE interaction / SE life-stage effect: 1.45
+
+## -> detectable interaction log2FC is ~se_ratio x larger than a detectable
+##    life-stage log2FC (same alpha, same power)
+
+## Supp. figure: the 3 genes with a significant life stage x MET interaction (Wald)
+int_df <- do.call(rbind, lapply(int_genes, function(g) {
+  d <- plotCounts(dds_int, g, intgroup = c("stage", "MET"), returnData = TRUE)
+  d$gene <- sprintf("%s\nWald FDR = %.3f",
+                    g, res_int[g, "padj"])
+  d
+}))
+int_df$group <- factor(paste(int_df$stage, int_df$MET),
+                       levels = c("zoospore control", "zoospore MET",
+                                  "infecting control", "infecting MET"))
+
+p_int <- ggplot(int_df, aes(x = MET, y = count, colour = group)) +
+  geom_jitter(width = 0.1, size = 2.5) +
+  stat_summary(aes(group = stage), fun = median, geom = "line",
+               colour = "grey40", linetype = 2) +                 # medians: crossing lines = interaction
+  stat_summary(fun = median, geom = "point", shape = 95, size = 10, colour = "black") +
+  scale_y_log10() +
+  scale_colour_manual(values = c("zoospore control" = "darkgreen", "zoospore MET" = "lightgreen",
+                                 "infecting control" = "purple",   "infecting MET" = "plum"),
+                      name = NULL) +
+  facet_grid(gene ~ stage, scales = "free_y") +
+  labs(x = NULL, y = "Normalised count (log scale)") +
+  theme_bw() +
+  theme(legend.position = "top", strip.text.y = element_text(angle = 0, size = 8))
+p_int
+ggsave(here("figures/FigS4_interactionGenes.pdf"), p_int, width = 7, height = 7)
+
+## ---------------------------------------------------------------------
+## (b) Concordance of the infection effect without vs with MET
+## Unshrunk log2FC (lfc_mle): contrast 2 has no DEG, so ashr would shrink
+## all its log2FC towards 0 and create an apparent "loss" of the effect.
+## ---------------------------------------------------------------------
+r1 <- as.data.frame(contrast_chytridgenome$res_counts1_infeffect_noMET_chy)
+r2 <- as.data.frame(contrast_chytridgenome$res_counts2_infeffect_MET_chy)
+shared <- intersect(rownames(r1), rownames(r2))
+
+conc <- data.frame(gene       = shared,
+                   lfc_noMET  = r1[shared, "lfc_mle"],
+                   lfc_MET    = r2[shared, "lfc_mle"],
+                   padj_noMET = r1[shared, "padj"],
+                   padj_MET   = r2[shared, "padj"],
+                   padj_int   = res_int$padj[match(shared, rownames(res_int))])
+
+## genome-wide: are the two infection effects correlated?
+ct <- cor.test(conc$lfc_noMET, conc$lfc_MET, method = "spearman", exact = FALSE)
+ct
+message(length(shared), " genes tested in both contrasts; Spearman rho = ",
+        round(ct$estimate, 2), ", p = ", signif(ct$p.value, 2))
+# 879 genes tested in both contrasts; Spearman rho = 0.08, p = 0.019
+
+## the infection DEGs without MET: same direction under MET? smaller effect?
+## interaction significant?
+deg_conc <- subset(conc, !is.na(padj_noMET) & padj_noMET < 0.05) %>%
+  dplyr::mutate(same_sign  = sign(lfc_noMET) == sign(lfc_MET),
+                ratio_MET  = round(lfc_MET / lfc_noMET, 2),   # 1 = same effect, 0 = no effect under MET
+                dplyr::across(where(is.numeric), ~ signif(.x, 2)))
+deg_conc
+#           gene lfc_noMET lfc_MET padj_noMET padj_MET padj_int same_sign ratio_MET
+# 17  ABCB6_HUMAN      -3.5   -0.29     0.0075     0.87     0.12      TRUE      0.08
+# 24   ACA1_SCHPO       3.3   -0.71     0.0310     0.85     0.13     FALSE     -0.21
+# 49   AMYA_DROMA       3.6    1.10     0.0120     0.77     0.45      TRUE      0.30
+# 109 CBPC1_HUMAN      -3.2    1.00     0.0290     0.77     0.12     FALSE     -0.32
+# 300  GDIR_YEAST       5.0   -0.36     0.0075     0.96     0.13     FALSE     -0.07
+# 618  RFC4_ARATH       4.0    1.00     0.0290     0.71     0.40      TRUE      0.25
+# 774  TRNL_SCHPO       1.9    0.60     0.0290     0.78     0.47      TRUE      0.32
+
+write.csv(deg_conc, here("figures/TableS_C8_infectionDEG_concordance.csv"), row.names = FALSE)
+
+## Supplementary figure: infection log2FC without vs with MET
+p_conc <- ggplot(conc, aes(lfc_noMET, lfc_MET)) +
+  geom_hline(yintercept = 0, colour = "grey80") +
+  geom_vline(xintercept = 0, colour = "grey80") +
+  geom_abline(slope = 1, intercept = 0, linetype = 2, colour = "grey40") +   # same effect
+  geom_point(colour = "grey60", alpha = 0.4, size = 1) +
+  geom_point(data = subset(conc, !is.na(padj_noMET) & padj_noMET < 0.05),
+             colour = "purple", size = 2.5) +
+  ggrepel::geom_text_repel(data = subset(conc, !is.na(padj_noMET) & padj_noMET < 0.05),
+                           aes(label = gene), size = 3, colour = "purple",
+                           min.segment.length = 0) +
+  labs(x = "log2FC infecting vs zoospore, control",
+       y = "log2FC infecting vs zoospore, MET",
+       title = "Infection effect on chytrid gene expression, without vs with MET",
+       subtitle = sprintf("%d genes; Spearman rho = %.2f; purple = DEGs in the control contrast",
+                          nrow(conc), ct$estimate)) +
+  coord_equal() +
+  theme_bw()
+p_conc
+ggsave(here("figures/FigS_C8_infectionEffect_concordance.pdf"), p_conc, width = 6.5, height = 6.5)
+
+## ---------------------------------------------------------------------
+## (c) Rank-based gene-set enrichment (fgsea), GO terms
+## Genes ranked by the DESeq2 Wald statistic (all tested genes, no cutoff)
+## ---------------------------------------------------------------------
+## gene -> GO tables. Gene names = row names of the DESeq2 results.
+gene2go_chy <- annotationChytrid_final %>%
+  dplyr::transmute(gene = gene_name,
+                   GO   = str_extract_all(gene_ontology_BLASTX, "GO:\\d+")) %>%
+  tidyr::unnest(GO) %>% dplyr::distinct()
+
+gene2go_cya <- annotationCyano_final %>%
+  dplyr::transmute(gene = as.character(gene_id),
+                   GO   = str_extract_all(Ontology_term, "GO:\\d+")) %>%
+  tidyr::unnest(GO) %>% dplyr::distinct()
+
+GO_names <- dplyr::bind_rows(GO_chytrid, GO_cyano) %>%
+  dplyr::distinct(GO.accession, .keep_all = TRUE)
+
+## check that the gene names match the DESeq2 results (should be close to 100%)
+mean(rownames(contrast_chytridgenome[[1]]) %in% gene2go_chy$gene)
+# [1] 0.9931973
+
+mean(rownames(contrast_cyanogenome[[1]])   %in% gene2go_cya$gene)
+# [1] 1
+
+run_fgsea <- function(r, gene2go, contrast, minSize = 10, maxSize = 300) {
+  st <- r$stat; names(st) <- rownames(r)
+  st <- st[!is.na(st)]
+  sets <- split(gene2go$gene, gene2go$GO)
+  fgsea::fgsea(pathways = sets, stats = st,
+               minSize = minSize, maxSize = maxSize, eps = 0) %>%
+    tibble::as_tibble() %>%
+    dplyr::left_join(GO_names, by = c("pathway" = "GO.accession")) %>%
+    dplyr::mutate(contrast    = contrast,
+                  n_ranked    = length(st),
+                  n_sets      = dplyr::n(),
+                  leadingEdge = sapply(leadingEdge, paste, collapse = ";")) %>%
+    dplyr::arrange(padj)
+}
+
+gsea_all <- dplyr::bind_rows(
+  run_fgsea(contrast_chytridgenome$res_counts1_infeffect_noMET_chy, gene2go_chy,
+            "Chytrid: infecting vs zoospore, control"),
+  run_fgsea(contrast_chytridgenome$res_counts2_infeffect_MET_chy,   gene2go_chy,
+            "Chytrid: infecting vs zoospore, MET"),
+  run_fgsea(contrast_chytridgenome$res_counts3_METeffect_alone_chy, gene2go_chy,
+            "Chytrid: MET vs control, zoospores"),
+  run_fgsea(contrast_chytridgenome$res_counts4_METeffect_infecting_chy, gene2go_chy,
+            "Chytrid: MET vs control, infecting"),
+  run_fgsea(res_int, gene2go_chy,
+            "Chytrid: MET x life-stage interaction"),
+  run_fgsea(contrast_cyanogenome$res_counts1_METeffect_alone_cyano, gene2go_cya,
+            "Cyanobacterium: MET vs control, uninfected"),
+  run_fgsea(contrast_cyanogenome$res_counts2_METeffect_both_cyano,  gene2go_cya,
+            "Cyanobacterium: MET vs control, infected"))
+
+## numbers for the text: genes ranked, GO sets tested, sets at FDR < 0.05
+gsea_all %>% dplyr::group_by(contrast) %>%
+  dplyr::summarise(n_ranked = n_ranked[1], n_sets = n_sets[1],
+                   n_sig = sum(padj < 0.05, na.rm = TRUE),
+                   n_up  = sum(padj < 0.05 & NES > 0, na.rm = TRUE),
+                   n_down= sum(padj < 0.05 & NES < 0, na.rm = TRUE))
+# contrast                                   n_ranked n_sets n_sig  n_up n_down
+# 1 Chytrid: MET vs control, infecting              930    108     0     0      0
+# 2 Chytrid: MET vs control, zoospores             1012    122     0     0      0
+# 3 Chytrid: MET x life-stage interaction          1071    129     0     0      0
+# 4 Chytrid: infecting vs zoospore, MET            1050    124     0     0      0
+# 5 Chytrid: infecting vs zoospore, control         882    100     0     0      0
+# 6 Cyanobacterium: MET vs control, infected       1943     28     0     0      0
+# 7 Cyanobacterium: MET vs control, uninfected     3512     38     0     0      0
+
+# descriptive list of the most strongly ranked terms per contrast.
+# NB: clearly stateas not significant
+top_desc <- gsea_all %>%
+  dplyr::group_by(contrast) %>%
+  dplyr::slice_min(pval, n = 5, with_ties = FALSE) %>%
+  dplyr::select(contrast, GO = pathway, GO.ontology, GO.name, size, NES, pval, padj, leadingEdge)
+
+write.csv(top_desc, here("figures/TableS3_GSEA_topTerms.csv"), row.names = FALSE)
+
+gsea_all %>% dplyr::group_by(contrast) %>% dplyr::summarise(min_padj = signif(min(padj, na.rm = TRUE), 2))
+#    contrast                                   min_padj
+# 1 Chytrid: MET vs control, infecting             0.44
+# 2 Chytrid: MET vs control, zoospores             0.41
+# 3 Chytrid: MET x life-stage interaction          0.88
+# 4 Chytrid: infecting vs zoospore, MET            0.08
+# 5 Chytrid: infecting vs zoospore, control        0.76
+# 6 Cyanobacterium: MET vs control, infected       0.05
+# 7 Cyanobacterium: MET vs control, uninfected     0.11
