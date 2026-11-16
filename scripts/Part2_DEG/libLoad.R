@@ -29,7 +29,8 @@ bioc_packages <- c(
   "rtracklayer",
   "openxlsx",
   "NOISeq",
-  "apeglm"
+  "apeglm",
+  "fgsea" ## NEW: for rank-based gene-set enrichment
 )
 
 github_packages <- c(
