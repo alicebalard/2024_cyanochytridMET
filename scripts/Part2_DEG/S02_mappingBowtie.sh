@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=2GB
 #SBATCH --time=24:00:00
-#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
-#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
+#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.out
+#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --qos=standard
 #SBATCH --partition=main,begendiv
 #SBATCH --constraint=no_gpu

@@ -1,7 +1,7 @@
 #!/bin/sh --login
 #SBATCH --job-name=BUSCO
-#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
-#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
+#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.out
+#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
 #SBATCH --mem-per-cpu=4GB 

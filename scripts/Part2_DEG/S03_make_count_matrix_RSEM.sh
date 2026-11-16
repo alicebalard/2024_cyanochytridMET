@@ -50,6 +50,6 @@ for f in $DATADIR/RSEM_new_hope.isoform.*; do
 done
 
 ## Move input for DESeq2 where useful
-cp $DATADIR/RSEM_new_hope.gene.counts.matrix /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/RSEM_new_hope.gene.counts.matrix
+cp $DATADIR/RSEM_new_hope.gene.counts.matrix /home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/data/RSEM_new_hope.gene.counts.matrix
 
-cp /scratch/alicebalard/outData/RSEM/samples_file.txt /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/.
+cp /scratch/alicebalard/outData/RSEM/samples_file.txt /home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/data/.

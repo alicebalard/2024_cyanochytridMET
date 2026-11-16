@@ -13,8 +13,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=2GB
 #SBATCH --time=24:00:00
-#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
-#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
+#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.out
+#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --qos=standard
 #SBATCH --partition=main,begendiv
 #SBATCH --constraint=no_gpu
@@ -81,10 +81,10 @@ echo "[S01] Combined FASTA created ($(grep -c '^>' assembly_both.fna) sequences)
 ## -------------------------------------------------------
 ## Outputs
 ## -------------------------------------------------------
-cp $OUTDIR/combined_gene_trans_map.txt /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/.
-cp $OUTDIR/header_lookup_table.txt /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/.
+cp $OUTDIR/combined_gene_trans_map.txt /home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/data/.
+cp $OUTDIR/header_lookup_table.txt /home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/data/.
 
 echo "[S01] Done. Outputs:"
 echo "  $OUTDIR/assembly_both.fna"
-echo "  /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/combined_gene_trans_map.txt"
-echo "  /home/alicebalard/Scripts/AliceScripts/cyanochytridMET/data/header_lookup_table.txt"
+echo "  /home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/data/combined_gene_trans_map.txt"
+echo "  /home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/data/header_lookup_table.txt"

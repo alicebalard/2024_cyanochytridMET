@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --job-name=6.2_checkQualityAssembly
-#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.out
-#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/cyanochytridMET/scripts/logs_dir/%x.%j.err
+#SBATCH --output=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.out
+#SBATCH --error=/home/alicebalard/Scripts/AliceScripts/2024_cyanochytridMET/scripts/logs_dir/%x.%j.err
 #SBATCH --mail-user=alicebalard@zedat.fu-berlin.de
 #SBATCH --mail-type=end
 #SBATCH --ntasks=1
