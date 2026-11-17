@@ -108,6 +108,14 @@ p_assign <- read_assign %>%
 
 p_assign # (will be merge with the rest of Figure 2 downstream)
 
+read_assign %>% dplyr::group_by(sample_type) %>%
+  dplyr::summarise(max_chy = max(pct_chytrid), max_cya = max(pct_cyano))
+# A tibble: 3 × 3
+# sample_type                       max_chy max_cya
+# 1 infected filament samples            7.09 0.330  
+# 2 uninfected cyanobacterium samples    0    8.40   
+# 3 zoospore samples                     7.67 0.00455 (<0.01 we write)
+
 #### CHYTRID ####
 
 RSEM_chytrid <- RSEM_newhope.gene[RSEM_newhope.gene$whichTranscriptome %in% "chytrid",] %>%
@@ -460,11 +468,11 @@ leg <- cowplot::get_plot_component(p_composition + theme(legend.position = "top"
 
 bc <- cowplot::plot_grid(p_composition + theme(legend.position = "none"),
                          p_ngenes      + theme(legend.position = "none"),
-                         labels = c("B.", "C."))
+                         labels = c("b", "c"))
 
 
 pdf(here("figures/Fig2.compositionPlot.pdf"), width = 11, height = 10)
-cowplot::plot_grid(p_assign, leg, bc, labels = c("A.", "", ""), ncol = 1,
+cowplot::plot_grid(p_assign, leg, bc, labels = c("a", "", ""), ncol = 1,
                    rel_heights = c(1, 0.12, 1.2))
 dev.off()
 
