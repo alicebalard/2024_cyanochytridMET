@@ -101,7 +101,7 @@ p_assign <- read_assign %>%
   scale_fill_manual(values = c("P. agardhii" = "steelblue", "R. megarrhizum" = "darkgreen"),
                     labels = c(expression(italic("P. agardhii")),
                                expression(italic("R. megarrhizum")))) +
-  labs(x = "Library", y = "% of read pairs (after rRNA removal)", fill = NULL) +
+  labs(x = "Library", y = "Proportion of read pairs assigned (%)\n(after trimming and rRNA removal)", fill = NULL) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1),
         legend.position = "top")
@@ -134,7 +134,7 @@ p_counts <- ggplot(count_long, aes(x = label, y = pairs, fill = assigned_to)) +
   facet_grid(~ sample_type, scales = "free_x", space = "free_x") +
   scale_fill_manual(values = c("P. agardhii" = "steelblue", "R. megarrhizum" = "darkgreen"),
                     labels = c(expression(italic("P. agardhii")), expression(italic("R. megarrhizum")))) +
-  labs(x = "Library", y = "Read pairs assigned\n(log scale)", fill = NULL) +
+  labs(x = "Library", y = "Number of read pairs assigned (log scale)\n(after trimming and rRNA removal)", fill = NULL) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1),
         legend.position = "top")
