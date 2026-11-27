@@ -94,8 +94,8 @@ p_assign <- read_assign %>%
   dplyr::mutate(label = factor(label, levels = unique(label[order(sub("[0-9]+$", "", label),
                                                                   as.numeric(sub("^[A-Za-z]+", "", label)))]))) %>%
   ggplot(aes(x = label, y = pct, fill = assigned_to)) +
-  geom_col() +
-  coord_cartesian(ylim = c(0, 10)) +                                     # zoom, data not removed
+  geom_col(position = position_dodge(preserve = "single"), width = 1, col = "white") +
+  coord_cartesian(ylim = c(0, 8.5)) +                                     # zoom, data not removed
   scale_y_continuous(expand = expansion(mult = c(0, 0.02))) +            # bars start at the axis
   facet_grid(~ sample_type, scales = "free_x", space = "free_x") +
   scale_fill_manual(values = c("P. agardhii" = "steelblue", "R. megarrhizum" = "darkgreen"),
@@ -115,6 +115,47 @@ read_assign %>% dplyr::group_by(sample_type) %>%
 # 1 infected filament samples            7.09 0.330  
 # 2 uninfected cyanobacterium samples    0    8.40   
 # 3 zoospore samples                     7.67 0.00455 (<0.01 we write)
+
+## NEW: read-pair COUNTS per library and organism (new Fig. 2a; % panel becomes 2b)
+count_long <- read_assign %>%
+  dplyr::select(sample, sample_type, chytrid, cyano) %>%
+  pivot_longer(c(chytrid, cyano), names_to = "assigned_to", values_to = "pairs") %>%
+  ## drop the organism absent by design (as in panel d)
+  dplyr::filter(!(assigned_to == "chytrid" & grepl("_cyano_", sample)),
+                !(assigned_to == "cyano"   & grepl("_chy_",   sample))) %>%
+  dplyr::mutate(assigned_to = factor(assigned_to, levels = c("cyano", "chytrid"),
+                                     labels = c("P. agardhii", "R. megarrhizum")),
+                label = factor(sub(".*_", "", sample), levels = levels(p_assign$data$label)))
+
+p_counts <- ggplot(count_long, aes(x = label, y = pairs, fill = assigned_to)) +
+  geom_col(position = position_dodge(preserve = "single"), width = 1, col = "white") +
+  scale_y_log10(breaks = 10^(2:7),
+                labels = scales::label_number(scale_cut = scales::cut_short_scale())) +   # 100, 1K, 10K, 1M
+  facet_grid(~ sample_type, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = c("P. agardhii" = "steelblue", "R. megarrhizum" = "darkgreen"),
+                    labels = c(expression(italic("P. agardhii")), expression(italic("R. megarrhizum")))) +
+  labs(x = "Library", y = "Read pairs assigned\n(log scale)", fill = NULL) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1),
+        legend.position = "top")
+p_counts
+
+## numbers for the text if needed
+count_long %>% dplyr::group_by(sample_type, assigned_to) %>%
+  dplyr::summarise(total_M = round(sum(pairs) / 1e6, 2),
+                   median  = round(median(pairs)), min = round(min(pairs)), max = round(max(pairs)))
+
+#   sample_type                       assigned_to    total_M  median     min     max
+# 1 infected filament samples         P. agardhii       0.61   26730     264  155784
+# 2 infected filament samples         R. megarrhizum    5.72  260768   48747 2486055
+# 3 uninfected cyanobacterium samples P. agardhii      33.2  2815575 1704160 3509902
+# 4 zoospore samples                  R. megarrhizum    4.14  257314   16115 1022088
+
+0.61+33.2
+# 33.81M to P. agardhii
+
+5.72 + 4.14
+# 9.86M to R. megarrhizum
 
 #### CHYTRID ####
 
@@ -407,14 +448,21 @@ p_composition <- ggplot(composition_df,
                         aes(x = pct_cyano, y = pct_chy,
                             colour = sample_type, fill = sample_type, shape = treatment)) +
   geom_point(size = 4) +
-  ggrepel::geom_label_repel(aes(label = label), size = 3, show.legend = FALSE, fill = "white") +
+  ggrepel::geom_label_repel(aes(label = label), size = 2.5, show.legend = FALSE, fill = "white",
+                            max.overlaps = Inf,          # never drop a label
+                            min.segment.length = 0,      # always draw the line to the point
+                            box.padding = 0.3, label.padding = 0.1,
+                            force = 2, max.time = 2,     # more repulsion, more time to place labels
+                            seed = 42) +                 # same layout every run
+  # ggrepel::geom_label_repel(aes(label = label), size = 3, show.legend = FALSE, fill = "white") +
   scale_type +
   scale_shape_manual(values = c(control = 21, MET = 24), name = "Treatment") +   # filled shapes
   annotate("text", x = 90, y = 90,  label = "genes of\nboth organisms", color = "grey50", size = 3, fontface = "italic") +
-  annotate("text", x = 10, y = 102, label = "chytrid genes only",      color = "grey50", size = 3, fontface = "italic") +
-  annotate("text", x = 85, y = 5,   label = "cyanobacterial genes only", color = "grey50", size = 3, fontface = "italic") +
+  annotate("text", x = 20, y = 102, label = "chytrid genes only",      color = "grey50", size = 3, fontface = "italic") +
+  annotate("text", x = 65, y = 5,   label = "cyanobacterial genes only", color = "grey50", size = 3, fontface = "italic") +
   theme_bw()
 
+p_composition
 
 composition_long <- composition_df %>%
   dplyr::select(sample, sample_type, treatment, label,
@@ -439,7 +487,7 @@ composition_long <- composition_df %>%
 p_ngenes <- ggplot(composition_long,
                    aes(x = reorder_within(label, n_genes, organism), y = n_genes,
                        colour = sample_type, fill = sample_type)) +              # colour AND fill
-  geom_col() +
+  geom_col(colour = "white") +
   scale_x_reordered() +
   scale_type +
   facet_wrap(~ organism, scales = "free", ncol = 1) +
@@ -466,14 +514,18 @@ p_ngenes <- p_ngenes +
 leg <- cowplot::get_plot_component(p_composition + theme(legend.position = "top"),
                                    "guide-box-top", return_all = TRUE)
 
+## a (counts) above b (%): same x axis, shared legend on top of a
+ab <- cowplot::plot_grid(p_counts,
+                         p_assign + theme(legend.position = "none", strip.text = element_blank()),
+                         ncol = 1, align = "v", axis = "lr",
+                         labels = c("a", "b"), rel_heights = c(1, 0.9))
+
 bc <- cowplot::plot_grid(p_composition + theme(legend.position = "none"),
                          p_ngenes      + theme(legend.position = "none"),
-                         labels = c("b", "c"))
+                         labels = c("c", "d"))                       # was b, c
 
-
-pdf(here("figures/Fig2.compositionPlot.pdf"), width = 11, height = 10)
-cowplot::plot_grid(p_assign, leg, bc, labels = c("a", "", ""), ncol = 1,
-                   rel_heights = c(1, 0.12, 1.2))
+pdf(here("figures/Fig2.compositionPlot.pdf"), width = 11, height = 13)   # taller
+cowplot::plot_grid(ab, bc, leg, ncol = 1, rel_heights = c(1.9, 1.2, 0.12))
 dev.off()
 
 ##################################################
